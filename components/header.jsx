@@ -20,8 +20,9 @@ const Header = async ({isAdminPage = false, SysAdminPage=false}) => {
   const isSysAdmin = user?.role === "SYSADMIN";
   const isSignedIn = !!user;
 
-  console.log("user:", user, isSignedIn)
-
+  if(isSignedIn){
+  console.log("user:", user.Fname, isSignedIn)
+  }
   return (
     // <div className='fixed top-0 w-full bg-gradient-to-r from-sky-300 to-white backdrop-blur-md z-50 border-b'>
     //   <nav className='container max-auto px-4 py-4 flex items-center justify-between'>
