@@ -20,7 +20,7 @@ const Header = async ({isAdminPage = false, SysAdminPage=false}) => {
   const isSysAdmin = user?.role === "SYSADMIN";
   const isSignedIn = !!user;
 
-  console.log("user:", user.role, isSignedIn)
+  console.log("user:", user, isSignedIn)
 
   return (
     // <div className='fixed top-0 w-full bg-gradient-to-r from-sky-300 to-white backdrop-blur-md z-50 border-b'>
