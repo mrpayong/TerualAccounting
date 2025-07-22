@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerTitle, DrawerHeader } from "./ui/drawer";
-import { House, LayoutDashboard, AtomIcon, ArrowLeft, Layout, Loader2, UserRoundCog, AlignJustify } from "lucide-react";
+import { House, LayoutDashboard, AtomIcon, ArrowLeft, Layout, Loader2, UserRoundCog, AlignJustify, LogIn } from "lucide-react";
 import { PT_Serif } from "next/font/google";
 
 
@@ -108,7 +108,10 @@ const MobileNavDrawer = ({
             <Link href="/sign-in" passHref>
               <Button disabled={loading} onClick={onNavClick}  className={`w-full justify-start ${PTserif.className}`}>
                 Log In
-                {loading && <Loader2 className="w-4 h-4 animate-spin"/>}
+                {loading 
+                  ? <Loader2 className="w-4 h-4 animate-spin"/>
+                  : <LogIn size={14} />
+                }
               </Button>
             </Link>
           )}
