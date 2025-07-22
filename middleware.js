@@ -3,6 +3,7 @@ import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // import arcjet, { detectBot, shield } from "arcjet";
 
+
 const isProtectedRoute = createRouteMatcher([
     "/admin(.*)",
     "/admin/activityLogs(.*)",
@@ -32,7 +33,9 @@ const clerk = clerkMiddleware(async (auth, req) => {
     }
 });
  
-export default createMiddleware(aj, clerk);
+export default createMiddleware(
+  aj, 
+  clerk);
 
 export const config = {
   matcher: [

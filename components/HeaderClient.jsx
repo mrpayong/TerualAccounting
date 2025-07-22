@@ -108,7 +108,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
             )}
 
             {/* LOGGED IN */}
-
+         
             {!SysAdminPage && isSysAdmin && isSignedIn && !isAdminPage && !isAdmin && !isStaff && (
               <>
                 {/* VISIBLE (User management button)
@@ -177,10 +177,10 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                   )}
               </>
             )}
-
+         
 
             {/* LOGGED OUT */}
-            {!isSignedIn && !pathname.startsWith("/sign-in") && (
+            {!isSignedIn && pathname !== '/sign-in' && pathname !== "/sign-in/factor-one" && (
               <div className="flex flex-row items-center justify-end gap-2 pr-3">
                 <span className="text-gray-600 font-semibold text-2xl hidden md:inline">
                   Ready to start?
@@ -203,6 +203,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
               </Link>
               </div>
             )}
+           
           </div>
 
           {/* LOGGED IN */}
@@ -218,6 +219,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
               onNavClick={() => setLoading(true)}
             />
           </div>
+        
           {isSignedIn && (
             loading 
             ? (<Loader2 className="w-10 h-10 animate-spin text-gray-400" />) 
@@ -230,6 +232,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                 />
               )
           )}
+          
         </div>
       </nav>
     </div>

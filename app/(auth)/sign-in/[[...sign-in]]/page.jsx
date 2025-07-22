@@ -2,7 +2,7 @@
 import { SignIn, useUser } from '@clerk/nextjs'
 import React from 'react'
 
-const Page = () => {
+export default function Page() {
   // const { isSignedIn, user, isLoaded } = useUser();
   // const hasLogged = useRef(false);
 
@@ -25,7 +25,6 @@ const Page = () => {
   // }, [isLoaded, isSignedIn, user]);
 
 
-  return <SignIn></SignIn>
+  return <SignIn />;
 }
 
-export default Page
