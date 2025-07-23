@@ -38,8 +38,8 @@ const useFetch = (cb) => {
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
 
-  const {name} = cb
-  console.log("[cb]", `${cb.name}`, name)
+
+  console.log("[cb]", {cb})
   const fn = async (...args) => {
     setLoading(true);
     setError(null);
@@ -51,12 +51,13 @@ const useFetch = (cb) => {
       setError(null);
       console.info("DATA IN FETCH HOOK", response);
       console.info("DATA IN FETCH HOOK[args]",args);
+      console.info("DATA IN FETCH HOOK[cb]",{cb});
       // --- Activity Tracking Logic ---
       fetch("/api/activityLog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: name,
+          action: cb.name,
           args,
           result: response,
           timestamp: new Date().toISOString(),
