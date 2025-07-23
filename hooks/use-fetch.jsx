@@ -38,7 +38,7 @@ const useFetch = (cb) => {
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
 
-  console.log("[cb]", cb)
+  console.log("[cb]", `${cb.name}`)
   const fn = async (...args) => {
     setLoading(true);
     setError(null);
@@ -57,7 +57,7 @@ const useFetch = (cb) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: JSON.stringify(cb.name),
+          action: `${cb.name}`,
           args,
           result: response,
           timestamp: new Date().toISOString(),
