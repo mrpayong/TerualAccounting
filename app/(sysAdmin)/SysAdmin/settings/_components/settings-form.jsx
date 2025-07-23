@@ -394,7 +394,6 @@ const [confirmRole, setConfirmRole] = useState(null);
     const [userToUpdataId, setUserToUpdateId] = useState("")
 
     const handleUpdateData = (user) => {
-      console.warn("user:", user)
       if (!user) return;
       setUserToUpdateId(user.id)
       setUpdateDialogOpen(true)
@@ -406,26 +405,22 @@ const [confirmRole, setConfirmRole] = useState(null);
 
 
     const handleUpdateUser = async () => {
-      try {
-        console.log()
-        await updateUserFn(userToUpdataId, userNewFname, userNewLname, userNewName);
-      } catch (error) {
-        toast.error(`Error updating user`);
-      }
+      await updateUserFn(userToUpdataId, userNewFname, userNewLname, userNewName);
     }
 
     useEffect(() => {
       if(updateUserData && !updateUserLoading){
-        setUpdateDialogOpen(false);
-        fetchUsers();
-        toast.success("User updated.")
+        if(updateUserData === 200){
+          setUpdateDialogOpen(false);
+          fetchUsers();
+          toast.success("User updated.")
+        }
       }
     }, [updateUserData, updateUserLoading])
 
     useEffect(() => {
       if(updateUserError && !updateUserLoading){
-        setUpdateDialogOpen(false);
-        toast.error("User failed to udpate")
+        setUpdateDialogOpen(true);
         console.log("Error occured", updateUserError)
       }
     }, [updateUserError, updateUserLoading])
@@ -442,11 +437,13 @@ const [confirmRole, setConfirmRole] = useState(null);
     const [emailUpdate, setEmailUpdate] = useState("")
     const [userToUpdateEmailId, setUserToUpdateEmailId] = useState("");
     const [openEmailDialog, setOpenEmailDialog] = useState(false);
+    const [originalEmail, setOriginalEmail] = useState("");
 
     const handleActiveEmailUpdate = (user) => {
       setOpenEmailDialog(true)
       setUserToUpdateEmailId(user.id);
       setEmailUpdate(user.email);
+      setOriginalEmail(user.email);
     }
 
     const handleCancelEmailUpdate = () => {
@@ -465,24 +462,23 @@ const [confirmRole, setConfirmRole] = useState(null);
 
     useEffect(() => {
       if(updatedEmail && !updateEmailLoading){
-        fetchUsers();
-        setOpenEmailDialog(false)
-        toast.success("User updated.")
-        setUserToUpdateEmailId("");
-        setEmailUpdate("");
-        
+        if(updatedEmail.status === 200){
+          fetchUsers();
+          setOpenEmailDialog(false)
+          toast.success("User updated.")
+          setUserToUpdateEmailId("");
+          setEmailUpdate("");
+        }
       }
     }, [updatedEmail, updateEmailLoading])
 
     useEffect(() => {
       if(udpateError && !updateEmailLoading){
-        setOpenEmailDialog(false)
-        setUserToUpdateEmailId("");
-        setEmailUpdate("");
-        toast.error("User failed to udpate")
+        setOpenEmailDialog(true);
+        setEmailUpdate(originalEmail);
         console.log("Error occured", udpateError)
       }
-    }, [udpateError, updateEmailLoading])
+    }, [udpateError, updateEmailLoading, originalEmail])
 
 
 

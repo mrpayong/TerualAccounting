@@ -8,7 +8,6 @@ import NotFound from '../not-found';
 
 const AdminLayout = async ({children}) => {
     const User = await getAdmin()
-    console.log("User in Admin Page: ", User)
 
     if (!User.authorized){ 
         await getUnauthUser()

@@ -106,6 +106,19 @@ function getActionLabel(action) {
   }
 }
 
+function formatManilaDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Manila",
+  }).format(date);
+}
 
 const ActivityLogTable = ({activities = {}}) => {
   // State
@@ -165,6 +178,7 @@ const filtered = useMemo(() => {
     );
   return logs;
 }, [activityArray, actionFilter, search]);
+
 
   // Sorting
   const sorted = useMemo(() => {
@@ -313,9 +327,7 @@ const filtered = useMemo(() => {
                     </Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
-                    {log.createdAt
-                      ? format(new Date(log.createdAt), "MMM dd, yyyy HH:mm:ss")
-                      : ""}
+                    {formatManilaDate(log.createdAt)}
                   </TableCell>
                   <TableCell>
                     {log.user

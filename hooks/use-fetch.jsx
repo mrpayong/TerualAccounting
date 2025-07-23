@@ -48,13 +48,15 @@ const useFetch = (cb) => {
       setData(response);
       setError(null);
       console.info("DATA IN FETCH HOOK", response);
-
+      console.info("DATA IN FETCH HOOK[cb]",cb);
+      console.info("DATA IN FETCH HOOK[cb.name]",cb.name);
+      console.info("DATA IN FETCH HOOK[args]",args);
       // --- Activity Tracking Logic ---
       fetch("/api/activityLog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: cb.name || "unknown",
+          action: cb.name,
           args,
           result: response,
           timestamp: new Date().toISOString(),

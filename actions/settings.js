@@ -293,11 +293,18 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
         console.log("[4] success update")
         return { 
             success: true, 
-            message: 'User udpated successfully'
+            message: 'User udpated successfully',
+            status: 200
         };
     } catch (error) {
-        console.log("Error user delete: ", error.message)
-        throw new Error("Error updating user");
+        console.log("Error user update: ", error.errors[0])
+        throw new Error(
+            error.errors[0].message === 'That username is taken. Please try another.'
+             ? "Username is taken."
+             : error.errors[0].message === 'Username can only contain letters, numbers and - or _.'
+                ? 'No spaces, accepted: letters, numbers and - or _.'
+                : "Error updating user"
+        );
     }
 }
 
@@ -389,9 +396,12 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
         revalidatePath("/SysAdmin/settings");
         revalidatePath("/");
         console.log("[6] Email updated")
-        return{ success: true };
+        return{ success: true, status: 200 };
     } catch (error) {
-        console.log("Error updating email:", error.message);
-        throw new Error("Error updating email");
+        throw new Error(
+            error.errors[0].message === 'That email address is taken. Please try another.'
+             ? "Email is taken."
+             : "Error updating email"
+        );
     }
 }

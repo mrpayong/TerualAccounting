@@ -399,7 +399,6 @@ useEffect(() => {
 
 
     const handleUpdateData = (user) => {
-      console.warn("user:", user)
       if (!user) return;
       setUserToUpdateId(user.id)
       setUpdateDialogOpen(true)
@@ -411,25 +410,24 @@ useEffect(() => {
 
 
     const handleUpdateUser = async () => {
-      try {
+ 
         await updateUserFn(userToUpdataId, userNewFname, userNewLname, userNewName);
-      } catch (error) {
-        toast.error(`Error updating user`);
-      }
+   
     }
 
     useEffect(() => {
       if(updateUserData && !updateUserLoading){
-        setUpdateDialogOpen(false);
-        fetchUsers();
-        toast.success("User updated.")
+        if(updateUserData === 200){
+          setUpdateDialogOpen(false);
+          fetchUsers();
+          toast.success("User updated.")
+       }
       }
     }, [updateUserData, updateUserLoading])
 
     useEffect(() => {
       if(updateUserError && !updateUserLoading){
-        setUpdateDialogOpen(false);
-        toast.error("User failed to udpate")
+        setUpdateDialogOpen(true);
         console.log("Error occured", updateUserError)
       }
     }, [updateUserError, updateUserLoading])
@@ -454,11 +452,13 @@ useEffect(() => {
     const [emailUpdate, setEmailUpdate] = useState("")
     const [userToUpdateEmailId, setUserToUpdateEmailId] = useState("");
     const [openEmailDialog, setOpenEmailDialog] = useState(false);
+    const [originalEmail, setOriginalEmail] = useState("");
 
     const handleActiveEmailUpdate = (user) => {
       setOpenEmailDialog(true)
       setUserToUpdateEmailId(user.id);
       setEmailUpdate(user.email);
+      setOriginalEmail(user.email);
     }
 
     const handleCancelEmailUpdate = () => {
@@ -477,24 +477,23 @@ useEffect(() => {
 
     useEffect(() => {
       if(updatedEmail && !updateEmailLoading){
-        fetchUsers();
-        setOpenEmailDialog(false)
-        toast.success("User updated.")
-        setUserToUpdateEmailId("");
-        setEmailUpdate("");
-        
+        if(updatedEmail.status === 200){
+          fetchUsers();
+          setOpenEmailDialog(false)
+          toast.success("User updated.")
+          setUserToUpdateEmailId("");
+          setEmailUpdate("");
+        }
       }
     }, [updatedEmail, updateEmailLoading])
 
     useEffect(() => {
       if(udpateError && !updateEmailLoading){
-        setOpenEmailDialog(false)
-        setUserToUpdateEmailId("");
-        setEmailUpdate("");
-        toast.error("User failed to udpate")
+        setOpenEmailDialog(true)
+        setEmailUpdate(originalEmail);
         console.log("Error occured", udpateError)
       }
-    }, [udpateError, updateEmailLoading])
+    }, [udpateError, updateEmailLoading, originalEmail])
 
 
   const { user } = useUser();
@@ -769,7 +768,7 @@ useEffect(() => {
         <Card className="bg-gradient-to-r from-white via-indigo-300/65 to-white">
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div>
-              <CardTitle>User List</CardTitle>
+              <CardTitle>User Table</CardTitle>
               <CardDescription>
                 Manage your users in here.
               </CardDescription>
