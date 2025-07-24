@@ -228,7 +228,22 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                 appearance={{
                   elements: {
                     avatarBox: "w-10 h-10",
-                  },}}
+                  },
+                }}
+                userProfileProps={{
+                  appearance: {
+                    elements: {
+                      profileSectionPrimaryButton__emailAddresses: {
+                        display: "none",
+                      },
+                      menuButton: "hidden",
+                      badge:"hidden",
+                      profileSectionPrimaryButton__username:{
+                        display:"none"
+                      },
+                    }
+                  }
+                }}
                 />
               )
           )}
