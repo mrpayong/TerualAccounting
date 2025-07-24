@@ -230,23 +230,24 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                     avatarBox: "w-10 h-10",
                   },
                 }}
+                
                 userProfileProps={{
                   appearance: {
                     elements: {
                       profileSectionItem__emailAddresses:{
                         button: {
                           display: "none",
-                        }
+                        },
                       },
+                      badge:"hidden",
                       profileSectionPrimaryButton__emailAddresses: {
                         display: "none",
                       },
-                      badge:"hidden",
                       profileSectionPrimaryButton__username:{
                         display:"none"
                       },
                     }
-                  }
+                  },
                 }}
                 />
               )
