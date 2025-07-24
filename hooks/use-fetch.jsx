@@ -39,7 +39,7 @@ const useFetch = (cb) => {
   const [error, setError] = useState(null);
 
 
-  console.log("[cb]", {cb})
+ 
   const fn = async (...args) => {
     setLoading(true);
     setError(null);
@@ -49,25 +49,7 @@ const useFetch = (cb) => {
       const response = await cb(...args);
       setData(response);
       setError(null);
-      console.info("DATA IN FETCH HOOK", response);
-      console.info("DATA IN FETCH HOOK[args]",args);
-      console.info("DATA IN FETCH HOOK[cb]",{cb});
-      // --- Activity Tracking Logic ---
-      fetch("/api/activityLog", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: cb.name,
-          args,
-          result: response,
-          timestamp: new Date().toISOString(),
-        }),
-      }).catch((err) => {
-        // Optionally handle/log error, but don't block UI
-        console.warn("Activity log failed:", err);
-      });
-      // --- End Activity Tracking ---
-
+      console.log("response: ", response)
     } catch (error) {
       setError(error);
       toast.error(error.message);

@@ -21,6 +21,38 @@ const serializeTransaction = (obj) => {
     return serialized;
 };
 
+function formatManilaDateTime(dateInput) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  }).format(date);
+}
+async function activityLog({userId, action, args, timestamp}){
+  try {
+    const dateTime = formatManilaDateTime(timestamp);
+    
+    await db.activityLog.create({
+      data: {
+        userId,
+        action,
+        meta: { args, timestamp: dateTime },
+      },
+    })
+    return {status: 200, success: true}
+  } catch (error) {
+    console.error("Activity Log Error[1]: ", error);
+    console.error("Activity Log Error Message: ", error.message);
+    return {status: 500, success: false}
+  }
+}
+
 async function archiveEntity({
   userId,
   accountId,
@@ -41,13 +73,20 @@ async function archiveEntity({
       },
     });
 
-    return;
+    await activityLog({
+    userId,
+    action,
+    args: {data}, 
+    timestamp: new Date()
+    });
+    return {status: 200, success: true}
   } catch (error) {
-    console.error("Error archiving entity:", error);
-    return { success: false, error: error.message || "Archiving failed" };
+    console.error("Archive Error Message: ", error.message);
+    console.error("Archive Error: ", error.message);
+    return {status: 500, success: false}
+    
   }
 }
-
 
 // for updating which account is the default account
 export async function updateDefaultAccount(accountId) {
@@ -126,75 +165,80 @@ export async function getAccountWithTransactions(accountId) {
 }
 
 
-export async function bulkDeleteTransactions(transactionIds) {
-    try {
-        console.log("Starting bulk delete transactions");   
-        const {userId} = await auth();
-        if (!userId) throw new Error("Unauthorized");
+export async function bulkDeleteTransactions(transactionIds, accountId) {
+  try {
+      console.log("Starting bulk delete transactions");   
+      const {userId} = await auth();
+      if (!userId) throw new Error("Unauthorized");
 
-        const user = await db.user.findUnique({
-            where: {clerkUserId: userId},
-        });
+      const user = await db.user.findUnique({
+          where: {clerkUserId: userId},
+      });
 
-        if (!user) {
-            throw new Error("User not Found");
-        }
-       if (user.role !== "STAFF"){
-        throw new Error("Unavailable action")
-       }
+      if (!user) {
+          throw new Error("User not Found");
+      }
+      if (user.role !== "STAFF"){
+      throw new Error("Unavailable action")
+      }
 
-        // fetching all transactions
-        const transactions = await db.transaction.findMany({
-            where: {
-                id: { in: transactionIds},
-                userId: user.id,
-            },
-            select:{
-              id: true,
-              accountId: true,
-              amount:true,
-              description: true,
-              particular: true,
-              createdAt: true, 
-            }
-        });
-            console.log("Fetched transactions:", transactions);
+      // fetching all transactions
+      const transactions = await db.transaction.findMany({
+          where: {
+              id: { in: transactionIds},
+              userId: user.id,
+          },
+          select:{
+            id:true,       
+            type:true,
+            amount:true,
+            description:true,
+            date:true,
+            category:true,
+            particular:true,
+            receiptUrl:true,
+            Activity:true,
+            printNumber:true,   
+            refNumber:true,    
+            createdAt:true,
+            updatedAt:true,
+          }
+      });
 
-        for (const transaction of transactions) {
-          await archiveEntity({
+      for (const transaction of transactions) {
+        const log = await archiveEntity({
+          userId: user.id,
+          accountId: transaction.accountId,
+          action: "bulkDeleteTransaction",
+          entityType: "Transaction",
+          entityId: transaction.id,
+          data: transaction,
+        })
+        if(log.success === false){
+          await db.activityLog({
             userId: user.id,
-            accountId: transaction.accountId,
-            action: "deleteTransaction",
-            entityType: "Transaction",
-            entityId: transaction.id,
-            data: transaction,
-          });
+            action: "bulkDeleteTransaction",
+            args: {message: "Possible System interruption: Failed to log Deleted transaction."},
+            timestamp: new Date(),
+          })
         }
+      } 
+      
+      await db.transaction.deleteMany({
+        where: {
+            id: {in: transactionIds},
+            userId: user.id,
+        },
+      });
 
-        // delete transaction and update account balance in a transac
-        await db.$transaction(async (tx) => {
-            // Delete transac
-            await tx.transaction.deleteMany({
-                where: {
-                    id: {in: transactionIds},
-                    userId: user.id,
-                },
-            });
-
-            console.log("Transactions deleted");
-        });
-        
-
-        revalidatePath("/dashboard");
-        
-
-        console.log("Paths revalidated");
-
-        return {success: true};
-    } catch (error) {
-      console.error("Error in bulkDeleteTransactions:", error);
-      return {success: false, error: error.message};
-    }
+      console.log("account id server: ", accountId)
+      revalidatePath("/dashboard");
+      revalidatePath(`/account/${accountId}`)
+      return {success: true};
+  } catch (error) {
+    console.error("Error in bulkDeleteTransactions:", error);
+    return {success: false, error: error.message};
+  }
 }
 
 function validateTransactionTypes(transactions) {
@@ -398,6 +442,7 @@ export async function createSubAccount(transactionIds, data, id) {
         userId: user.id,
       },
       select: {
+        refNumber: true,
         amount: true,
         type: true,
         Activity: true,
@@ -613,7 +658,6 @@ export async function createSubAccount(transactionIds, data, id) {
       if(parentSubAccountValidated.success === true){
         console.log("[5.7] Parent Sub Account is: ", parentSubAccount)
         await updateParentBalancesInTransaction(parentSubAccount.id, balanceFloat);
-    
       } else {
         console.log("[5.7] No Parent Sub Account to update")
       }
@@ -652,15 +696,28 @@ export async function createSubAccount(transactionIds, data, id) {
      
     });
 
-      console.log("id: ", id)
-     console.log("STEP 3 balance returned: ", balanceFloat);
+      const createdSubAccount = [data, transactions]
+    const updateLog = await activityLog({
+      userId: user.id,
+      action: "createSubAccount",
+      args: createdSubAccount,
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "createSubAccount",
+          meta: { message: "Possible System interruption: Failed to log Created Group Transaction" },
+        }
+      })
+    }
+      console.log("STEP 3 balance returned: ", balanceFloat);
       revalidatePath("/dashboard");
       revalidatePath(`/account/${id}`);
       
       console.log("[5.8] Success Creating")
-      return { success: true, 
-        // data: serializedSubAccount 
-      };
+      return { success: true};
   } catch (error) {
     console.error("Error creating sub-account:", error.message);
     throw new Error(error);
@@ -798,13 +855,36 @@ export async function updateSubAccountBalance(newBalance, subAccountId){
     }
 
     console.log("[3] Update Sub Account Balance")
-    const udpatedSubAccount = await db.subAccount.update({
+    const updatedSubAccount = await db.subAccount.update({
       where: { id: subAccount.id },
       data: {
         balance: newBalance,
         updatedAt: new Date()
       }
     });
+
+
+
+
+    const updateLog = await activityLog({
+      userId: user.id,
+      action: "updateSubAccountBalance",
+      args: {
+        oldBalance: subAccount.balance,
+        newBalance: updatedSubAccount.balance,
+        updatedSubAccount: updatedSubAccount,
+      },
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "updateSubAccountBalance",
+          meta: { message: "Possible System interruption: Failed to log Edit Group Transaction Balance" },
+        }
+      })
+    }
 
     revalidatePath(`/SubAccounts/${subAccount.accountId}`)
     console.log("[4] Success update")
@@ -833,6 +913,8 @@ export async function deleteSubAccountTransactionRelation(subAccountId, transact
       where: { id: transactionId },
       select: {
         id: true,
+        refNumber: true,
+        amount: true,
       }
     });
     if (!transaction){
@@ -843,6 +925,7 @@ export async function deleteSubAccountTransactionRelation(subAccountId, transact
       where: {id: subAccountId},
       select: {
         id: true,
+        name: true,
         accountId: true,
       }
     })
@@ -865,6 +948,27 @@ export async function deleteSubAccountTransactionRelation(subAccountId, transact
       throw new Error("[2] Relation not found");
     }
 
+    const archive = await archiveEntity({
+      userId: user.id,
+      accountId: subAccount.accountId,
+      action: "deleteSubAccountTransactionRelation",
+      entityType: "Group Transaction",
+      entityId: `${subAccount.id}-${transaction.id}`,
+      data: {
+        GroupTransaction: subAccount,
+        transaction: transaction,
+        dateGrouped: relation.createdAt,
+      },
+    });
+    if(archive.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "deleteSubAccountTransactionRelation",
+          meta: { message: "Possible System interruption: Failed to log Removed Transaction from a Group." },
+        }
+      })
+    }
     console.log("[3] Delete Relation");
     await db.subAccountTransaction.delete({
       where: {
@@ -874,7 +978,6 @@ export async function deleteSubAccountTransactionRelation(subAccountId, transact
         },
       },
     });
-
     revalidatePath(`/SubAccounts/${subAccount.accountId}`);
     console.log("[4] Success delete");
     return { success: true };
@@ -885,7 +988,7 @@ export async function deleteSubAccountTransactionRelation(subAccountId, transact
   }
 }
 
-export async function deleteSubAccount(subAccountId) {
+export async function deleteSubAccount(subAccountId, accountId) {
   try {
     console.log("[1] Auth");
     const { userId } = await auth();
@@ -917,14 +1020,23 @@ export async function deleteSubAccount(subAccountId) {
       throw new Error("[2] Sub Account not found.")
     }
 
-    await archiveEntity({
+    const archive = await archiveEntity({
       userId: user.id,
       accountId: subAccount.accountId,
       action: "deleteSubAccount",
-      entityType: "SubAccount",
+      entityType: "Group Transaction",
       entityId: subAccount.id,
       data: subAccount,
-    });
+    })
+    if(archive.success ===  false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "deleteSubAccount",
+          meta: { message: "Possible System interruption: Failed to log Deleted Group Transaction" },
+        } 
+      })
+    }
 
     console.log("[3] Deleting group", subAccount.id);
     await db.subAccount.delete({
@@ -935,7 +1047,7 @@ export async function deleteSubAccount(subAccountId) {
    
 
     revalidatePath("/dashboard");
-    revalidatePath("/account/[id]");
+    revalidatePath(`/account/${accountId}`);
     console.log("[4] Success delete");
     return { success: true };
   } catch (error) {
@@ -968,15 +1080,33 @@ export async function updateClientInfo(data, accountId){
       throw new Error("Account not found.");
     }
 
-    await db.account.update({
+    const updatedClientInfo = await db.account.update({
       where: {id: accountToUpdate.id},
       data: {
         ...data,
       },
     });
-
+    
+     const updateLog = await activityLog({
+      userId: user.id,
+      action: "updateClientInfo",
+      args: {
+        previous: accountToUpdate,
+        updated: updatedClientInfo
+      }, 
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "updateClientInfo",
+          meta: { message: "Possible System interruption: Failed to log Edit Client Information." },
+        }
+      })
+    }
+    
     revalidatePath(`/ClientInfo/${accountToUpdate.id}`);
-
     return {success: true};
   } catch (error) {
     console.log("Error editing client info: ", error.message)

@@ -5,6 +5,25 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+async function activityLog({userId, action, args, timestamp}){
+  try {
+    const dateTime = formatManilaDateTime(timestamp);
+    
+    await db.activityLog.create({
+      data: {
+        userId,
+        action,
+        meta: { args, timestamp: dateTime },
+      },
+    })
+    return {status: 200, success: true}
+  } catch (error) {
+    console.error("Activity Log Error[1]: ", error);
+    console.error("Activity Log Error Message: ", error.message);
+    return {status: 500, success: false}
+  }
+}
+
 export async function getSuggestedWeeklySchedule() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -101,7 +120,23 @@ console.log("cleaning data")
  
     const schedule = JSON.parse(cleanedText);
  
-  console.log("Generated sched:", schedule);
+ 
+
+  const updateLog = await activityLog({
+    userId: user.id,
+    action: "getSuggestedWeeklySchedule",
+    args: schedule,
+    timestamp: new Date()
+  });
+  if(updateLog.success === false){
+    await db.activityLog.create({
+      data: {
+        userId: user.id,
+        action: "getSuggestedWeeklySchedule",
+        meta: { message: "Possible System interuption: Failed to log AI sugesstion for Weekly Schedule" },
+      }
+    })
+  }
 
   return schedule;
 }
@@ -228,6 +263,30 @@ function accumulateByMonth(transactions) {
   const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
   const forecast = JSON.parse(cleanedText);
 
+  const updateLog = await activityLog({
+    userId: user.id,
+    action: "getInflowOutflowForecast",
+    args: {
+      acccount_ID: accountId,
+      historical: {
+        inflows: monthlyInflows,
+        outflows: monthlyOutflows,
+      },
+      inflowForecast: forecast.inflowForecast,
+      outflowForecast: forecast.outflowForecast,
+    },
+    timestamp: new Date()
+  });
+  if(updateLog.success === false){
+    await db.activityLog.create({
+      data: {
+        userId: user.id,
+        action: "getInflowOutflowForecast",
+        meta: { message: "Possible System interruption: Failed to log AI Forecasting of Inflows and Outflows" },
+      }
+    })
+  }
+
  return {
     historical: {
       inflows: monthlyInflows,
@@ -337,6 +396,32 @@ export async function getCashflowForecast(accountId) {
   // Parse and return the forecast
   const forecast = JSON.parse(cleanedText);
   console.log("Generated forecast:", forecast)
+
+
+  const updateLog = await activityLog({
+    userId: user.id,
+    action: "getCashflowForecast",
+    args: {
+      account_ID: accountId,
+      historical: cashflows.map(cf => ({
+        month: cf.date.toISOString().slice(0, 7), // "YYYY-MM"
+        netChange: cf.netChange,
+      })),
+      forecast: forecast.forecast,
+      insight: forecast.insight,
+      issuesOrImprovements: forecast.issuesOrImprovements,
+    },
+    timestamp: new Date()
+  });
+  if(updateLog.success === false){
+    await db.activityLog.create({
+      data: {
+        userId: user.id,
+        action: "getCashflowForecast",
+        meta: { message: "Possible System interruption: Failed to log AI Forecast of Cashflows" },
+      }
+    })
+  }
   return {
     historical: cashflows.map(cf => ({
       month: cf.date.toISOString().slice(0, 7), // "YYYY-MM"
@@ -353,8 +438,6 @@ export async function getCashflowForecast(accountId) {
 
 export async function getOverallFinancialDataAnalysis({ cashflowForecast, inflowOutflowForecast }) {
   try {
-    
-  
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -446,7 +529,30 @@ export async function getOverallFinancialDataAnalysis({ cashflowForecast, inflow
   console.log("Parsed Gemini insights:", insights);
 
 
-const insightsArr = Array.isArray(insights.insights) ? insights.insights : [];
+  const insightsArr = Array.isArray(insights.insights) ? insights.insights : [];
+
+  const updateLog = await activityLog({
+    userId: user.id,
+    action: "getOverallFinancialDataAnalysis",
+    args: {
+      insights: insightsArr.map(r => ({
+        id: r.id,
+        recommendationTitle: r.recommendationTitle,
+        detail: r.detail,
+        impactLevel: r.impactLevel,
+      })),
+    },
+    timestamp: new Date()
+  });
+  if(updateLog.success === false){
+    await db.activityLog.create({
+      data: {
+        userId: user.id,
+        action: "getOverallFinancialDataAnalysis",
+        meta: { message: "Possible System interruption: Failed to log AI Overall Analysis" },
+      }
+    })
+  }
 
 return {
   success: true,

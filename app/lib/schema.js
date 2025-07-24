@@ -56,7 +56,7 @@ export const userSchema = z.object({
     email: z.string().min(1, "Email is required."),
     Fname: z.string().min(1, "First name is required"),
     Lname: z.string().min(1, "Last name is required"),
-    username: z.string().min(5, "Please enter a username."),
+    username: z.string().min(8, "At least 8 characters."),
     role: z.enum(["ADMIN", "SYSADMIN", "USER", "STAFF"])
 })
 

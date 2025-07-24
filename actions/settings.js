@@ -4,6 +4,38 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 
+function formatManilaDateTime(dateInput) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  }).format(date);
+}
+async function activityLog({userId, action, args, timestamp}){
+  try {
+    const dateTime = formatManilaDateTime(timestamp);
+    
+    await db.activityLog.create({
+      data: {
+        userId,
+        action,
+        meta: { args, timestamp: dateTime },
+      },
+    })
+    return {status: 200, success: true}
+  } catch (error) {
+    console.error("Activity Log Error[1]: ", error);
+    console.error("Activity Log Error Message: ", error.message);
+    return {status: 500, success: false}
+  }
+}
+
 async function archiveEntity({
   userId,
   accountId,
@@ -24,12 +56,23 @@ async function archiveEntity({
       },
     });
 
-    return;
+    await activityLog({
+    userId,
+    action,
+    args: data, 
+    timestamp: new Date()
+    });
+    return {status: 200, success: true}
   } catch (error) {
-    console.error("Error archiving entity:", error);
-    return { success: false, error: error.message || "Archiving failed" };
+    console.error("Archive Error Message: ", error.message);
+    console.error("Archive Error: ", error.message);
+    return {status: 500, success: false}
+    
   }
 }
+
+
+
 
 export async function getUser(){
     try {
@@ -96,7 +139,7 @@ export async function getUserForSysAdmin(){
     } 
 }
 
-export async function updateUserRole(UserIdRoleUpdate, role){
+export async function updateUserRole(UserIdRoleUpdate, newRole){
     try {
         const { userId } = await auth();
         if(!userId){
@@ -113,11 +156,44 @@ export async function updateUserRole(UserIdRoleUpdate, role){
             throw new Error("[1] Unauthorized")
         }
 
-        await db.user.update({
+        const userToUpdate = await db.user.findUnique({
             where: {id: UserIdRoleUpdate},
-            data: {role},
+            select: {
+                id: true,
+                clerkUserId: true,
+                email: true,
+                Fname: true,
+                Lname: true,
+                role: true,
+            }
         });
 
+        const userRoleUpdated = await db.user.update({
+            where: {id: UserIdRoleUpdate},
+            data: {
+                role: newRole
+            },
+        });
+
+        const updateLog = await activityLog({
+            userId: user.id,
+            action: "updateUserRole",
+            args: {
+                userData: userToUpdate,
+                oldRole: userToUpdate.role,
+                newRole: userRoleUpdated.role,
+            }, 
+            timestamp: new Date()
+        });
+        if(updateLog.success === false){
+            await db.activityLog.create({
+                data: {
+                userId: user.id,
+                action: "updateUserRole",
+                meta: { message: "Possible System interuption: Failed to log Edit User Role" },
+                }
+            })
+        }
         revalidatePath('/admin/settings')
         revalidatePath('/SysAdmin/settings')
         return {success: true}
@@ -146,6 +222,7 @@ export async function createUser(data) {
     const client = await clerkClient()
 
 
+
     // 2. Create user in Clerk (passwordless, will send invite/verification email)
     const clerkUser = await client.users.createUser({
         emailAddress: [data.email],
@@ -167,6 +244,24 @@ export async function createUser(data) {
       },
     });
 
+    const updateLog = await activityLog({
+        userId: currentUser.id,
+        action: "createUser",
+        args: {
+            newUserData:newUser
+        }, 
+        timestamp: new Date()
+    });
+    if(updateLog.success === false){
+        await db.activityLog.create({
+            data: {
+            userId: currentUser.id,
+            action: "createUser",
+            meta: { message: "Possible System interuption: Failed to log Created User" },
+            }
+        })
+    }
+
     revalidatePath("/admin/settings")
     revalidatePath("/SysAdmin/settings")
 
@@ -179,6 +274,7 @@ export async function createUser(data) {
       },
     };
   } catch (error) {
+    console.log("error createUser: ", error)
     throw new Error("Email or Username might already exists.");
   }
 }
@@ -205,16 +301,23 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
                 Lname: true,
             }
         })
-        
-        
-       await archiveEntity({
-          userId: currentUser.id,
-          action: "deleteUser",
-          entityType: "User",
-          entityId: userToDelete.id,
-          data: userToDelete,
+        const archive = await archiveEntity({
+            userId: currentUser.id,
+            action: "deleteUser",
+            entityType: "User",
+            entityId: userToDelete.id,
+            data: userToDelete,
         });
-        
+        if(archive.success ===  false){
+            await db.activityLog.create({
+                data: {
+                userId: currentUser.id,
+                action: "deleteUser",
+                meta: { message: "Possible System interruption: Failed to log Deleted User" },
+                } 
+            })
+        }
+            
 
         const client = await clerkClient();
         await client.users.deleteUser(userToDelete.clerkUserId);
@@ -261,6 +364,9 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
             select: {
                 id: true,
                 clerkUserId: true,
+                Fname: true,
+                Lname: true,
+                username: true,
             }
         })
 
@@ -279,7 +385,7 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
 
         // udpate method for my own database
         console.log("[3] Update in Db")
-        await db.user.update({
+        const updatedUser = await db.user.update({
             where: { id: user.id },
             data: {
                 Fname: newFname,
@@ -287,6 +393,25 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
                 username: newuserName,
             }
         });
+
+        const updateLog = await activityLog({
+            userId: currentUser.id,
+            action: "updateUser",
+            args: {
+                oldData: user,
+                newData: updatedUser,
+            },
+            timestamp: new Date()
+        });
+        if(updateLog.success === false){
+        await db.activityLog.create({
+            data: {
+            userId: currentUser.id,
+            action: "updateUser",
+            meta: { message: "Possible System interuption: Failed to log Edit User" },
+            }
+        })
+        }
 
         revalidatePath("/admin/settings");
         revalidatePath("/SysAdmin/settings");
@@ -298,13 +423,7 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
         };
     } catch (error) {
         console.log("Error user update: ", error.errors[0])
-        throw new Error(
-            error.errors[0].message === 'That username is taken. Please try another.'
-             ? "Username is taken."
-             : error.errors[0].message === 'Username can only contain letters, numbers and - or _.'
-                ? 'No spaces, accepted: letters, numbers and - or _.'
-                : "Error updating user"
-        );
+        throw new Error("!")
     }
 }
 
@@ -384,13 +503,34 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
             }
         })
 
-        await archiveEntity({
+
+        await activityLog({
             userId: user.id,
-            action: "updateEmail",
-            entityType: "User",
-            entityId: newUserUpdated.id,
-            data: newUserUpdated,
-        })
+            action: "updateUserEmail",
+            args: newUserUpdated, 
+            timestamp: new Date()
+        });
+
+        const updateLog = await activityLog({
+            userId: user.id,
+            action: "updateUserEmail",
+            args: {
+                oldData: userToUpdate.email,
+                newData: newUserUpdated.email,
+            },
+            timestamp: new Date()
+        });
+        if(updateLog.success === false){
+            await db.activityLog.create({
+                data: {
+                userId: user.id,
+                action: "updateUserEmail",
+                meta: { message: "Possible System interuption: Failed to log Edit User Email" },
+                }
+            })
+        }
+
+        
         
         revalidatePath("/admin/settings");
         revalidatePath("/SysAdmin/settings");
@@ -398,10 +538,6 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
         console.log("[6] Email updated")
         return{ success: true, status: 200 };
     } catch (error) {
-        throw new Error(
-            error.errors[0].message === 'That email address is taken. Please try another.'
-             ? "Email is taken."
-             : "Error updating email"
-        );
+        throw new Error("!");
     }
 }

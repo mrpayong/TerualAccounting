@@ -26,7 +26,6 @@ export default async function SubAccountsPage({ params }) {
   }
 
   const subAccounts = response.data;
-  console.log("sub account page: ", id)
 
   return (
     <div className="container flex flex-col items-center justify-center mx-auto p-4">

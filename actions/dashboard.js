@@ -18,6 +18,38 @@ const serializeTransaction = (obj) => {
     return serialized;
 };
 
+function formatManilaDateTime(dateInput) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  }).format(date);
+}
+async function activityLog({userId, action, args, timestamp}){
+  try {
+    const dateTime = formatManilaDateTime(timestamp);
+    
+    await db.activityLog.create({
+      data: {
+        userId,
+        action,
+        meta: { args, timestamp: dateTime },
+      },
+    })
+    return {status: 200, success: true}
+  } catch (error) {
+    console.error("Activity Log Error[1]: ", error);
+    console.error("Activity Log Error Message: ", error.message);
+    return {status: 500, success: false}
+  }
+}
+
 
 //action for creating account
 export async function createAccount(data) {
@@ -50,11 +82,29 @@ export async function createAccount(data) {
             },
         });
 
+
         const serializedAccount = serializeTransaction(account);
+
+        const updateLog = await activityLog({
+        userId: user.id,
+        action: "createAccount",
+        args: account,
+        timestamp: new Date()
+        });
+        if(updateLog.success === false){
+        await db.activityLog.create({
+            data: {
+            userId: user.id,
+            action: "createAccount",
+            meta: { message: "Possible System interuption: Failed to log Created Account" },
+            }
+        })
+        }
 
         revalidatePath("/dashboard");
         return {success: true, data: serializedAccount};
     } catch (error) {
+        console.log("Error creating account: ", error)
         throw new Error(error.message);
     }
 }

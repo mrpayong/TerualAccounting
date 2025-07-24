@@ -142,8 +142,6 @@ const AccountChart = ({ transactions, id }) => {
   const router = useRouter();
 
 
-console.log("id", id)
-
   return (
 
     <>

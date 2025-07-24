@@ -429,6 +429,7 @@ useEffect(() => {
       if(updateUserError && !updateUserLoading){
         setUpdateDialogOpen(true);
         console.log("Error occured", updateUserError)
+        toast.error("Invalid Username or already taken.")
       }
     }, [updateUserError, updateUserLoading])
 
@@ -492,6 +493,7 @@ useEffect(() => {
         setOpenEmailDialog(true)
         setEmailUpdate(originalEmail);
         console.log("Error occured", udpateError)
+        toast.error("Invalid Email or already taken.")
       }
     }, [udpateError, updateEmailLoading, originalEmail])
 
@@ -562,7 +564,7 @@ useEffect(() => {
                 <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
                 <Input
                   id="username"
-                  placeholder="username"
+                  placeholder="Letters, Numbers and - or _."
                   className="w-full"
                   {...register("username")}
                   required

@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowDown, ArrowUp, ChartLine, Check, CircleArrowUp, CircleX, Loader2, Pen, PenOff, Plus, Square, SquareArrowDown, SquareArrowUp, Trash, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { deleteCashflow, udpateBalanceQuick } from "@/actions/cashflow";
+import { deleteCashflow, updateBalanceQuick } from "@/actions/cashflow";
 import useFetch from "@/hooks/use-fetch";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -106,7 +106,7 @@ const accumulatedAmounts = cashflowRecords.reduce(
     fn: updateBalanceFn,
     data: updatedBalanceData,
     error: updateBalanceError,
-  } = useFetch(udpateBalanceQuick);
+  } = useFetch(updateBalanceQuick);
 
   const [updateBalanceField, setUpdateBalanceField] = useState(false)
   const [updateCfsId, setCfsId] = useState("");

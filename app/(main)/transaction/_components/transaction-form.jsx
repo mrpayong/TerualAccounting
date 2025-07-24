@@ -89,7 +89,7 @@ const AddTransactionForm = ({
             amount: "",
             description: "",
             category: "",
-            printNumber: "12345",
+            printNumber: "Manually encoded",
             accountId: accountId || accounts.find((ac) => ac.id)?.id,
             date: getPhilippinesDate(),
             isRecurring: false,

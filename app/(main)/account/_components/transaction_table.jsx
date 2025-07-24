@@ -152,6 +152,7 @@ const rowsPerPage = 10; // Default rows per page
         data: deleted,
       } = useFetch(bulkDeleteTransactions);
 
+    const acount_id = id;
     const handleSingleDelete = async (id) => {
         const result = await Swal.fire({
             title: `Are you sure?`,
@@ -165,7 +166,7 @@ const rowsPerPage = 10; // Default rows per page
           });
         
           if (result.isConfirmed) {
-            deleteFn([id]);
+            deleteFn([id], acount_id);
           }
     }
 
@@ -264,7 +265,7 @@ const rowsPerPage = 10; // Default rows per page
         if (deleted && !deleteLoading) {
             // console.log("Transactions deleted successfully:", deleted);
             // toast.error("Selected Transactions Deleted successfully");
-             toast.error(`Deleted successfully`);
+             toast.success(`Deleted successfully`);
              setSelectedIds([]);
         }
     }, [deleted, deleteLoading]);
@@ -284,7 +285,7 @@ const rowsPerPage = 10; // Default rows per page
       
         if (result.isConfirmed) {
           console.log("Deleting transactions with IDs:", selectedIds);
-          deleteFn(selectedIds); // Call the delete function with selected IDs
+          deleteFn(selectedIds, acount_id); // Call the delete function with selected IDs
         }
       };
 
@@ -751,7 +752,7 @@ const rowsPerPage = 10; // Default rows per page
         if(!groupToDeleteId){
           toast.error("Error deleting group.")
         } else {
-          deleteGroupFn(groupToDeleteId);
+          deleteGroupFn(groupToDeleteId, id);
         }
       }
 

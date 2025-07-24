@@ -14,107 +14,38 @@ const serializeAmount = (obj) => ({
     amount: obj.amount.toNumber(),
 });
 
-// export async function createTransaction(data) {
-//     try {
-//         const {userId} = await auth();
-//         if(!userId) throw new Error("Unauthorized");
 
-//         // arcjet to add rate limiting
-//         const req = await request();
-
-//         const decision = await aj.protect(req, {
-//           userId,
-//           requested: 1,
-//         });
-
-//         if (decision.isDenied()) {
-//           if(decision.reason.isRateLimit()){
-//             const {remaining, reset} = decision.reason;
-//             console.error({
-//               code: "RATE_LIMIT_EXCEEDED",
-//               details: {
-//                 remaining,
-//                 resetInSeconds: reset,
-//               },
-//             });
-
-//             throw new Error("Too many requests. Please try again later.");
-//           }
-
-//             throw new Error("Requested blocked.");
-//         }
-
-//         const user = await db.user.findUnique({
-//             where: {clerkUserId: userId}, 
-//         });
-
-//         if(!user) {
-//             throw new Error("User not found.");
-//         }
-
-
-//         console.log("initializing account to create transaction");
-//         const account = await db.account.findUnique({
-//             where: {
-//                 id: data.accountId, //ID of account
-//                 userId: user.id, //ID of user
-//             },
-//         });
-
-//         if(!account){
-//             throw new Error("Account not found.");
-//         }
-//         console.log("user info checked.")
-        
-//        // calculate balance change
-//         console.log("Calculating initial balance");
-//         const balanceChange = data.type === "EXPENSE"
-//             ? -data.amount
-//             : data.amount;
-//         const newBalance = account.balance.toNumber() + balanceChange;
-//         console.log("Initial balance calculated")
-
-//         console.log("creating a new transaction...");
-//         const transaction = await db.$transaction(async(tx) => {
-//             const newTransaction = await tx.transaction.create({
-//                 data: {
-//                     ...data,
-//                     userId: user.id,
-//                     nextRecurringDate: //where the date will be assigned
-//                         data.isRecurring && data.recurringInterval
-//                             ? calculateNextRecurringDate(data.date, data.recurringInterval) //code to get date
-//                             : null,
-//                 },
-//             });
-//         console.log("New transaction created.");
-
-//             console.log("updating balance in current account...")
-//             await tx.account.update({
-//                 where: { id: data.accountId },
-//                 data: { balance: newBalance },
-//             });
-
-//             // await tx.account.update({
-//             //     where: { id: data.accountId },
-//             //     data: { balance: newBalance },
-//             //   });
-//             console.log("New balance updated.")
-
-//             return newTransaction;
-//         });
-//         console.log("updated balance.")
-
-//         revalidatePath("/dashboard");
-//         revalidatePath(`/account/${transaction.accountId}`);
-
-//         return {success: true, data: serializeAmount(transaction)};
-
-//     } catch (error) {
-//         console.error(error);   
-//         throw new Error(error.message);
-//     }
-// }
-
+function formatManilaDateTime(dateInput) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  }).format(date);
+}
+async function activityLog({userId, action, args, timestamp}){
+  try {
+    const dateTime = formatManilaDateTime(timestamp);
+    
+    await db.activityLog.create({
+      data: {
+        userId,
+        action,
+        meta: { args, timestamp: dateTime },
+      },
+    })
+    return {status: 200, success: true}
+  } catch (error) {
+    console.error("Activity Log Error[1]: ", error);
+    console.error("Activity Log Error Message: ", error.message);
+    return {status: 500, success: false}
+  }
+}
 
 
 export async function createTransaction(data) {
@@ -174,23 +105,32 @@ export async function createTransaction(data) {
         },
       });
 
-      await tx.account.update({
-        where: { id: data.accountId },
-        data: { 
-          // balance: newBalance 
-        },
-      });
+
       return newTransaction;
     });
  
+     const updateLog = await activityLog({
+      userId: user.id,
+      action: "createTransaction",
+      args: transaction,
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "createTransaction",
+          meta: { message: "Possible System interruption: Failed to log Created Transaction" },
+        }
+      })
+    }
 
     revalidatePath("/dashboard");
     revalidatePath(`/account/${transaction.accountId}`);
-
     return { success: true, data: serializeAmount(transaction) };
   } catch (error) {
     console.error("Error creating transaction.",error.message)
-    throw new Error(error.message);
+    throw new Error("!");
     
   }
 }
@@ -287,6 +227,22 @@ console.log("[5]")
       }
 
 console.log("[6]")
+
+    const updateLog = await activityLog({
+      userId: user.id || "Authorized User",
+      action: "scanReceipt",
+      args: data,
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "scanReceipt",
+          meta: { message: "Possible System interruption: Failed to log Scanned Receipt" },
+        }
+      })
+    }
       return{
         amount: parseFloat(data.amount),
         refNumber: data.refNumber,
@@ -306,7 +262,7 @@ console.log("[6]")
       throw error; // Re-throw the custom error
     }
     console.error("Error scanning the receipt:", error.message);
-    throw new Error("System: Failed to scan receipt");
+    throw new Error("!");
   }
 }
 
@@ -338,29 +294,6 @@ export async function getTransaction(id) {
 
 
 
-// export async function getTransaction(id) {
-//   const { userId } = await auth();
-//   if (!userId) throw new Error("Unauthorized");
-
-//   const user = await db.user.findUnique({
-//     where: { clerkUserId: userId },
-//   });
-
-//   if (!user) throw new Error("User not found");
-
-//   const transaction = await db.transaction.findUnique({
-//     where: {
-//       id,
-//       userId: user.id,
-//     },
-//   });
-
-//   if (!transaction) throw new Error("Transaction not found");
-
-//   return serializeAmount(transaction);
-// }
-
-
 
 export async function updateTransaction(id, data) {
   try {
@@ -388,17 +321,8 @@ export async function updateTransaction(id, data) {
     });
 
     if (!originalTransaction) throw new Error("Transaction not found.");
+  
 
-    //calculate balance change
-    // const oldBalanceChange = originalTransaction.type === "EXPENSE"
-    //   ? -originalTransaction.amount.toNumber()
-    //   : originalTransaction.amount.toNumber();
-
-    // const newBalanceChange = data.type === "EXPENSE"
-    //   ? -data.amount
-    //   : data.amount ;
-
-    // const netBalanceChange = newBalanceChange - oldBalanceChange;
 
     const transaction = await db.$transaction(async (tx) => {
       const updated = await tx.transaction.update({
@@ -428,90 +352,37 @@ export async function updateTransaction(id, data) {
       return updated;
     });
 
+    const updateLog = await activityLog({
+      userId: user.id,
+      action: "updateTransaction",
+      args:{
+        account_ID: data.accountId,
+        oldData: originalTransaction,
+        newData: transaction
+      },
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "updateTransaction",
+          meta: { message: "Possible System interruption: Failed to log Edited Transaction." },
+        }
+      })
+    }
+
+
     revalidatePath("/dashboard");
     revalidatePath(`/account/${data.accountId}`);
 
     return {success: true, data: serializeAmount(transaction)};
   } catch (error) {
-    throw new Error(error.message);
+    console.log("Error update transaction: ", error)
+    console.log("Error update transaction: ", error.message)
+    throw new Error("!");
   }
 }
-
-
-
-
-// export async function updateTransaction(id, data) {
-//   try {
-//     const { userId } = await auth();
-//     if (!userId) throw new Error("Unauthorized");
-
-//     const user = await db.user.findUnique({
-//       where: { clerkUserId: userId },
-//     });
-
-//     if (!user) throw new Error("User not found");
-
-//     // Get original transaction to calculate balance change
-//     const originalTransaction = await db.transaction.findUnique({
-//       where: {
-//         id,
-//         userId: user.id,
-//       },
-//       include: {
-//         account: true,
-//       },
-//     });
-
-//     if (!originalTransaction) throw new Error("Transaction not found");
-
-//     // Calculate balance changes
-//     const oldBalanceChange =
-//       originalTransaction.type === "EXPENSE"
-//         ? -originalTransaction.amount.toNumber()
-//         : originalTransaction.amount.toNumber();
-
-//     const newBalanceChange =
-//       data.type === "EXPENSE" ? -data.amount : data.amount;
-
-//     const netBalanceChange = newBalanceChange - oldBalanceChange;
-
-//     // Update transaction and account balance in a transaction
-//     const transaction = await db.$transaction(async (tx) => {
-//       const updated = await tx.transaction.update({
-//         where: {
-//           id,
-//           userId: user.id,
-//         },
-//         data: {
-//           ...data,
-//           nextRecurringDate:
-//             data.isRecurring && data.recurringInterval
-//               ? calculateNextRecurringDate(data.date, data.recurringInterval)
-//               : null,
-//         },
-//       });
-
-//       // Update account balance
-//       await tx.account.update({
-//         where: { id: data.accountId },
-//         data: {
-//           balance: {
-//             increment: netBalanceChange,
-//           },
-//         },
-//       });
-
-//       return updated;
-//     });
-
-//     revalidatePath("/dashboard");
-//     revalidatePath(`/account/${data.accountId}`);
-
-//     return { success: true, data: serializeAmount(transaction) };
-//   } catch (error) {
-//     throw new Error(error.message);
-//   }
-// }
 
 export async function updateManyTransaction(transactionIds, ActivityType){
   try {
@@ -540,11 +411,13 @@ export async function updateManyTransaction(transactionIds, ActivityType){
           userId: user.id,
       },
       select:{
+        id: true,
+        accountId: true,
+        refNumber: true,
         Activity: true,
       }
     })
     console.log("[2] Fetched")
-    console.log("[2]", transactions[0], "[...]")
 
     console.log("[3] Update Method")
     const updatedTransactions = await db.transaction.updateMany({
@@ -557,14 +430,37 @@ export async function updateManyTransaction(transactionIds, ActivityType){
       },
     });
 
-        revalidatePath("/dashboard");
-        revalidatePath("/account/[id]");
+    for (const transaction of transactions) {
+      const updateLog = await activityLog({
+        userId: user.id,
+        action: "updateManyTransaction",
+        args: {
+          refNumber: transaction.refNumber,
+          account_ID: transaction.accountId,
+          oldActivity: transaction.Activity,
+          newActivity: ActivityType,
+        },
+        timestamp: new Date()
+      });
+      if(updateLog.success === false){
+        await db.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "updateManyTransaction",
+            meta: { message: `Possible System interruption: Failed to log Edited Activity Type of Transaction.` },
+          }
+        })
+      }
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/account/${transactions[0].accountId}`);
 
     console.log("[4] Update Success", updatedTransactions)
     return {success: true}
   } catch (error) {
-    console.log("Error editing Activity Type.")
-    throw new Error("Error editing Activity type", error.message)
+    console.log("Error editing Activity Type.", error.message)
+    throw new Error("!")
   }
 }
 

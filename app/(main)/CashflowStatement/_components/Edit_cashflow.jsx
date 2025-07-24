@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useFetch from "@/hooks/use-fetch";
-import { udpateNetchange, updateCashflow, updateCashflowTransaction, updateEndBalance, updateStartBalance, updateTotalFinancing, updateTotalInvesting, updateTotalOperating } from "@/actions/cashflow";
+import { updateNetchange, updateCashflow, updateCashflowTransaction, updateEndBalance, updateStartBalance, updateTotalFinancing, updateTotalInvesting, updateTotalOperating } from "@/actions/cashflow";
 import Link from "next/link";
 import { Check, Loader2, SquarePen, Trash, X } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ export default function EditCashflow({ cashflow }) {
     fn: updateNetFn,
     data: updatedNetData,
     error: errorUpdatingNet
-  } = useFetch(udpateNetchange);
+  } = useFetch(updateNetchange);
 
   const [netChangeInput, setNetChangeInput] = useState(0)
   const [netInputField, setNetInputField] = useState(false);

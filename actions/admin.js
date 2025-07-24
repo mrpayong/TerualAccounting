@@ -18,6 +18,8 @@ class DatabaseError extends Error {
     }
 }
 
+
+
 const serializeTransaction = (obj) => {
     const serialized = {...obj};
 
@@ -32,11 +34,16 @@ const serializeTransaction = (obj) => {
     return serialized;
 };
 
+
+
+
+
+
+
 export async function getAdmin() {
         try {
             const {userId} = await auth();
             if (!userId) {
-                revalidatePath("/")
                 throw new UnauthorizedError("authenticate !=1&&0");
             }
 
@@ -109,51 +116,51 @@ export async function getSysAdmin() {
 }
 
 
-export async function activityLog({ action, args, result, timestamp }) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-        throw new UnauthorizedError("Unauthorized");
-    }
+// export async function activityLog({ action, args, result, timestamp }) {
+//   try {
+//     const { userId } = await auth();
+//     if (!userId) {
+//         throw new UnauthorizedError("Unauthorized");
+//     }
 
 
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
+//     const user = await db.user.findUnique({
+//       where: { clerkUserId: userId },
+//     });
 
-    if (
-      action &&
-      action.toLowerCase().startsWith("delete") &&
-      args &&
-      args.dataToArchive // You must pass the data to archive as args.dataToArchive from your delete server action
-    ) {
-      await createArchiveData({
-        userId: user.id,
-        action,
-        data: args.dataToArchive,
-        reason: args.reason || null,
-        actionSource: args.actionSource || null,
-        relatedIds: args.relatedIds || null,
-      });
-    }
+//     if (
+//       action &&
+//       action.toLowerCase().startsWith("delete") &&
+//       args &&
+//       args.dataToArchive // You must pass the data to archive as args.dataToArchive from your delete server action
+//     ) {
+//       await createArchiveData({
+//         userId: user.id,
+//         action,
+//         data: args.dataToArchive,
+//         reason: args.reason || null,
+//         actionSource: args.actionSource || null,
+//         relatedIds: args.relatedIds || null,
+//       });
+//     }
 
-    const activity = await db.activityLog.create({
-      data: {
-        userId: user.id,
-        action,
-        meta: { args, result, timestamp },
-      },
-    });
+//     const activity = await db.activityLog.create({
+//       data: {
+//         userId: user.id,
+//         action,
+//         meta: { args, result, timestamp },
+//       },
+//     });
    
 
 
 
-    return { success: true };
-  } catch (error) {
-    console.error("Activity log error:", error);
-    return { success: false, error: "Error logging activity" };
-  }
-}
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Activity log error:", error);
+//     return { success: false, error: "Error logging activity" };
+//   }
+// }
 
 export async function getActivityLogs() {
     try {
