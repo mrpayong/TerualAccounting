@@ -26,15 +26,15 @@ const AddTransactionPage = async ({ searchParams }) => {
       // console.log(editId);
       const transaction = await getTransaction(editId);
       initialData = transaction;
-      console.info(transaction)
     }
     
-
+  const ScannerUserId = user.data.id;
   return (
     <div className="max-w-3xl mx-auto px-5">
      <h1 className="text-5xl gradient-title mb-8">{editId ? "Edit" : "Add"} Transaction</h1>
  
       <AddTransactionForm 
+        ScannerUserId={ScannerUserId}
         accounts={accounts} 
         categories={defaultCategories}
         editMode={!!editId}

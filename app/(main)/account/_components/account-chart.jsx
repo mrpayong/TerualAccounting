@@ -15,9 +15,6 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zen_Kaku_Gothic_Antique } from "next/font/google";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-
 
 // Custom date formatter
 const formatDate = (date) => {
@@ -66,7 +63,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 
 
-const AccountChart = ({ transactions, id }) => {
+const AccountChart = ({ transactions}) => {
   // Default to last 30 days
   const [dateRange, setDateRange] = useState({
     from: getStartOfDay(subtractDays(new Date(), 30)),
@@ -139,11 +136,11 @@ const AccountChart = ({ transactions, id }) => {
     return Math.max(filteredData.length * pxPerPoint, minWidth);
   }, [filteredData.length]);
 
-  const router = useRouter();
+
+
 
 
   return (
-
     <>
     <Card>
       <CardHeader className="flex  flex-col sm:flex-row items-center justify-between space-y-0 pb-7">
@@ -155,6 +152,7 @@ const AccountChart = ({ transactions, id }) => {
            <DatePicker
               label="From"
               value={dateRange.from}
+              timezone="Asia/Manila"
               onChange={(date) => handleDateChange("from", date)}
               slotProps={{
                 textField: {
@@ -166,6 +164,7 @@ const AccountChart = ({ transactions, id }) => {
             <DatePicker
               label="To"
               value={dateRange.to}
+              timezone="Asia/Manila"
               onChange={(date) => handleDateChange("to", date)}
               slotProps={{
                 textField: {
@@ -217,7 +216,7 @@ const AccountChart = ({ transactions, id }) => {
         <div className="overflow-x-auto w-full">
           <div 
           style={{ minWidth: chartWidth }}>
-        {filteredData.length > 0 ? (
+        {filteredData.length > 0 && transactions.length > 0 ? (
           <ResponsiveContainer
             // width={filteredData.length * 50 } // Dynamic width based on the number of dates
             width="100%"
@@ -276,7 +275,7 @@ const AccountChart = ({ transactions, id }) => {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className={`${fontZenKaku.className} font-normal text-base text-center text-muted-foreground`}>
+          <p className={`${fontZenKaku.className} font-normal text-base text-start lg:text-center text-muted-foreground`}>
             No data available.
           </p>
         )}

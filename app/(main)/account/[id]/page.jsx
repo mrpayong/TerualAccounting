@@ -37,7 +37,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 async function AccountsPage({ params }) {
   const user = await getStaff();
-
+  
 
   if(!user.authorized){
     await getUnauthUser();
@@ -47,7 +47,6 @@ async function AccountsPage({ params }) {
   const accountData = await getAccountWithTransactions(id);
   const subAccounts = await getSubAccounts(id);
   const recentCashflows = await getCashflowEnding(id)
-
   // console.log("recentCashflows", fetchedCashflows);
 
   // const recentCashflows = fetchedCashflows.latestCashflows;
@@ -61,13 +60,14 @@ async function AccountsPage({ params }) {
   if (!accountData) {
     notFound();
   }
-  return (
+ return (
     <div className="space-y-8 px-5">
       <div className="flex flex-col md:flex-row sm:justify-between">
 <       div className="md:flex items-center">
           <SideNavBar accountId={id} />
         </div>
         <div className="text-center">
+
           <h1 className={`text-6xl md:text-[5rem]/[1] ${fontUnicaOne.className} font-normal tracking-wide md:tracking-widest capitalize`}>
             {account.name}
           </h1>
@@ -93,6 +93,7 @@ async function AccountsPage({ params }) {
         }
       >
         <TransactionTable
+        
           recentCashflows={recentCashflows}
           transactions={transactions}
           id={id}

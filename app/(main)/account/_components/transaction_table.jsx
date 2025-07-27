@@ -18,7 +18,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from "@/components/ui/tooltip"
-import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Info, Loader, Loader2, MoreHorizontal, PlusCircleIcon, RefreshCw, Search, Trash, X } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Folders, Info, Loader, Loader2, MoreHorizontal, PlusCircleIcon, RefreshCw, Search, SquareArrowOutUpRight, Trash, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -56,6 +56,13 @@ import {
 } from "@/components/ui/popover"
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import Link from 'next/link';
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { Box } from '@mui/material';
+
+
 
 const RECURRING_INTERVALS = {
     DAILY: "Daily",
@@ -87,6 +94,11 @@ function formatManilaDate(date) {
     day: "2-digit",
   });
 }
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700"],
+})
   
 
 
@@ -105,6 +117,8 @@ const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => {
     const [currentSubAccountPage, setCurrentSubAccountPage] = useState(1);
     const [activityFilter, setActivityFilter] = useState("");
     const isSmallScreen = useIsSmallScreen();
+    const [fromDateRaw, setFromDateRaw] = useState(null);
+    const [toDateRaw, setToDateRaw] = useState(null);
 // Removed duplicate declaration of rowsPerPage
 const rowsPerPage = 10; // Default rows per page
 
@@ -169,7 +183,6 @@ const rowsPerPage = 10; // Default rows per page
             deleteFn([id], acount_id);
           }
     }
-
     const filteredAndSortedTransactions = useMemo(() => {
         let result = [...transactions];
 
@@ -214,9 +227,22 @@ const rowsPerPage = 10; // Default rows per page
             
             return sortConfig.direction === "asc" ? comparison : -comparison; 
         })
+
+        if (fromDateRaw || toDateRaw) {
+          result = result.filter((transaction) => {
+            const txnDate = new Date(transaction.date);
+            // Zero out time for comparison
+            const txnDateOnly = new Date(txnDate.getFullYear(), txnDate.getMonth(), txnDate.getDate());
+            const fromDateOnly = fromDateRaw ? new Date(fromDateRaw.getFullYear(), fromDateRaw.getMonth(), fromDateRaw.getDate()) : null;
+            const toDateOnly = toDateRaw ? new Date(toDateRaw.getFullYear(), toDateRaw.getMonth(), toDateRaw.getDate()) : null;
+
+            const afterFrom = fromDateOnly ? txnDateOnly >= fromDateOnly : true;
+            const beforeTo = toDateOnly ? txnDateOnly <= toDateOnly : true;
+            return afterFrom && beforeTo;
+          });
+        }
         return result;
-    },[transactions, searchTerm, typeFilter, activityFilter, sortConfig])
-    
+    },[transactions, searchTerm, typeFilter, activityFilter, sortConfig, fromDateRaw, toDateRaw])
     const handleSort = (field) => {
         // setSortConfig((current) => ({
         //     field,
@@ -295,6 +321,8 @@ const rowsPerPage = 10; // Default rows per page
         setRecurringFilter("");
         setSelectedIds([]);
         setActivityFilter("")
+        setFromDateRaw(null);
+        setToDateRaw(null);
     }
 
     const {
@@ -442,7 +470,7 @@ const rowsPerPage = 10; // Default rows per page
         loading: subAccountLoading, 
         fn: createSubAccountFn,
         data: subAccountData,
-        error: subAccountError 
+        error: subAccountError,
         } = useFetch(createSubAccount);
 
         const onSubmit = async (data) => {
@@ -463,8 +491,15 @@ const rowsPerPage = 10; // Default rows per page
         };
 
         useEffect(() => {
-          if (subAccountData && !subAccountLoading) {
-            toast.success("Group created successfully!");
+          if (!!subAccountData?.success === true && !subAccountLoading) {
+            if(subAccountData?.code === 200){
+              console.log("Success")
+              toast.success("Done!");
+            }
+            if(subAccountData?.code === 201){
+              console.log("Success")
+              toast.success("Transaction inserted successfully!");
+            }
             setSelectedIds([]);
             reset(); // Reset the form after successful submission
             setIsDialogOpen(false); // Close the dialog
@@ -474,9 +509,52 @@ const rowsPerPage = 10; // Default rows per page
         useEffect(() => {
           if (subAccountError && !subAccountLoading) {
             console.error("Error grouping transactions:", subAccountError.message);
-            toast.error("Failed to create group.");
+            toast.error(subAccountError.message)
+            toast.error("Failed to create group. Wrong Inputs.");
           }
-        }, [subAccountError, subAccountLoading]);
+        }, [subAccountError, subAccountLoading,]);
+
+        useEffect(() => {
+          if(!!subAccountData?.success === false 
+            && subAccountData?.success === false &&
+            subAccountData?.code === 500
+            ){
+            console.log("subAccountData.message", subAccountData?.message)
+            toast.error("Transactions already related to this Group. Check selected transactions.")
+          }
+          if(subAccountData?.code === 423){
+            console.log("Select Transactions with same type (INCOME or EXPENSE).")
+            toast.error("Select Transactions with same type (INCOME or EXPENSE).")
+          }
+          if(subAccountData?.code === 424){
+            console.log("Transactions must be same Activity types.")
+            toast.error("Transactions must be same Activity types.")
+          }
+          if(subAccountData?.code === 425){
+            console.log("Invalid amount.")
+            toast.error("Invalid amount.")
+          }
+          if(subAccountData?.code === 426){
+            console.log("No existing Parent group.")
+            toast.error("No existing Parent group.")
+          }
+          if(subAccountData?.code === 428){
+            console.log("Activity type mismatch with Parent Group.")
+            toast.error("Activity type mismatch with Parent Group.")
+          }
+          if(subAccountData?.code === 429){
+            console.log("Transaction type mismatch with Parent Group.")
+            toast.error("Transaction type mismatch with Parent Group.")
+          }
+          if(subAccountData?.code === 430){
+            console.log("Code:430, Error creating group. Consult System Admin.")
+            toast.error("Error creating group. Consult System Admin.")
+          }
+          if(subAccountData?.code === 505){
+            console.log("Code:505, System Error.")
+            toast.error("Error creating group. Consult System Admin.")
+          }
+        }, [subAccountData])
 
    
 
@@ -548,18 +626,23 @@ const rowsPerPage = 10; // Default rows per page
 
 
       const formatDate = (dateString) => {
-        const date = new Date(dateString); // Parse the date string
-        const utcYear = date.getUTCFullYear();
-        const utcMonth = date.getUTCMonth(); // Month is zero-based
-        const utcDay = date.getUTCDate();
-      
-        // Format the date as "Month Day, Year"
-        return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toLocaleDateString(undefined, {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-PH", {
+          timeZone: "Asia/Manila",
           year: "numeric",
           month: "long",
           day: "numeric",
         });
       };
+
+      function formatUtcDateFriendly(dateString) {
+        if (!dateString) return "";
+        const d = new Date(dateString);
+        const month = d.toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+        const day = d.getUTCDate();
+        const year = d.getUTCFullYear();
+        return `${month} ${day}, ${year}`;
+      }
 
       const getGerundActivity = (activity) => {
         switch (activity) {
@@ -573,6 +656,18 @@ const rowsPerPage = 10; // Default rows per page
             return activity; // Fallback to raw data if no match
         }
       };
+
+      function formatUtcDateWithTime(dateString) {
+        if (!dateString) return "";
+        const d = new Date(dateString);
+        const month = d.toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+        const day = d.getUTCDate();
+        const year = d.getUTCFullYear();
+        const hour = d.getUTCHours().toString().padStart(2, "0");
+        const minute = d.getUTCMinutes().toString().padStart(2, "0");
+        const second = d.getUTCSeconds().toString().padStart(2, "0");
+        return `${month} ${day}, ${year}, ${hour}:${minute}:${second} UTC`;
+      }
       const TransactionDetailshandler = (transaction) => {
         if (typeof window === "undefined") return;
         const formatDateTime = (dateString) => {
@@ -608,7 +703,8 @@ const rowsPerPage = 10; // Default rows per page
               <p><strong>Activity type:</strong> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
               <p><strong>Description:</strong> ${transaction.description || "No description provided."}</p>
               <p><strong>BIR authority to print number:</strong> ${transaction.printNumber || "N/A"}</p>
-              <p><strong>Recorded on:</strong> ${formatDateTime(transaction.createdAt) || "N/A"}</p>              
+              <p><strong>Recorded on:</strong> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>
+              <p><strong>Edited on:</strong> ${formatUtcDateWithTime(transaction.updatedAt) || "N/A"}</p>              
             </div>
             <div class="text-center mt-4">
               <p class="text-xs text-neutral-400 italic">
@@ -686,7 +782,6 @@ const rowsPerPage = 10; // Default rows per page
       const isCreateGroupDisabled =
         (!groupName && !parentGroupName) ||
         (parentGroupName && selectedIds.length === 0);
-
 
 
       const PERIOD_LABELS = [
@@ -889,7 +984,7 @@ const handleDownloadCDBExcel = () => {
                 <div className='relative flex'>
                     <Search className='absolute left-2 top-2.5 h-4 text-muted-foreground'/>
                     <Input 
-                        className="pl-8 text-xs w-full md:w-64 lg:w-80"
+                        className="pl-8 text-xs w-full md:w-64 lg:w-80 ml-1"
                         placeholder="Search Ref#, Particular, Description"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -944,8 +1039,42 @@ const handleDownloadCDBExcel = () => {
                     </SelectContent>
                   </Select>
 
-
-                  {(searchTerm || typeFilter || activityFilter) && (
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <Box className="flex flex-col sm:flex-row gap-2 w-full">
+                      <DatePicker
+                        label="From"
+                        timezone='Asia/Manila'
+                        value={fromDateRaw}
+                        onChange={setFromDateRaw}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                            inputProps: { placeholder: 'Start date' }
+                          }
+                        }}
+                        disableFuture={false}
+                        format="yyyy-MM-dd"
+                      />
+                      <DatePicker
+                        label="To"
+                        value={toDateRaw}
+                        timezone='Asia/Manila'
+                        onChange={setToDateRaw}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                            inputProps: { placeholder: 'End date' }
+                          }
+                        }}
+                        disableFuture={false}
+                        format="yyyy-MM-dd"
+                        minDate={fromDateRaw}
+                      />
+                    </Box>
+                  </LocalizationProvider>
+                  {(searchTerm || typeFilter || activityFilter || fromDateRaw || toDateRaw) && (
                       <Button
                           variant="outline"
                           size="icon"
@@ -1076,7 +1205,9 @@ const handleDownloadCDBExcel = () => {
                   </Popover>
 
                   <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                      <DialogContent onInteractOutside={e => e.preventDefault()} className="[&>button:last-child]:hidden sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
+                      <DialogContent onInteractOutside={e => e.preventDefault()} 
+                        className="[&>button:last-child]:hidden rounded-md sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] 
+                        xl:max-w-[50%] max-h-[90vh]">
                       <DialogHeader>
                           <DialogTitle>Cashflow Statement PDF</DialogTitle>
                       </DialogHeader>
@@ -1180,12 +1311,14 @@ const handleDownloadCDBExcel = () => {
                         }
                       <div className="flex justify-around items-center">
                         <DialogFooter className="text-gray-400 tracking-normal">
+                          <DialogDescription>
                           {cfsLoading
                             ? "Re-assessing your last entry..."
                             : isSmallScreen
                               ? "PDF ready, download to view. Downloading also saves in Cashflow."
                               : "Preview of generated cashflow statement. Downloading also saves in Cashflow."
                           }
+                          </DialogDescription>
                         </DialogFooter>
                       </div>
                       </DialogContent>
@@ -1204,46 +1337,46 @@ const handleDownloadCDBExcel = () => {
                         Group transactions
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
+                    <DialogContent className="rounded-lg sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
                         <DialogHeader>
                         <DialogTitle>Group transactions</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium">New group name</label>
-                            <input
-                            type="text"
-                            {...register("name")}
-                            className="w-full p-2 border border-gray-300 rounded" 
-                            placeholder="Enter group name"
-                            />
-                            {errors.name && (<p className="text-sm text-red-500">{errors.name.message}</p>)}
-                        </div>
+                          <div>
+                              <label className="text-sm font-medium">New group name</label>
+                              <input
+                              type="text"
+                              {...register("name")}
+                              className="w-full p-2 border border-gray-300 rounded" 
+                              placeholder="Enter group name"
+                              />
+                              {errors.name && (<p className="text-sm text-red-500">{errors.name.message}</p>)}
+                          </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Description</label>
-                            <textarea
-                            {...register("description")}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            placeholder="Enter description (optional)"
-                            />
-                            {errors.description && (
-                            <p className="text-sm text-red-500">{errors.description.message}</p>
-                            )}
-                        </div>
+                          <div>
+                              <label className="text-sm font-medium">Description</label>
+                              <textarea
+                              {...register("description")}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              placeholder="Enter description (optional)"
+                              />
+                              {errors.description && (
+                              <p className="text-sm text-red-500">{errors.description.message}</p>
+                              )}
+                          </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Parent group's name</label>
-                            <input
-                            type="text"
-                            {...register("parentName")}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            placeholder="Enter parent group name (optional)"
-                            />
-                            {errors.parentName && (
-                            <p className="text-sm text-red-500">{errors.parentName.message}</p>
-                            )}
-                        </div>
+                          <div>
+                              <label className="text-sm font-medium">Parent group's name</label>
+                              <input
+                              type="text"
+                              {...register("parentName")}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              placeholder="Enter parent group name (optional)"
+                              />
+                              {errors.parentName && (
+                              <p className="text-sm text-red-500">{errors.parentName.message}</p>
+                              )}
+                          </div>
 
                         <div className="flex justify-end">
                             <Button type="submit" disabled={subAccountLoading || isCreateGroupDisabled} className="bg-blue-500 text-white">
@@ -1254,6 +1387,17 @@ const handleDownloadCDBExcel = () => {
                             </Button>
                         </div>
                         </form>
+                        <DialogFooter className="flex md:justify-start md:items-center">
+                          <DialogDescription className="md:flex md:flex-row grid grid-rows-2 items-center text-xs lg:text-sm whitespace-nowrap">
+                            <span className='flex flex-row'>
+                            <Link href='/' className='flex flex-row items-center gap-[0.5] 
+                              underline underline-offset-4 hover:text-blue-600 mr-1 ' target="_blank">
+                            <SquareArrowOutUpRight className='h-3 w-3' />Read</Link>
+                            <b className='mr-1 whitespace-nowrap'>Group Transaction</b>
+                            </span>
+                            guide for smoother experience of grouping transactions.
+                          </DialogDescription>
+                        </DialogFooter>
                     </DialogContent>
                   </Dialog>
 
@@ -1483,7 +1627,7 @@ const handleDownloadCDBExcel = () => {
                         {formatTableAmount(transaction.amount.toFixed(2))}
                       </TableCell>
                       <TableCell className="text-center">
-                        {formatDate(transaction.createdAt)}
+                        {formatUtcDateFriendly(transaction.createdAt)}
                       </TableCell>
                       <TableCell className="text-center">
                         {transaction.refNumber}
@@ -1630,10 +1774,10 @@ const handleDownloadCDBExcel = () => {
                                   <strong>Description:</strong> {subAccount.description || "No description available"}
                                 </p>
                                 <p className="text-sm text-gray-700">
-                                  <strong>Created On:</strong> {formatDate(subAccount.createdAt) || "No date"}
+                                  <strong>Created On:</strong> {formatUtcDateWithTime(subAccount.createdAt) || "No date"}
                                 </p>
                                 <p className="text-sm text-gray-700">
-                                  <strong>Updated Last:</strong> {subAccount?.updatedAt ? formatDate(subAccount.updatedAt) : "No date"}
+                                  <strong>Updated Last:</strong> {subAccount?.updatedAt ? formatUtcDateWithTime(subAccount.updatedAt) : "No date"}
                                 </p>
                               </div>
                             </div>
@@ -1651,7 +1795,7 @@ const handleDownloadCDBExcel = () => {
                       </Dialog>
                           
                       <Dialog open={groupToDeleteId === subAccount.id} onOpenChange={(open) => setGroupToDeleteId(open ? subAccount.id : null)}>
-                          <DialogContent>
+                          <DialogContent className="[&>button:last-child]:hidden">
                           <DialogHeader>
                               <DialogTitle className="text-center">Delete this group?</DialogTitle>
                               <DialogDescription className="text-center">

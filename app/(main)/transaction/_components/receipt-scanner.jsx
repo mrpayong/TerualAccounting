@@ -7,10 +7,9 @@ import { Camera, CircleCheck, Loader2 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner';
 
-const ReceiptScanner = ({onScanComplete, scannedReceipt}) => {
+const ReceiptScanner = ({onScanComplete, scannedReceipt, ScannerUserId}) => {
     const fileInputRef = useRef();
     const [isClient, setIsClient] = useState(false);
-    
         useEffect(() => {
             setIsClient(true)
           }, [])
@@ -29,7 +28,7 @@ const ReceiptScanner = ({onScanComplete, scannedReceipt}) => {
         }
         console.log("File size: ", file.size,"byte", "<", 50 * 1024 *1024);
        
-        await scanReceiptFn(file);
+        await scanReceiptFn(file, ScannerUserId);
     };
 
     useEffect(() => {

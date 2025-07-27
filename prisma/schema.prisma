@@ -322,3 +322,11 @@ model Archive {
   @@index ([accountId])
   @@map("archives")
 }
+
+model Unauthz {
+  id        String   @id @default(uuid())
+  IP        String
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+}

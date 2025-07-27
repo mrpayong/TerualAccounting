@@ -18,6 +18,19 @@ const serializeTransaction = (obj) => {
         serialized.amount = obj.amount.toNumber();
     }
 
+    if (obj.date) {
+        const d = new Date(obj.date);
+        serialized.date = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    }
+
+    // createdAt and updatedAt: preserve full timestamp
+    if (obj.createdAt) {
+        serialized.createdAt = obj.createdAt; // keep as is
+    }
+    if (obj.updatedAt) {
+        serialized.updatedAt = obj.updatedAt; // keep as is
+    }
+
     return serialized;
 };
 
@@ -231,7 +244,6 @@ export async function bulkDeleteTransactions(transactionIds, accountId) {
         },
       });
 
-      console.log("account id server: ", accountId)
       revalidatePath("/dashboard");
       revalidatePath(`/account/${accountId}`)
       return {success: true};
@@ -320,18 +332,18 @@ async function validateParentSubAccount(data) {
         });
         console.log(`fetchSubAccount. Null if no existing parent Sub account wit name ${data.parentName}`, fetchSubAccount)
         if (!fetchSubAccount) {
-          throw new Error(`Parent sub account with name "${data.parentName}" not found`);
+           return {success: false, code:426, message:"No existing Parent group with provided parent name."}
         }
         const dataFetched = {
           ...fetchSubAccount,
           balance: Number(fetchSubAccount.balance)
         };
         console.log("returning dataFetched to server action", dataFetched)
-        return {parentSubAccount: dataFetched, success: true, message: "A matching parent name was found"}
+        return {parentSubAccount: dataFetched, code:200, success: true, message: "A matching parent name was found"}
       } 
       
       console.log("testing validateParentSubAccount", data)
-      return {parentSubAccount: data, success: false, message: "No matching parent name."}
+      return {parentSubAccount: data, code:427, success: false, message: "No parent name input. This is new Group"}
 }
 
 async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAccount){
@@ -355,17 +367,17 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
           },
         });
         console.log("Sub-account created:", subAccount);
-        return subAccount;
+        return {success: true, subAccount: subAccount, code:200, message: "New Group Created."};
       } else {
         console.log("[5.4] No New Sub Account created")
         console.log("[5.4] Inserting transactions to existing Parent Sub Account only.")
         console.log("Exit [5.4]", data)
-        return data;
+        return {success:true, subAccount:data, code:201, message:"Inserting transactions to existing Parent Group only."};
       } 
     
   } catch (error) {
     console.log("[5.4] Error creating sub account", error.message)
-    throw new Error("[5.4] Error creating sub account")
+    return {success: false, code: 430, message: "Error creating Group."}
   }
 }
 
@@ -407,13 +419,17 @@ export async function createSubAccount(transactionIds, data, id) {
   try {
     // Authenticate the user (maintaining authorization)
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
 
     // Validate the user
     const user = await db.user.findUnique({
       where: { clerkUserId: userId },
     });
-    if (!user) throw new Error("User not found");
+    if (!user){
+       throw new Error("User not found");
+    }
 
     if(user.role !== "STAFF"){
       throw new Error("You are not allowed to do this action")
@@ -431,7 +447,7 @@ export async function createSubAccount(transactionIds, data, id) {
       })
       if(existingSubAccountName){
         console.log("The New Group Name already exists.")
-        throw new Error("The New Group Name already exists.")
+        return{success: false, code: 422, message:"The New Group Name already exists."}
       }
     }
 
@@ -454,18 +470,18 @@ export async function createSubAccount(transactionIds, data, id) {
         // validate transcations to have same transaction type
     const validationResult = validateTransactionTypes(transactions);
       if (!validationResult.success) {
-        throw new Error("Select Transactions with same type (INCOME or EXPENSE).");
+        return {success: false, code: 423, message:"Select Transactions with same type (INCOME or EXPENSE)."}
     }
 
         // validate transcations to have same "ACTIVITY" type
     const validationActivity = validateActivityTypesConsistency(transactions);
       if (!validationActivity.success) {
-        throw new Error("Inconsistent Activity type, must be same Activity types.");
+        return {success: false, code: 424, message:"Inconsistent Activity type, must be same Activity types."}
     }
 
     const summationResult = calculateTotalAmount(transactions);
       if (!summationResult.success) {
-        throw new Error("Detected possible invalid amount.");
+        return {success: false, code: 425, message:"Detected possible invalid amount."}
     }
 
     const balanceFloat = summationResult.total;
@@ -476,7 +492,7 @@ export async function createSubAccount(transactionIds, data, id) {
 
 
     // Use a transaction to ensure all operations succeed or fail together
-    await db.$transaction(async (tx) => {
+    const subAccountCreated = await db.$transaction(async (tx) => {
       // Find the parent SubAccount if parentName is provided
       // let parentSubAccount = null;
       // if (data.parentName) {
@@ -496,11 +512,15 @@ export async function createSubAccount(transactionIds, data, id) {
       const parentSubAccountValidated = await validateParentSubAccount(data) // ------> db.subAccount.findFirst
       // return error message if inputted parentName is non-existent
       console.log("parentSubAccountValidated returned: ", parentSubAccountValidated)
-      if(parentSubAccountValidated.success === true){
+      if(parentSubAccountValidated.success === true && parentSubAccountValidated.code === 200){
         console.log("[5.1] Parent Sub Account was found")
       } else {
         console.log("[5.1] Parent Sub Account was not found")
         console.log("[5.1] Continue process with: ", parentSubAccountValidated.parentSubAccount)
+      }
+
+      if(parentSubAccountValidated.success === false && parentSubAccountValidated.code === 426){
+        return{success: false, code: 426, message: parentSubAccountValidated.message}
       }
       const parentSubAccount = parentSubAccountValidated.parentSubAccount;
       console.log(".parentSubAccountt is: ", parentSubAccount)
@@ -542,7 +562,7 @@ export async function createSubAccount(transactionIds, data, id) {
         
               // Compare the Activity of the parent sub-account and the passed-in transactions
               if (parentActivity !== transactionActivity) {
-                throw new Error(`The ${transactionActivity} activities does not match the ${parentActivity} activities.`);
+                return{success: false, code:428, message:`The ${transactionActivity} activities does not match the ${parentActivity} activities.`}
               }              
             }
       } else {
@@ -574,7 +594,8 @@ export async function createSubAccount(transactionIds, data, id) {
 
           // Compare the type of the parent sub-account and the passed-in transactions
           if (parentType !== transactiontype) {
-            throw new Error(`The ${transactiontype} type does not match the ${parentType} type.`);
+            return{success: false, code:429, message:`The ${transactiontype} type does not match the ${parentType} type.`}
+           
           }
         }
       } else {
@@ -587,26 +608,30 @@ export async function createSubAccount(transactionIds, data, id) {
 
       const subAccount = await createSubAccountHelper(data, balanceFloat, parentSubAccountValidated.success)
       console.log("[5.4] subAccount returned", subAccount)
-
+      if(subAccount.code === 430){
+        return{success: false, code:430, message:subAccount.message}
+      }
       // Link transactions to the sub-account
       // create the actual relation of Passed in transactions and Newly created sub account(for Sub_Account_Transaction Database model)
       // this is only if there are passed in transactionsIds
 
       //    MAIN PROBLEM: PARENT SUB ACCOUNT AND TRANSACTIONS RELATION NOT CREATED WHEN INSERTING ONLY. (MEANS NO DATA.NAME IS PASSED)
-      if ((subAccount.id || parentSubAccount.id) && transactionIds && transactionIds.length > 0) {
+      console.log("if created new Group: ", subAccount.subAccount.id)
+      console.log("if inserting only: ", parentSubAccount.id)
+      if ((subAccount.code === 201 || parentSubAccount.id) && transactionIds && transactionIds.length > 0) {
         console.log("[5.5] Create New Sub account and Transactions Relation")
         try {
           await tx.subAccountTransaction.createMany({
             data: transactionIds.map((transactionId) => ({
-              subAccountId: subAccount.id || parentSubAccount.id, 
+              subAccountId: subAccount.subAccount.id || parentSubAccount.id, 
               transactionId,
             })),
           });          
         } catch (error) {
           console.log("Checked SubAcc_Transaction relation. One or many tranasctions already related")
           console.log("[5.5] Transactions already related to this Sub Account. Check selected transactions")
-          throw new Error("[5.5] Transactions already related to this Sub Account. Check selected transactions.")
-        }
+          return {success: false, code:500, message: "[5.5] Transactions already related to this Sub Account. Check selected transactions."}
+         }
 
 
         // this logic does not work without newly created Sub Account
@@ -628,7 +653,7 @@ export async function createSubAccount(transactionIds, data, id) {
       // Create parent-child relationship if a parent is found in database
       // create the actual relation of fetched Parent Sub Account and Newly created sub account(for Sub_Account_Transaction Database model)
       // this is only if there is fetched Parent Sub Account
-      console.log("[5.6]", parentSubAccountValidated)
+      
       if (parentSubAccountValidated.success === true && data.name){
         console.log("[5.6] Create Parent and Child Sub Account Relation")
         console.log("[5.6] parentSubAccount", parentSubAccount)
@@ -637,19 +662,14 @@ export async function createSubAccount(transactionIds, data, id) {
         await tx.subAccountRelation.create({
           data: {
             parentId: parentSubAccount.id,  // this is the id of the Parent subAccount
-            childId: subAccount.id,    // this is the id of the newly created sub account
-            relationName: `${parentSubAccount.name} -> ${subAccount.name}`
+            childId: subAccount.subAccount.id,    // this is the id of the newly created sub account
+            relationName: `${parentSubAccount.name} -> ${subAccount.subAccount.name}`
           }
         })
-
-        console.log(`Relationship created between "${parentSubAccount.name}" and "${subAccount.name}"`);
-
         // Recursively update all parent balances up the hierarchy
         // will updated balance of Parent Sub account or Parent Sub accounts up the hierarchy 
-
-        
       } else {
-        console.log("This is mother account. No Parent and New Child Sub Account Explicit Relations created", parentSubAccount)
+        console.log("This is mother account. No Parent and New Child Sub Account Explicit Relations created")
         console.log("Exit [5.6]")
         // return {success: true, parentSubAccount: parentSubAccount}
       }
@@ -693,7 +713,7 @@ export async function createSubAccount(transactionIds, data, id) {
       //   })),
       // };
 
-     
+     return{success:true, code:200, message:"Proccessing Group Success"}
     });
 
       const createdSubAccount = [data, transactions]
@@ -712,15 +732,32 @@ export async function createSubAccount(transactionIds, data, id) {
         }
       })
     }
+    console.log("subAccountCreated: ",subAccountCreated)
+    if (subAccountCreated.code === 500){
+      return{success: false, code:500, message:subAccountCreated.message}
+    }
+    if (subAccountCreated.code === 426){
+      return{success: false, code:426, message:subAccountCreated.message}
+    }
+    if(subAccountCreated.code === 428){
+      return{success: false, code:428, message:subAccountCreated.message}
+    }
+    if(subAccountCreated.code === 429){
+      return{success: false, code:429, message:subAccountCreated.message}
+    }
+    if(subAccountCreated.code === 430){
+      return{success: false, code:430, message:subAccountCreated.message}
+    }
       console.log("STEP 3 balance returned: ", balanceFloat);
       revalidatePath("/dashboard");
       revalidatePath(`/account/${id}`);
       
       console.log("[5.8] Success Creating")
-      return { success: true};
+
+      return {success: true, code:subAccountCreated.code, message:subAccountCreated.message}
   } catch (error) {
     console.error("Error creating sub-account:", error.message);
-    throw new Error(error);
+    return {success: false, code:505, message:"Error Creating Group."}
   }
 }
 export async function getSubAccounts(accountId) {
@@ -853,7 +890,6 @@ export async function updateSubAccountBalance(newBalance, subAccountId){
     if(!subAccount){
       throw new Error("[2] Sub Account not found");
     }
-
     console.log("[3] Update Sub Account Balance")
     const updatedSubAccount = await db.subAccount.update({
       where: { id: subAccount.id },
@@ -1113,3 +1149,4 @@ export async function updateClientInfo(data, accountId){
     throw new Error("Error editing client information.")
   }
 }
+

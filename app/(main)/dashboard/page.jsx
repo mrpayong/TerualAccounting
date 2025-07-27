@@ -23,7 +23,11 @@ async function DashboardPage () {
 
   const transactions = await getDashboardData();
 
+    const accountNames = Array.isArray(accounts)
+    ? accounts.map(acc => acc?.name).filter(Boolean)
+    : [];
 
+console.log('accounts dashboard', accountNames);
   return ( 
     <div className='space-y-8'>
 
@@ -39,7 +43,7 @@ async function DashboardPage () {
        {/* ACCOUNTS GRID */}
        <AccountCardProvider>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <CreateAccountDrawer>
+          <CreateAccountDrawer names={accountNames} >
             <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border border-green-900">
               <CardContent className="flex flex-col items-center justify-center text-muted-foreground h-full pt-5">
                 <Plus className="h-10 w-10 mb-2" />

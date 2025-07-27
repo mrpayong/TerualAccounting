@@ -18,7 +18,7 @@ import { Zen_Kaku_Gothic_Antique, Zen_Kaku_Gothic_New } from 'next/font/google';
 
 const fontZenKaku = Zen_Kaku_Gothic_Antique({
   subsets:["latin"],
-  weight: "400",
+  weight: ["400", "500"],
 })
 
 const fontZenKakuNew = Zen_Kaku_Gothic_New({
@@ -234,7 +234,6 @@ const areaChartData = Object.entries(groupedTransactions)
     const expensePieLabel = new Date()
     expensePieLabel.setMonth(expensePieLabel.getMonth() - 1); // Set to last month
     const expensePieLabelString = expensePieLabel.toLocaleString("default", { month: "long" });
-    console.log(expensePieLabelString)
 
     const valueFormatter = (item) => formatAmount(item.value);
 
@@ -302,7 +301,7 @@ const areaChartData = Object.entries(groupedTransactions)
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
                 <CardHeader className="flex flex-col-reverse gap-1 md:gap-0 md:flex-row items-center justify-between space-y-0 pb-4">
-                    <CardTitle className={`${fontZenKaku.className} text-sm sm:text-base md:text-lg lg:text-xl`}>
+                    <CardTitle className={`${fontZenKaku.className} font-normal text-sm sm:text-base md:text-lg lg:text-xl`}>
                         Highest source of income last month
                     </CardTitle>
 
@@ -310,14 +309,14 @@ const areaChartData = Object.entries(groupedTransactions)
                         value={selectedAccountId}
                         onValueChange={setSelectedAccountId}
                     >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className={`${fontZenKaku.className} font-medium w-[140px]`}>
                             <SelectValue placeholder="Select Account"/>
                         </SelectTrigger>
 
                         <SelectContent>
 
                             {accounts.map((account) => (
-                                <SelectItem key={account.id} value={account.id}>
+                                <SelectItem className={`${fontZenKaku.className}  font-normal `} key={account.id} value={account.id}>
                                     {account.name}
                                 </SelectItem>
                             ))}
@@ -387,7 +386,7 @@ const areaChartData = Object.entries(groupedTransactions)
             
             <Card>
                 <CardHeader>
-                    <CardTitle className={`${fontZenKaku.className}  text-sm sm:text-base md:text-lg lg:text-xl`}>
+                    <CardTitle className={`${fontZenKaku.className} font-normal text-sm sm:text-base md:text-lg lg:text-xl`}>
                         Monthly Expense Breakdown 
                     </CardTitle>    
                 </CardHeader>
@@ -446,7 +445,7 @@ const areaChartData = Object.entries(groupedTransactions)
         
             <Card className="w-full">
                 <CardHeader>
-                    <CardTitle className={`${fontZenKaku.className} text-sm sm:text-base md:text-lg lg:text-xl`}>
+                    <CardTitle className={`${fontZenKaku.className} font-normal text-sm sm:text-base md:text-lg lg:text-xl`}>
                     Income vs Expense 
                     </CardTitle>
                 </CardHeader>

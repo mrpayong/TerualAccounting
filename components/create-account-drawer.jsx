@@ -32,10 +32,14 @@ const fontYsabeau = Ysabeau({
   weight: ['400', "500", '600', "700"]
 })
 
-const CreateAccountDrawer = ({ children }) => {
+const CreateAccountDrawer = ({ children, names }) => {
   const [open, setOpen] = useState(false);
   const [isIndividual, setIsIndividual] = useState(null);
   const [radioSelected, setRadioSelected] = useState(false); // Track if a radio button is selected
+
+//   const accountNames = (accounts.map(account => account.name));
+//   const listName = Object(Object(accountNames))
+// console.log("accounts", listName)
 
 
   const {
@@ -141,11 +145,27 @@ const CreateAccountDrawer = ({ children }) => {
     setIsIndividual(null);
   } 
 
+  const inputName = watch("name");
 
+  function normalizeName(name) {
+    return name.trim().replace(/\s+/g, " ").toLowerCase().normalize("NFC");
+  }
 
-
-
-
+  useEffect(() => {
+    if (!inputName) return;
+    const inputNormalized = normalizeName(inputName);
+    const matchedName = names.find(n => normalizeName(n) === inputNormalized);
+    if (matchedName) {
+      toast.warning(`"${matchedName}" already exists.`, 
+        {
+        style: {
+          background: '#fddf4a',
+          color: '#ff5800'
+        },
+      }
+    );
+    }
+  }, [inputName, names]);
 
 
 

@@ -3,6 +3,8 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { NextRequest } from 'next/server'
 
 class UnauthorizedError extends Error {
     constructor (message = "Unauthorized") {
@@ -35,7 +37,24 @@ const serializeTransaction = (obj) => {
 };
 
 
-
+async function activityLog({userId, action, args, timestamp}){
+  try {
+    const dateTime = formatManilaDateTime(timestamp);
+    
+    const log = await db.activityLog.create({
+      data: {
+        userId,
+        action,
+        meta: { args, timestamp: dateTime },
+      },
+    })
+    return {status: 200, success: true}
+  } catch (error) {
+    // console.log("Activity Log Error[1]: ", error);
+    // console.log("Activity Log Error Message: ", error.message);
+    return {status: 500, success: false}
+  }
+}
 
 
 
@@ -44,7 +63,7 @@ export async function getAdmin() {
         try {
             const {userId} = await auth();
             if (!userId) {
-                throw new UnauthorizedError("authenticate !=1&&0");
+                throw new UnauthorizedError("[ADM]You are not a user. Notifying System Admin");
             }
 
             const user = await db.user.findUnique({
@@ -52,27 +71,27 @@ export async function getAdmin() {
             });
 
             if (!user) {
-                return {authorized: false, reason: "User Exist !=1&&0"};
+                return {authorized: false, reason: "[ADM]You are not a user. Notifying System Admin"};
             }
             if (user.role !== "ADMIN") {
-                return {authorized: false, reason: "User Admin !=1&&0"};
+                return {authorized: false, reason: "[ADM]You are not an Admin. Notifying System Admin"};
             }
 
             return {authorized: true, data: user};
             
         } catch (error) {
             if (error instanceof UnauthorizedError) {
-                console.warn("authenticate !=1&&0: ", error.message);
-                return { authorized: false, reason: "Now handling auth..." }
+                console.warn("[ADM]authenticate: ", error.message);
+                return { authorized: false, reason: "[ADM]Now handling auth" }
             }
             if (error instanceof DatabaseError) {
-                console.error("Now handling database...", error.message);
-                return { authorized: false, reason: "Now handling database..."};
+                console.error("[ADM]Now handling database", error.message);
+                return { authorized: false, reason: "[ADM]Now handling database"};
             }
     
             // Log unexpected errors and return a generic response
-            console.error("Expected error !=1&&0: ", error);
-            return { authorized: false, reason: "Expected error !=1&&0" };
+            console.error("[ADM]Unexpected error: ", error);
+            return { authorized: false, reason: "[ADM]Unexpected error" };
         }
         
 }
@@ -81,8 +100,7 @@ export async function getSysAdmin() {
     try {
         const {userId} = await auth();
         if (!userId) {
-            revalidatePath("/")
-            throw new UnauthorizedError("authenticate !=1&&0");
+            throw new UnauthorizedError("[SYSA]You are not a user. Notifying System Admin");
         }
 
         const user = await db.user.findUnique({
@@ -90,27 +108,27 @@ export async function getSysAdmin() {
         });
 
         if (!user) {
-            return {authorized: false, reason: "User Exist !=1&&0"};
+            return {authorized: false, reason: "[SYSA]You are not a user. Notifying System Admin"};
         }
         if (user.role !== "SYSADMIN") {
-            return {authorized: false, reason: "User SysAdmin !=1&&0"};
+            return {authorized: false, reason: "[SYSA]You are not a System Admin. Notifying System admin."};
         }
 
         return {authorized: true, user};
         
     } catch (error) {
         if (error instanceof UnauthorizedError) {
-            console.warn("authenticate !=1&&0: ", error.message);
-            return { authorized: false, reason: "Now handling auth..." }
+            console.warn("[SYSA]authenticate: ", error.message);
+            return { authorized: false, reason: "Now handling auth" }
         }
         if (error instanceof DatabaseError) {
-            console.error("Now handling database...", error.message);
-            return { authorized: false, reason: "Now handling database..."};
+            console.error("[SYSA]Now handling database", error.message);
+            return { authorized: false, reason: "Now handling database"};
         }
 
         // Log unexpected errors and return a generic response
-        console.error("Expected error !=1&&0: ", error);
-        return { authorized: false, reason: "Expected error !=1&&0" };
+        console.error("[SYSA]Expected error: ", error);
+        return { authorized: false, reason: "Expected error" };
     }
         
 }
@@ -209,67 +227,77 @@ export async function getActivityLogs() {
 }
 
 export async function getStaff() {
-        try {
-            const {userId} = await auth();
-            if (!userId) {
-                revalidatePath("/")
-                throw new UnauthorizedError("authenticate !=1&&0");
-            }
-
-            const user = await db.user.findUnique({
-                where: {clerkUserId: userId},
-            });
-
-            if (!user) {
-                return {authorized: false, reason: "User Exist !=1&&0"};
-            }
-            if (user.role !== "STAFF") {
-                console.error("YOU ARE AN UNAUTHORIZED USER.", user)
-                return {authorized: false, reason: "User Staff !=1&&0"};
-            }
-
-            return {authorized: true, data: user};
-            
-        } catch (error) {
-            if (error instanceof UnauthorizedError) {
-                console.warn("authenticate !=1&&0: ", error.message);
-                return { authorized: false, reason: "Now handling auth..." }
-            }
-            if (error instanceof DatabaseError) {
-                console.error("Now handling database...", error.message);
-                return { authorized: false, reason: "Now handling database..."};
-            }
-    
-            // Log unexpected errors and return a generic response
-            console.error("Expected error !=1&&0: ", error);
-            return { authorized: false, reason: "Expected error !=1&&0" };
+    try {
+        const {userId} = await auth();
+        if (!userId) {
+            throw new UnauthorizedError("[STF]You are not a user. Notifying System Admin");
         }
+
+        const user = await db.user.findUnique({
+            where: {clerkUserId: userId},
+        });
+
+        if (!user) {
+            return {authorized: false, reason: "[STF]You are not a user. Notifying System Admin"};
+        }
+        if (user.role !== "STAFF") {
+            console.error("YOU ARE AN UNAUTHORIZED USER.", user)
+            return {authorized: false, reason: "[STF]You are not a Staff. Notifying System Admin"};
+        }
+
+        return {authorized: true, data: user};
         
+    } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            console.warn("[STF]Unknown User: ", error.message);
+            return { authorized: false, reason: "[STF]Unknown User..." }
+        }
+        if (error instanceof DatabaseError) {
+            console.error("[STF]Not a user: ", error.message);
+            return { authorized: false, reason: "[STF]Not a user"};
+        }
+
+        // Log unexpected errors and return a generic response
+        console.error("[STF]Unexpected error: ", error);
+        return { authorized: false, reason: "[STF]Unexpected error" };
+    }
 }
+
 
 export async function getUnauthUser() {
     const {userId} = await auth();
+
     if (!userId) {
-        await activityLog({
-            action: "getUnauthUser",
-            args: { attemptedUserId: null },
-            result: {
-                message: "Non-user attempting to access prohibited page"
-            },
-            timestamp: new Date().toISOString(),
-        });
+        const headersList = await headers();
+        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        const city = headersList.get('x-geo-city') || "unkown city"
+        const country = headersList.get('x-geo-country') || "unkown country"
+        console.log("headersList:",headersList, )
+        console.log("ip:",ip, typeof ip)
+        console.log("city:",city, typeof city)
+        console.log("country:",country, typeof country)
+        
+        await db.unauthz.create({
+          data: {  
+            IP: ip,
+            action:"getUnauthUser",
+            meta: {
+                message: "Unauthorized user attempting to access a prohibited page.",
+                ip_Add: ip
+            }, }
+        })
         return { authorized: false, reason: "Non-user attempting to access prohibited page" };
     }
 
     const user = await db.user.findUnique({
-        where: {clerkUserId: userId},
+        where: {clerkUserId:userId},
     });
 
     await activityLog({
         action: "getUnauthUser",
         args: { attemptedUserId: userId, data: user },
         result: {
-            message: "User attempting to access prohibited page"
+            message: "User attempting to access prohibited page."
         },
         timestamp: new Date().toISOString(),
     });

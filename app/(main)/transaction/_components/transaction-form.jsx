@@ -29,7 +29,8 @@ const AddTransactionForm = ({
     categories,
     editMode =  false,
     initialData = null,
-    accountId
+    accountId,
+    ScannerUserId
 }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -96,7 +97,6 @@ const AddTransactionForm = ({
         },
     });
 
-    console.log("Transaction form account:", accounts)
 
     const {
         loading: transactionLoading,
@@ -116,19 +116,27 @@ const AddTransactionForm = ({
     );
     
     const onSubmit = async (data) => {
-
         const formData = {
             ...data,
             amount: parseFloat(data.amount),
         };
-
+        
+        const sign = Math.sign(formData.amount)
+        if(formData.type === "EXPENSE" && sign !== -1){
+            toast.error(`Type and amount mismatch. Expense and ${formData.amount}.`)
+            return;
+        }
+       if(formData.type === "INCOME" && sign !== 1){
+            toast.error(`Type and amount mismatch. Income and ${formData.amount}.`)
+            return;
+        }
         if (editMode) {
             transactionFn(editId, formData);
         } else{
             transactionFn(formData);
         }
     };
-
+  
     useEffect(() => {
         if (transactionResult?.success && !transactionLoading) {
             toast.success(
@@ -140,7 +148,6 @@ const AddTransactionForm = ({
             editMode
             ? router.push(`/account/${transactionResult.data.accountId}`)
             : ""
-            
         }
     }, [transactionResult, transactionLoading, editMode]);
 
@@ -217,9 +224,6 @@ const AddTransactionForm = ({
 
 
 
-
-
-
       
 
 
@@ -228,7 +232,8 @@ const AddTransactionForm = ({
         className='space-y-6'
         onSubmit={handleSubmit(onSubmit)}>
       {/* AI RECEIPT SCANNER */}
-      {!editMode && <ReceiptScanner scannedReceipt={scannedReceipt} onScanComplete={handleScanComplete}/>}
+      
+      {!editMode && <ReceiptScanner scannedReceipt={scannedReceipt} ScannerUserId={ScannerUserId} onScanComplete={handleScanComplete}/>}
 
       {isClient ? ('This is never prerendered') : ( 
         <div className='grid gap-6 md:grid-cols-2'>
@@ -285,7 +290,6 @@ const AddTransactionForm = ({
                         placeholder="0.00"
                         {...register("amount")}
                     />
-
                     {errors.amount && (
                         <p className="text-sm text-red-500">{errors.amount.message}</p>
                     )}
@@ -505,6 +509,7 @@ const AddTransactionForm = ({
             <Button
                 type="submit"
                 className="w-full"
+
                 disabled={transactionLoading}>
                     {transactionLoading
                         ? (<>

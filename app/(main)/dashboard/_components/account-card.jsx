@@ -46,6 +46,8 @@ const AccountCard = ({account}) => {
       router.push(`/transaction/create?accountId=${account.id}`);
     };
 
+
+
     const { 
         //fetch hook for updating default status
         // this is update default function to be called
@@ -124,13 +126,12 @@ const typenHandle = (type) => {
 
 
 
-
   return (
     <Card
     onClick={handleClick}
-    className={`hover:shadow-md transition-shadow group relative border border-gray-800 ${
-        isDisabled ? "pointer-events-none opacity-50" : ""
-      }`}
+    className={`hover:shadow-md hover:shadow-gray-400 transition-shadow group relative border border-gray-800
+      ${isDisabled ? "pointer-events-none opacity-50" : ""}`
+    }
     >
     <Link href={`/account/${id}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -149,7 +150,7 @@ const typenHandle = (type) => {
     )}
   </div>
         <Badge variant="outline"className={`mt-1 bg-black/85 text-[#FDBD01] border-black
-          ${fontOrbitron.className} tracking-wide
+          ${fontOrbitron.className} tracking-wide md:tracking-wider 
           font-normal text-xs md:text-[0.795rem]/[1rem]`}>
           {typenHandle(type)}
     

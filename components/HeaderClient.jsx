@@ -35,7 +35,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
 
   const navBorderClass = useMemo(() => {
     if (pathname.startsWith("/admin")) return "border-blue-500";
-    if (pathname.startsWith("/dashboard")) return "border-teal-400";
+    if (pathname.startsWith("/dashboard")) return "border-yellow-500";
     if (pathname.startsWith("/SysAdmin")) return "border-green-500";
     if (pathname.startsWith("/sign-in")) return "border-black";
     if (pathname.startsWith("/DecisionSupport")) return "border-purple-500"
@@ -57,7 +57,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
         z-50 border-b rounded-b-lg  transition-colors 
         duration-300 ${navBorderClass}`}
     >
-      <nav className="container mx-auto px-4 py-4 flex items-center justify-between gap-4 ">
+      <nav className="container mx-auto px-4 py-4 flex items-center justify-between gap-4 bg-neutral-50">
         {/* LEFT: Logo + Name */}
         <div className="flex items-center min-w-[220px] shine-effect transition ">
           <Link href={isAdminPage ? "/admin" : "/"} className="flex items-center">
@@ -69,10 +69,10 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
               height={200}
             />
             <div className="flex flex-col items-start ml-2">
-              <h1 className={`text-3xl tracking-widest font-bold bg-gradient-to-r from-yellow-400 via-gray-300 to-gray-500 bg-clip-text text-transparent ${PTserif.className}`}>
+              <h1 className={`text-3xl tracking-widest font-bold bg-gradient-to-r from-[#FFCA4B] via-black/75 to-[#041f60] bg-clip-text text-transparent ${PTserif.className}`}>
                 Teruel
               </h1>
-              <h1 className={`text-xl tracking-wide font-semibold bg-gradient-to-r from-gray-400 via-gray-300 to-yellow-500 bg-clip-text text-transparent ${PTserif.className}`} >
+              <h1 className={`text-xl tracking-wide font-semibold bg-gradient-to-r from-[#041f60] via-black/75 to-[#FFCA4B] bg-clip-text text-transparent ${PTserif.className}`} >
                 Accounting
               </h1>
             </div>

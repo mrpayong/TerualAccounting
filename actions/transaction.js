@@ -5,6 +5,7 @@ import { db } from "@/lib/prisma";
 import { request }  from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -32,7 +33,7 @@ async function activityLog({userId, action, args, timestamp}){
   try {
     const dateTime = formatManilaDateTime(timestamp);
     
-    await db.activityLog.create({
+    const log = await db.activityLog.create({
       data: {
         userId,
         action,
@@ -41,8 +42,8 @@ async function activityLog({userId, action, args, timestamp}){
     })
     return {status: 200, success: true}
   } catch (error) {
-    console.error("Activity Log Error[1]: ", error);
-    console.error("Activity Log Error Message: ", error.message);
+    // console.log("Activity Log Error[1]: ", error);
+    // console.log("Activity Log Error Message: ", error.message);
     return {status: 500, success: false}
   }
 }
@@ -64,8 +65,6 @@ export async function createTransaction(data) {
       throw new Error("Unauthorized action.")
     }
 
-
-
     const account = await db.account.findUnique({
       where: {
         id: data.accountId,
@@ -84,8 +83,12 @@ export async function createTransaction(data) {
       throw new Error("Reference number already exists.");
     }
 
-    
-
+      const absAmount = Math.sign(data.amount) === -1 
+        ? Math.abs(data.amount)
+        : data.amount
+  
+console.log("absolute amount: ", absAmount, typeof absAmount)
+console.log("Report:", data.amount, "is now", absAmount, typeof absAmount)
     // Calculate new balance
     // const balanceChange = data.type === "EXPENSE" 
     //   ? -data.amount 
@@ -94,9 +97,11 @@ export async function createTransaction(data) {
 
     // Create transaction and update account balance
     const transaction = await db.$transaction(async (tx) => {
+      
       const newTransaction = await tx.transaction.create({
         data: {
           ...data,
+          amount: absAmount,
           userId: user.id,
           nextRecurringDate:
             data.isRecurring && data.recurringInterval
@@ -156,7 +161,7 @@ function calculateNextRecurringDate(startDate, interval) {
     return date;
 }
 
-export async function scanReceipt(file){
+export async function scanReceipt(file, ScannerUserId){
   try {
     console.log("[1]")
     const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
@@ -227,22 +232,28 @@ console.log("[5]")
       }
 
 console.log("[6]")
-
+     
+     
     const updateLog = await activityLog({
-      userId: user.id || "Authorized User",
+      userId: ScannerUserId,
       action: "scanReceipt",
-      args: data,
+      args: JSON.stringify(data), 
       timestamp: new Date()
     });
+    console.log("[8]", updateLog, ScannerUserId, typeof ScannerUserId)
     if(updateLog.success === false){
+      console.log("Fallback triggered")
       await db.activityLog.create({
         data: {
-          userId: user.id,
+          userId: ScannerUserId,
           action: "scanReceipt",
-          meta: { message: "Possible System interruption: Failed to log Scanned Receipt" },
+          meta: {message:"Possible System interruption: Failed to log Scanned Receipt"},
         }
       })
+      console.log("Triggered fallback")
     }
+    console.log("[7]")
+    
       return{
         amount: parseFloat(data.amount),
         refNumber: data.refNumber,
@@ -258,11 +269,26 @@ console.log("[6]")
     
   } catch (error) {
     if (error instanceof ValidationError) {
-      console.error("Validation Error:", error.message);
-      throw error; // Re-throw the custom error
+      console.log("Validation Error:", error.message);
+      throw new Error("Error Scanning:[Validation]"); // Re-throw the custom error
     }
-    console.error("Error scanning the receipt:", error.message);
-    throw new Error("!");
+
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    console.log("PrismaClientKnownRequestError code:", error.code);
+    console.log("PrismaClientKnownRequestError meta:", error.meta);
+    console.log("PrismaClientKnownRequestError message:", error.message);
+  } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    console.log("PrismaClientUnknownRequestError message:", error.message);
+    // Sometimes error.meta is available, log it if present
+    if (error.meta) {
+      console.log("PrismaClientUnknownRequestError meta:", error.meta);
+    }
+  } else {
+    console.log("Unknown error:", error);
+  }
+    console.log("error only:", error)
+    console.log("Error scanning the receipt:", error.message);
+    throw new Error(error.message);
   }
 }
 
@@ -323,6 +349,9 @@ export async function updateTransaction(id, data) {
     if (!originalTransaction) throw new Error("Transaction not found.");
   
 
+      const absAmount = Math.sign(data.amount) === -1 
+        ? Math.abs(data.amount)
+        : data.amount
 
     const transaction = await db.$transaction(async (tx) => {
       const updated = await tx.transaction.update({
@@ -332,6 +361,7 @@ export async function updateTransaction(id, data) {
         },
         data: {
           ...data, 
+          amount: absAmount,
           nextRecurringDate:
             data.isRecurring && data.recurringInterval
               ? null

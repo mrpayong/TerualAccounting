@@ -1,6 +1,8 @@
 // import { createMiddleware } from "@arcjet/next";
 import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { geolocation, ipAddress } from "@vercel/functions";
+import { NextResponse } from "next/server";
 // import arcjet, { detectBot, shield } from "arcjet";
 
 
@@ -10,7 +12,7 @@ const isProtectedRoute = createRouteMatcher([
     "/SysAdmin(.*)",
     "/dashboard(.*)",
     "/account(.*)",
-    "/transaction(.*)"
+    "/transaction(.*)",
 ]);
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
@@ -32,10 +34,19 @@ const clerk = clerkMiddleware(async (auth, req) => {
         return redirectToSignIn();
     }
 });
- 
-export default createMiddleware(
-  aj, 
-  clerk);
+
+function unauthCatch(req){
+    // Geolocation/IP logic
+    const ip = ipAddress(req);
+    const geo = geolocation(req);
+    const response = NextResponse.next();
+    response.headers.set('x-real-ip', ip || '');
+    response.headers.set('x-geo-city', geo.city || '');
+    response.headers.set('x-geo-country', geo.country || '');
+    return response;
+}
+
+export default createMiddleware(aj, clerk, unauthCatch);
 
 export const config = {
   matcher: [
