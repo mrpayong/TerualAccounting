@@ -8,12 +8,22 @@ import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
     "/admin(.*)",
-    "/admin/activityLogs(.*)",
     "/SysAdmin(.*)",
     "/dashboard(.*)",
-    "/account(.*)",
     "/transaction(.*)",
+
+    "/account/:path*",
+    "/Archive(.*)",
+    "/CashflowStatement(.*)",
+    "/CashReceiptBook(.*)",
+    "/ClientInfo(.*)",
+    "/DecisionSupport(.*)",
+    "/DisbursementReceiptBook(.*)",
+    "/SubAccounts(.*)",
 ]);
+
+
+
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
   rules: [
@@ -27,12 +37,10 @@ const aj = arcjet({
 
 const clerk = clerkMiddleware(async (auth, req) => {
     const {userId} = await auth();
-
     if (!userId && isProtectedRoute(req)) {
-        const {redirectToSignIn} = await auth();
-
-        return redirectToSignIn();
+      return NextResponse.redirect(new URL("/sign-in", req.url));
     }
+    return NextResponse.next();
 });
 
 function unauthCatch(req){

@@ -276,15 +276,20 @@ export async function getUnauthUser() {
         console.log("ip:",ip, typeof ip)
         console.log("city:",city, typeof city)
         console.log("country:",country, typeof country)
-        
+        const metaData = JSON.stringify({
+            message: "Unauthorized user attempting to access a prohibited page.",
+            ip_Add: ip,
+            location: {
+                cty:city,
+                cntry:country
+            }
+        })
         await db.unauthz.create({
           data: {  
             IP: ip,
             action:"getUnauthUser",
-            meta: {
-                message: "Unauthorized user attempting to access a prohibited page.",
-                ip_Add: ip
-            }, }
+            meta: metaData
+            }
         })
         return { authorized: false, reason: "Non-user attempting to access prohibited page" };
     }

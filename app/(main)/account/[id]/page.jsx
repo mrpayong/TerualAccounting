@@ -36,13 +36,13 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 })
 
 async function AccountsPage({ params }) {
-  const user = await getStaff();
+  // const user = await getStaff();
   
 
-  if(!user.authorized){
-    await getUnauthUser();
-    return NotFound();
-  }
+  // if(!user.authorized){
+  //   await getUnauthUser();
+  //   return NotFound();
+  // }
   const { id } = await params;
   const accountData = await getAccountWithTransactions(id);
   const subAccounts = await getSubAccounts(id);

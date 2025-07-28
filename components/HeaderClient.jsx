@@ -182,7 +182,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
             {/* LOGGED OUT */}
             {!isSignedIn && pathname !== '/sign-in' && pathname !== "/sign-in/factor-one" && (
               <div className="flex flex-row items-center justify-end gap-2 pr-3">
-                <span className="text-gray-600 font-semibold text-2xl hidden md:inline">
+                <span className={`${PTserif.className} text-gray-600 font-semibold lg:text-2xl md:text-lg hidden md:inline`}>
                   Ready to start?
                 </span>
               <Link href={"/sign-in"}>
