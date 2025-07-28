@@ -268,7 +268,7 @@ export async function getUnauthUser() {
     const {userId} = await auth();
 
     if (!userId) {
-        console.log("start unauth logging")
+        console.log("start unauth logging[1]")
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         const city = headersList.get('x-geo-city') || "unkown city"
