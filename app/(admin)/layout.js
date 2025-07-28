@@ -10,6 +10,7 @@ const AdminLayout = async ({children}) => {
     const User = await getAdmin()
 
     if (!User.authorized){ 
+      console.log("log")
         await getUnauthUser()
         return NotFound(); 
     }

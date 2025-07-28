@@ -267,7 +267,7 @@ export async function getStaff() {
 export async function getUnauthUser() {
     const {userId} = await auth();
 
-    if (!userId) {
+    if (userId) {
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         const city = headersList.get('x-geo-city') || "unkown city"

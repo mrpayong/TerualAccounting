@@ -11,7 +11,6 @@ import TestCard from './_components/TestCard';
 
 const ClientsPage = async () => {
     const accounts = await getUserAccount();
-    console.log("accounts for admin: ", accounts);
 
   return (
     <div className='p-6'>

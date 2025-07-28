@@ -33,7 +33,7 @@ const AdminPage = async () => {
     type,
     count,
   }));
-  console.log("PIE CHART DATA",pieChartData);
+  
 
 
   const lineChartData = accounts.data.map(account => ({
