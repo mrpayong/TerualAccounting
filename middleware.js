@@ -3,6 +3,7 @@ import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { geolocation, ipAddress } from "@vercel/functions";
 import { NextResponse } from "next/server";
+import NotFound from "./app/not-found";
 // import arcjet, { detectBot, shield } from "arcjet";
 
 
@@ -38,7 +39,8 @@ const aj = arcjet({
 const clerk = clerkMiddleware(async (auth, req) => {
     const {userId} = await auth();
     if (!userId && isProtectedRoute(req)) {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
+      // return NextResponse.redirect(new URL("/sign-in", req.url));
+      NotFound();
     }
     return NextResponse.next();
 });

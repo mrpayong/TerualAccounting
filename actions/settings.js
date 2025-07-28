@@ -84,7 +84,7 @@ export async function getUser(){
         });
 
  
-        console.log("user is: ", user)
+     
         if (!user || user.role !== "ADMIN"){
             throw new Error("Unauthorized");
         }

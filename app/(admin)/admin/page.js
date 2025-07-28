@@ -21,7 +21,6 @@ const AdminPage = async () => {
   const accountCount = accounts.data.length;
   const UserCount = Users.data;
   const transactionCount = transactions.data;
-  console.log("accounts and transactions: ",accounts,)
 
 
   const typeCounts = accounts.data.reduce((acc, account) => {
