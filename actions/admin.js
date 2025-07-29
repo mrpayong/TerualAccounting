@@ -268,7 +268,6 @@ export async function getUnauthUser() {
     const {userId} = await auth();
 
     if (!userId) {
-        console.log("start unauth logging[1]")
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         const city = headersList.get('x-geo-city') || "unkown city"
@@ -808,7 +807,42 @@ export async function getArchives(accountId){
     }
 }
 
+export async function getTestGeoIP() {
+    const {userId} = await auth();
 
+    if (!userId) {
+        console.log("no user")
+        throw new Error()
+    }
+
+    const user = await db.user.findUnique({
+        where: {clerkUserId:userId},
+    });
+const headersList = await headers();
+        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        const city = headersList.get('x-geo-city') || "unkown city"
+        const country = headersList.get('x-geo-country') || "unkown country"
+        console.log("headersList:",headersList, )
+        console.log("ip:",ip, typeof ip)
+        console.log("city:",city, typeof city)
+        console.log("country:",country, typeof country)
+        const metaData = JSON.stringify({
+            message: "Unauthorized user attempting to access a prohibited page.",
+            ip_Add: ip,
+            location: {
+                cty:city,
+                cntry:country
+            }
+        })
+        const savedMEtadata = await db.unauthz.create({
+          data: {  
+            IP: ip,
+            action:"getUnauthUser",
+            meta: metaData
+            }
+        })
+        return { authorized: true, reason: "Metadata saved in db", data: savedMEtadata };
+}
 
 
 

@@ -39,7 +39,6 @@ const aj = arcjet({
 const clerk = clerkMiddleware(async (auth, req) => {
     const {userId} = await auth();
     if (!userId && isProtectedRoute(req)) {
-      console.log("midlWR")
       return NextResponse.redirect(new URL("/sign-in", req.url));
       // NotFound();
     }

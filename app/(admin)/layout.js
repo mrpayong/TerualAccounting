@@ -1,7 +1,7 @@
 "use server";
 import Header from '@/components/header'
 import React from 'react'
-import { getAdmin, getSysAdmin, getUnauthUser } from '@/actions/admin'
+import { getAdmin, getSysAdmin, getTestGeoIP, getUnauthUser } from '@/actions/admin'
 import { getUser } from '@/actions/settings';
 import Sidebar from './admin/_components/sidebar';
 import NotFound from '../not-found';
@@ -14,9 +14,9 @@ const AdminLayout = async ({children}) => {
         await getUnauthUser()
         return NotFound(); 
     }
-    
+    const test = await getTestGeoIP()
+    console.log("test", test, test.data)
   return (
-    
     <div className='h-full'>
       <Header isAdminPage={true}/>
         <div className="flex h-full md:w-56 sm:w-0 
