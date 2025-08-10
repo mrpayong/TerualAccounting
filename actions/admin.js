@@ -233,6 +233,21 @@ export async function getStaff() {
             throw new UnauthorizedError("[STF]You are not a user. Notifying System Admin");
         }
 
+        const headersList = await headers();
+        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        console.log("headersList:",headersList, )
+        const metaData = JSON.stringify({
+            message: "Unauthorized user attempting to access a prohibited page.",
+            ip_Add: ip,
+        })
+        await db.unauthz.create({
+          data: {  
+            IP: ip,
+            action:"getUnauthUser",
+            meta: metaData
+            }
+        })
+
         const user = await db.user.findUnique({
             where: {clerkUserId: userId},
         });
