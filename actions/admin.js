@@ -234,7 +234,6 @@ export async function getStaff() {
         }
 
         const headersList = await headers();
-        console.log("headersList:",headersList, )
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         
         const metaData = JSON.stringify({
@@ -285,7 +284,6 @@ export async function getUnauthUser() {
 
     if (userId) {
         const headersList = await headers();
-        console.log("headersList:",headersList, )
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         
         const metaData = JSON.stringify({
