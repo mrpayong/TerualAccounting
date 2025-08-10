@@ -50,7 +50,7 @@ function unauthCatch(req){
     const ip = ipAddress(req);
     const geo = geolocation(req);
     const response = NextResponse.next();
-    response.headers.set('x-real-ip', ip || '');
+    response.headers.set('x-forwarded-for', ip || '');
     response.headers.set('x-geo-city', geo.city || '');
     response.headers.set('x-geo-country', geo.country || '');
     return response;
