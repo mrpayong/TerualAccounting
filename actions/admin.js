@@ -234,7 +234,7 @@ export async function getStaff() {
         }
 
         const headersList = await headers();
-        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        const ip = JSON.stringify(headersList.get('x-real-ip')) || 'Unknown IP'
         console.log("headersList:",headersList, )
         const metaData = JSON.stringify({
             message: "Unauthorized user attempting to access a prohibited page.",
@@ -284,7 +284,7 @@ export async function getUnauthUser() {
 
     if (userId) {
         const headersList = await headers();
-        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        const ip = JSON.stringify(headersList.get('x-real-ip')) || 'Unknown IP'
         console.log("headersList:",headersList, )
         const metaData = JSON.stringify({
             message: "Unauthorized user attempting to access a prohibited page.",
