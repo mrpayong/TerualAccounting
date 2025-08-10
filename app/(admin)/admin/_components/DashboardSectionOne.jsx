@@ -10,8 +10,12 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import { useCarousel } from "@/components/ui/carousel"
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google'
 
-
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 function CarouselDots() {
   const { selectedIndex, slideCount, api } = useCarousel()
@@ -73,7 +77,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
   },
 ]
   return (
-    <div className="mb-6">
+    <div className={`${fontZenKaku.className} mb-6`}>
       {/* Mobile: Carousel */}
       <div className="block sm:hidden">
         <Carousel>
@@ -82,7 +86,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
               <CarouselItem key={idx} className="pl-2">
                 <Card className="min-w-[85vw] max-w-xs mx-auto">
                   <CardHeader className="pb-0">
-                    <CardTitle>
+                    <CardTitle className='!font-bold text-base'>
                       {card.label}
                     </CardTitle>
                   </CardHeader>
@@ -98,7 +102,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className={`text-sm flex items-center mt-1 ${card.changeColor}`}>
+                  <CardFooter className={`font-normal tracking-wide text-sm flex items-center mt-1 ${card.changeColor}`}>
                     {card.change}
                   </CardFooter>
                 </Card>
@@ -119,7 +123,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
               return (
                 <Card key={idx} className="min-w-[320px] max-w-xs flex-shrink-0">
                   <CardHeader className="pb-0">
-                    <CardTitle>
+                    <CardTitle className='!font-bold text-base'>
                       {card.label}
                     </CardTitle>
                   </CardHeader>
@@ -135,7 +139,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className={`text-sm flex items-center mt-1 ${card.changeColor}`}>
+                  <CardFooter className={`font-normal text-sm flex items-center mt-1 ${card.changeColor}`}>
                     {card.change}
                   </CardFooter>
                 </Card>
@@ -151,7 +155,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
         {cards.map((card, idx) => (
           <Card key={idx}>
             <CardHeader className="pb-0">
-              <CardTitle>
+              <CardTitle className='!font-bold text-base'>
                 {card.label}
               </CardTitle>
             </CardHeader>
@@ -161,8 +165,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
                   <h3 className="text-2xl font-bold text-slate-900">
                     {card.value}
                   </h3>
-                  <p className={`text-sm flex items-center mt-1 ${card.changeColor}`}>
-                    
+                  <p className={`font-normal text-sm flex items-center mt-1 ${card.changeColor}`}>
                     {card.change}
                   </p>
                 </div>

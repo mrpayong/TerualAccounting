@@ -268,29 +268,20 @@ export async function getUnauthUser() {
     const {userId} = await auth();
 
     if (!userId) {
-        // const headersList = await headers();
-        // const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
-        // const city = headersList.get('x-geo-city') || "unkown city"
-        // const country = headersList.get('x-geo-country') || "unkown country"
-        // console.log("headersList:",headersList, )
-        // console.log("ip:",ip, typeof ip)
-        // console.log("city:",city, typeof city)
-        // console.log("country:",country, typeof country)
-        // const metaData = JSON.stringify({
-        //     message: "Unauthorized user attempting to access a prohibited page.",
-        //     ip_Add: ip,
-        //     location: {
-        //         cty:city,
-        //         cntry:country
-        //     }
-        // })
-        // await db.unauthz.create({
-        //   data: {  
-        //     IP: ip,
-        //     action:"getUnauthUser",
-        //     meta: metaData
-        //     }
-        // })
+        const headersList = await headers();
+        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        console.log("headersList:",headersList, )
+        const metaData = JSON.stringify({
+            message: "Unauthorized user attempting to access a prohibited page.",
+            ip_Add: ip,
+        })
+        await db.unauthz.create({
+          data: {  
+            IP: ip,
+            action:"getUnauthUser",
+            meta: metaData
+            }
+        })
         return { authorized: false, reason: "Non-user attempting to access prohibited page" };
     }
 
@@ -797,6 +788,9 @@ export async function getArchives(accountId){
             where:{ 
                 userId: user.id,
                 accountId: accountId,
+                entityType: {
+                    in: ["CashflowStatement", "Transaction", "Group Transaction"]
+                }
             }
         });
         

@@ -78,7 +78,9 @@ export default function EditCashflow({ cashflow }) {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "PHP",
-    }).format(amount);
+      minimumFractionDigits:3,
+      maximumFractionDigits:3,
+    }).format((amount));
   };
 
   
@@ -445,17 +447,17 @@ const ACTIVITY_LABELS = {
       {/* Transactions Section */}
         <div className="mb-6">
           {/* <div className="flex flex-row "> */}
-          <h2 className="text-xl text-center items-center gap-3 justify-center border-black border-b-2 border-t-2 font-semibold">Transactions</h2>
+          <h2 className="text-xl text-center items-center gap-3 justify-center border-black border-b-2 border-t-2 font-bold">Transactions</h2>
           {/* </div> */}
           
           {Object.entries(groupedTransactions).map(([activity, txs]) => (
             <div key={activity} className="mb-4">
-              <h3 className="text-md font-bold text-bold">{ACTIVITY_LABELS[activity] || activity}</h3>
+              <h3 className="text-lg font-bold">{ACTIVITY_LABELS[activity] || activity}</h3>
               <ul>
                 {txs.map((transaction) => (
                   <li key={transaction.id} className="flex flex-row justify-between items-center hover:bg-green-400">
-                    <span className="flex flex-row gap-2 items-center">
-                      {transaction.description || <span className="italic text-gray-400">No description</span>} 
+                    <span className="text-base font-medium flex flex-row gap-2 items-center">
+                      {transaction.particular || transaction.description || <span className="italic text-gray-400">No description</span>} 
                       {UpdateTransactionInputField && UpdateTransactionId === transaction.id
                         ? (isLoadingUpdateTransaction
                             ? (<Loader2 className="w-4 h-4 animate-spin"/>)
@@ -470,17 +472,16 @@ const ACTIVITY_LABELS = {
                         )
                         : (
                             <span
-                            className={
-                              transaction.type === "EXPENSE"
-                                ? "text-red-500 font-mono"
-                                : transaction.type === "INCOME"
-                                ? "text-green-600 font-mono"
-                                : ""
-                            }
-                          >
-                            
-                            {transaction.type === "EXPENSE" ? "-" : ""}
-                            {formatTableAmount(transaction.amount)}
+                              className={
+                                transaction.type === "EXPENSE"
+                                  ? "text-red-500 font-mono tracking-wide"
+                                  : transaction.type === "INCOME"
+                                  ? "text-green-600 font-mono tracking-wide"
+                                  : ""
+                              }
+                            >
+                              {transaction.type === "EXPENSE" ? "-" : ""}
+                              {formatTableAmount(transaction.amount)}
                           </span>
                           )
                           
@@ -522,11 +523,11 @@ const ACTIVITY_LABELS = {
 
         {/* Sub-Accounts Section */}
         <div className="mb-5">
-          <h2 className="text-xl text-center border-black border-b-2 border-t-2 font-semibold">Grouped Transactions</h2>
+          <h2 className="text-xl text-center border-black border-b-2 border-t-2 font-bold">Grouped Transactions</h2>
           <ul className="mt-2">
             {cashflow.subAccounts.map((subAccount) => (
               <li key={subAccount.id} className="flex flex-row justify-between items-center hover:bg-green-400">
-                <span>{subAccount.name} - {formatTableAmount(subAccount.balance)}</span>
+                <span className="text-base font-medium">{subAccount.name} - {formatTableAmount(subAccount.balance)}</span>
                 {isRoutLoad 
                   ?(
                   <Loader2 className="animate-spin h-4 w-4"/>
@@ -548,12 +549,12 @@ const ACTIVITY_LABELS = {
 
 
         <div>
-          <h2 className="text-xl text-center border-black border-b-2 border-t-2 font-semibold">
+          <h2 className="text-xl font-bold text-center border-black border-b-2 border-t-2">
             Cashflow Statement Balances
           </h2>
           <ul className="mt-2 mb-4">
             <li className="flex justify-between items-center hover:bg-green-400">
-              <span className="flex flex-row items-center gap-2 font-semibold">Total Operating 
+              <span className="flex flex-row items-center gap-2 text-base font-bold">Total Operating 
               {TotalOpInputField && UpdateOpId === cashflow.id
                 ? (
                   isLoadingTotalOp
@@ -599,253 +600,245 @@ const ACTIVITY_LABELS = {
                   </Button>
                 )}
             </li>
-<li className="flex justify-between items-center hover:bg-green-400">
-  <span className="flex flex-row items-center gap-2 font-semibold">Total Investing
-    {TotalInvInputField && UpdateInvId === cashflow.id
-      ? (
-        isLoadingTotalInv
-          ? (<Loader2 className="h-4 w-4 animate-spin" />)
-          : <input
-              type="number"
-              value={TotalInvInput}
-              onChange={e => setTotalInvInput(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
-            />
-      )
-      : (
-        <span className={
-          activityTotal[1] > 0
-            ? "font-mono text-green-600"
-            : activityTotal[1] < 0
-            ? "font-mono text-red-500"
-            : "font-mono text-black"
-        }>
-          {formatTableAmount(activityTotal[1])}
-        </span>
-      )
-    }
-  </span>
-  {TotalInvInputField && UpdateInvId === cashflow.id
-    ? (
-      <div className="flex flex-row gap-2 items-center ml-2">
-        <Button variant="ghost" onClick={UpdateCancelInvField}>
-          <X className="text-red-600" />
-        </Button>
-        <Button variant="ghost" onClick={handleTotalInv}>
-          <Check className="text-green-600" />
-        </Button>
-      </div>
-    )
-    : (
-      <Button
-        onClick={() => UpdateActiveInvField(cashflow)}
-        variant="ghost"
-        className="text-yellow-500 hover:text-purple-600 ml-2"
-      >
-        <SquarePen />
-      </Button>
-    )}
-</li>
-<li className="flex justify-between items-center hover:bg-green-400">
-  <span className="flex flex-row items-center gap-2 font-semibold">Total Financing
-    {TotalFncInputField && UpdateFncId === cashflow.id
-      ? (
-        isLoadingTotalFnc
-          ? (<Loader2 className="h-4 w-4 animate-spin" />)
-          : <input
-              type="number"
-              value={TotalFncInput}
-              onChange={e => setTotalFncInput(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
-            />
-      )
-      : (
-        <span className={
-          activityTotal[2] > 0
-            ? "font-mono text-green-600"
-            : activityTotal[2] < 0
-            ? "font-mono text-red-500"
-            : "font-mono text-black"
-        }>
-          {formatTableAmount(activityTotal[2])}
-        </span>
-      )
-    }
-  </span>
-  {TotalFncInputField && UpdateFncId === cashflow.id
-    ? (
-      <div className="flex flex-row gap-2 items-center ml-2">
-        <Button variant="ghost" onClick={UpdateCancelFncField}>
-          <X className="text-red-600" />
-        </Button>
-        <Button variant="ghost" onClick={handleTotalFnc}>
-          <Check className="text-green-600" />
-        </Button>
-      </div>
-    )
-    : (
-      <Button
-        onClick={() => UpdateActiveFncField(cashflow)}
-        variant="ghost"
-        className="text-yellow-500 hover:text-purple-600 ml-2"
-      >
-        <SquarePen />
-      </Button>
-    )}
-</li>
+            <li className="flex justify-between items-center hover:bg-green-400">
+              <span className="flex flex-row items-center gap-2 text-base font-bold">Total Investing
+                {TotalInvInputField && UpdateInvId === cashflow.id
+                  ? (
+                    isLoadingTotalInv
+                      ? (<Loader2 className="h-4 w-4 animate-spin" />)
+                      : <input
+                          type="number"
+                          value={TotalInvInput}
+                          onChange={e => setTotalInvInput(e.target.value)}
+                          className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
+                        />
+                  )
+                  : (
+                    <span className={
+                      activityTotal[1] > 0
+                        ? "font-mono text-green-600"
+                        : activityTotal[1] < 0
+                        ? "font-mono text-red-500"
+                        : "font-mono text-black"
+                    }>
+                      {formatTableAmount(activityTotal[1])}
+                    </span>
+                  )
+                }
+              </span>
+              {TotalInvInputField && UpdateInvId === cashflow.id
+                ? (
+                  <div className="flex flex-row gap-2 items-center ml-2">
+                    <Button variant="ghost" onClick={UpdateCancelInvField}>
+                      <X className="text-red-600" />
+                    </Button>
+                    <Button variant="ghost" onClick={handleTotalInv}>
+                      <Check className="text-green-600" />
+                    </Button>
+                  </div>
+                )
+                : (
+                  <Button
+                    onClick={() => UpdateActiveInvField(cashflow)}
+                    variant="ghost"
+                    className="text-yellow-500 hover:text-purple-600 ml-2"
+                  >
+                    <SquarePen />
+                  </Button>
+                )}
+            </li>
+            <li className="flex justify-between items-center hover:bg-green-400">
+              <span className="flex flex-row items-center gap-2 text-base font-bold">Total Financing
+                {TotalFncInputField && UpdateFncId === cashflow.id
+                  ? (
+                    isLoadingTotalFnc
+                      ? (<Loader2 className="h-4 w-4 animate-spin" />)
+                      : <input
+                          type="number"
+                          value={TotalFncInput}
+                          onChange={e => setTotalFncInput(e.target.value)}
+                          className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
+                        />
+                  )
+                  : (
+                    <span className={
+                      activityTotal[2] > 0
+                        ? "font-mono text-green-600"
+                        : activityTotal[2] < 0
+                        ? "font-mono text-red-500"
+                        : "font-mono text-black"
+                    }>
+                      {formatTableAmount(activityTotal[2])}
+                    </span>
+                  )
+                }
+              </span>
+              {TotalFncInputField && UpdateFncId === cashflow.id
+                ? (
+                  <div className="flex flex-row gap-2 items-center ml-2">
+                    <Button variant="ghost" onClick={UpdateCancelFncField}>
+                      <X className="text-red-600" />
+                    </Button>
+                    <Button variant="ghost" onClick={handleTotalFnc}>
+                      <Check className="text-green-600" />
+                    </Button>
+                  </div>
+                )
+                : (
+                  <Button
+                    onClick={() => UpdateActiveFncField(cashflow)}
+                    variant="ghost"
+                    className="text-yellow-500 hover:text-purple-600 ml-2"
+                  >
+                    <SquarePen />
+                  </Button>
+                )}
+            </li>
 
             <div className="mt-4">
-<li className="flex justify-between items-center hover:bg-green-400">
-  <span className="flex flex-row items-center gap-2 font-semibold">Beginning Balance
-    {StartBalanceInputField && UpdateStartBalanceId === cashflow.id
-      ? (
-        isLoadingUpdateBegBal
-          ? (<Loader2 className="h-4 w-4 animate-spin" />)
-          : <input
-              type="number"
-              value={StartBalanceInput}
-              onChange={e => setStartBalanceInput(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
-            />
-      )
-      : (
-        <span className={
-          cashflow.startBalance > 0
-            ? "font-mono text-green-600"
-            : cashflow.startBalance < 0
-            ? "font-mono text-red-500"
-            : "font-mono text-black"
-        }>
-          {formatTableAmount(cashflow.startBalance)}
-        </span>
-      )
-    }
-  </span>
-  {StartBalanceInputField && UpdateStartBalanceId === cashflow.id
-    ? (
-      <div className="flex flex-row gap-2 items-center ml-2">
-        <Button variant="ghost" onClick={UpdateCancelStartBalanceField}>
-          <X className="text-red-600" />
-        </Button>
-        <Button variant="ghost" onClick={handleUpdateStartBalance}>
-          <Check className="text-green-600" />
-        </Button>
-      </div>
-    )
-    : (
-      <Button
-        onClick={() => UpdateActiveStartBalanceField(cashflow)}
-        variant="ghost"
-        className="text-yellow-500 hover:text-purple-600 ml-2"
-      >
-        <SquarePen />
-      </Button>
-    )}
-</li>
+              <li className="flex justify-between items-center hover:bg-green-400">
+                <span className="flex flex-row items-center gap-2 text-base font-bold">Beginning Balance
+                  {StartBalanceInputField && UpdateStartBalanceId === cashflow.id
+                    ? (
+                      isLoadingUpdateBegBal
+                        ? (<Loader2 className="h-4 w-4 animate-spin" />)
+                        : <input
+                            type="number"
+                            value={StartBalanceInput}
+                            onChange={e => setStartBalanceInput(e.target.value)}
+                            className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
+                          />
+                    )
+                    : (
+                      <span className={
+                        cashflow.startBalance > 0
+                          ? "font-mono text-green-600"
+                          : cashflow.startBalance < 0
+                          ? "font-mono text-red-500"
+                          : "font-mono text-black"
+                      }>
+                        {formatTableAmount(cashflow.startBalance)}
+                      </span>
+                    )
+                  }
+                </span>
+                {StartBalanceInputField && UpdateStartBalanceId === cashflow.id
+                  ? (
+                    <div className="flex flex-row gap-2 items-center ml-2">
+                      <Button variant="ghost" onClick={UpdateCancelStartBalanceField}>
+                        <X className="text-red-600" />
+                      </Button>
+                      <Button variant="ghost" onClick={handleUpdateStartBalance}>
+                        <Check className="text-green-600" />
+                      </Button>
+                    </div>
+                  )
+                  : (
+                    <Button
+                      onClick={() => UpdateActiveStartBalanceField(cashflow)}
+                      variant="ghost"
+                      className="text-yellow-500 hover:text-purple-600 ml-2"
+                    >
+                      <SquarePen />
+                    </Button>
+                  )}
+              </li>
 
+              <li className="flex justify-between items-center hover:bg-green-400">
+                <span className="flex flex-row items-center gap-2 text-base font-bold">Gross
+                  {netInputField && UpdateNetChangeId === cashflow.id
+                    ? (
+                      isLoadingUpdateNet
+                        ? (<Loader2 className="h-4 w-4 animate-spin" />)
+                        : <input
+                            type="number"
+                            value={netChangeInput}
+                            onChange={e => setNetChangeInput(e.target.value)}
+                            className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
+                          />
+                    )
+                    : (
+                      <span className={
+                        cashflow.netChange > 0
+                          ? "font-mono text-green-600"
+                          : cashflow.netChange < 0
+                          ? "font-mono text-red-500"
+                          : "font-mono text-black"
+                      }>
+                        {formatTableAmount(cashflow.netChange)}
+                      </span>
+                    )
+                  }
+                </span>
+                {netInputField && UpdateNetChangeId === cashflow.id
+                  ? (
+                    <div className="flex flex-row gap-2 items-center ml-2">
+                      <Button variant="ghost" onClick={UpdateCancelNetChangeField}>
+                        <X className="text-red-600" />
+                      </Button>
+                      <Button variant="ghost" onClick={handleUpdateNetChange}>
+                        <Check className="text-green-600" />
+                      </Button>
+                    </div>
+                  )
+                  : (
+                    <Button
+                      onClick={() => UpdateActiveNetChangeField(cashflow)}
+                      variant="ghost"
+                      className="text-yellow-500 hover:text-purple-600 ml-2"
+                    >
+                      <SquarePen />
+                    </Button>
+                  )}
+              </li>
 
-
-
-
-<li className="flex justify-between items-center hover:bg-green-400">
-  <span className="flex flex-row items-center gap-2 font-semibold">Gross
-    {netInputField && UpdateNetChangeId === cashflow.id
-      ? (
-        isLoadingUpdateNet
-          ? (<Loader2 className="h-4 w-4 animate-spin" />)
-          : <input
-              type="number"
-              value={netChangeInput}
-              onChange={e => setNetChangeInput(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
-            />
-      )
-      : (
-        <span className={
-          cashflow.netChange > 0
-            ? "font-mono text-green-600"
-            : cashflow.netChange < 0
-            ? "font-mono text-red-500"
-            : "font-mono text-black"
-        }>
-          {formatTableAmount(cashflow.netChange)}
-        </span>
-      )
-    }
-  </span>
-  {netInputField && UpdateNetChangeId === cashflow.id
-    ? (
-      <div className="flex flex-row gap-2 items-center ml-2">
-        <Button variant="ghost" onClick={UpdateCancelNetChangeField}>
-          <X className="text-red-600" />
-        </Button>
-        <Button variant="ghost" onClick={handleUpdateNetChange}>
-          <Check className="text-green-600" />
-        </Button>
-      </div>
-    )
-    : (
-      <Button
-        onClick={() => UpdateActiveNetChangeField(cashflow)}
-        variant="ghost"
-        className="text-yellow-500 hover:text-purple-600 ml-2"
-      >
-        <SquarePen />
-      </Button>
-    )}
-</li>
-
-
-
-
-
-<li className="flex justify-between items-center hover:bg-green-400">
-  <span className="flex flex-row items-center gap-2 font-semibold">Ending Balance
-    {EndBalInputField && UpdateEndBalId === cashflow.id
-      ? (
-        isLoadingEndBal
-          ? (<Loader2 className="h-4 w-4 animate-spin" />)
-          : <input
-              type="number"
-              value={EndBalInput}
-              onChange={e => setEndBalInput(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
-            />
-      )
-      : (
-        <span className={
-          cashflow.endBalance > 0
-            ? "font-mono text-green-600"
-            : cashflow.endBalance < 0
-            ? "font-mono text-red-500"
-            : "font-mono text-black"
-        }>
-          {formatTableAmount(cashflow.endBalance)}
-        </span>
-      )
-    }
-  </span>
-  {EndBalInputField && UpdateEndBalId === cashflow.id
-    ? (
-      <div className="flex flex-row gap-2 items-center ml-2">
-        <Button variant="ghost" onClick={UpdateCancelEndBalField}>
-          <X className="text-red-600" />
-        </Button>
-        <Button variant="ghost" onClick={handleEndBal}>
-          <Check className="text-green-600" />
-        </Button>
-      </div>
-    )
-    : (
-      <Button
-        onClick={() => UpdateActiveEndBalField(cashflow)}
-        variant="ghost"
-        className="text-yellow-500 hover:text-purple-600 ml-2"
-      >
-        <SquarePen />
-      </Button>
-    )}
-</li>
+              <li className="flex justify-between items-center hover:bg-green-400">
+                <span className="flex flex-row items-center gap-2 text-base font-bold">Ending Balance
+                  {EndBalInputField && UpdateEndBalId === cashflow.id
+                    ? (
+                      isLoadingEndBal
+                        ? (<Loader2 className="h-4 w-4 animate-spin" />)
+                        : <input
+                            type="number"
+                            value={EndBalInput}
+                            onChange={e => setEndBalInput(e.target.value)}
+                            className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
+                          />
+                    )
+                    : (
+                      <span className={
+                        cashflow.endBalance > 0
+                          ? "font-mono text-green-600"
+                          : cashflow.endBalance < 0
+                          ? "font-mono text-red-500"
+                          : "font-mono text-black"
+                      }>
+                        {formatTableAmount(cashflow.endBalance)}
+                      </span>
+                    )
+                  }
+                </span>
+                {EndBalInputField && UpdateEndBalId === cashflow.id
+                  ? (
+                    <div className="flex flex-row gap-2 items-center ml-2">
+                      <Button variant="ghost" onClick={UpdateCancelEndBalField}>
+                        <X className="text-red-600" />
+                      </Button>
+                      <Button variant="ghost" onClick={handleEndBal}>
+                        <Check className="text-green-600" />
+                      </Button>
+                    </div>
+                  )
+                  : (
+                    <Button
+                      onClick={() => UpdateActiveEndBalField(cashflow)}
+                      variant="ghost"
+                      className="text-yellow-500 hover:text-purple-600 ml-2"
+                    >
+                      <SquarePen />
+                    </Button>
+                  )}
+              </li>
             </div>
           </ul>
         </div>
@@ -853,7 +846,11 @@ const ACTIVITY_LABELS = {
 
         <div className="flex justify-end">
           <Button 
-          className="ml-0 mt-4"
+          className="ml-0 mt-4
+          bg-black hover:bg-transparent
+          text-white hover:text-black 
+          hover:border hover:border-black
+          font-medium hover:font-normal text-base tracking-wide"
           onClick={handleBack}
           disabled={goBack}>
             {goBack

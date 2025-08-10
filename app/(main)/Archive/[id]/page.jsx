@@ -4,6 +4,12 @@ import ArchiveTable from '../_components/ArchiveTable'
 import ButtonBack from '../_components/ButtonBack';
 import { getArchives, getStaff, getUnauthUser } from '@/actions/admin';
 import NotFound from '@/app/not-found';
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 async function ArchivePage ({ params }) {
   const {id} = await params;
@@ -20,12 +26,12 @@ async function ArchivePage ({ params }) {
 
   return (
     <div className='flex flex-col justify-center mx-6'>
-      <div className="flex flex-col justify-center">
+      <div className={`${fontZenKaku.className} flex flex-col justify-center`}>
         <div className="flex justify-start">
           <ButtonBack id={id}/>
         </div>
          <label className='text-center font-bold text-6xl tracking-normal'>Archive</label>
-        <label className='text-center my-2 text-sm text-slate-400'>Here are your deleted transactions and groups of this account.</label>
+        <label className='text-center my-2 font-normal text-base text-slate-400'>Here are your deleted transactions and groups of this account.</label>
       </div>
      <ArchiveTable archives={archives}/>
       

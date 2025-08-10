@@ -19,7 +19,10 @@ export default function ButtonBack({id}) {
         type="button" 
         disabled={isLoading}
         variant="outline"
-        className="bg-black text-white hover:border-black hover:bg-white hover:text-black"
+        className="bg-black text-white 
+        hover:border-black hover:bg-white hover:text-black
+        font-medium hover:font-normal text-sm md:!text-base
+        tracking-wide h-5 md:h-9 px-2 md:px-4 py-3 md:py-2"
         onClick={handleBackLoading}>
       { isLoading
         ? (<>

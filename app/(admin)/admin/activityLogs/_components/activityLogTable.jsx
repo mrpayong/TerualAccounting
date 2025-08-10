@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 
 function getActionLabel(action) {
@@ -101,6 +103,8 @@ function getActionLabel(action) {
       return "Edited Client Information";
     case "deleteSubAccount":
       return "Deleted a Group transaction";
+    case "deleteCashflowStatement":
+      return 'Deleted Cashflow Statement';
     default:
       return action;
   }
@@ -128,6 +132,8 @@ const ActivityLogTable = ({activities = {}}) => {
   const [sortDir, setSortDir] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+const [toDateRaw, setToDateRaw] = useState(null);
+const [fromDateRaw, setFromDateRaw] = useState(null);
 
   const activityArray = activities.data ?? [];
   // Derived: unique actions for filter
@@ -141,6 +147,8 @@ const ActivityLogTable = ({activities = {}}) => {
     const actions = Array.from(new Set(activityArray.map((a) => a.action)));
     const grouped = [];
     let hasGet = false;
+
+
     actions.forEach(action => {
       if (typeof action === "string" && action.startsWith("get")) {
         hasGet = true;
@@ -176,8 +184,18 @@ const filtered = useMemo(() => {
         a.user?.email?.toLowerCase().includes(search.toLowerCase()) ||
         a.userId?.toLowerCase().includes(search.toLowerCase())
     );
+  // Date filtering logic
+  if (fromDateRaw) {
+    const from = new Date(fromDateRaw);
+    logs = logs.filter((a) => new Date(a.createdAt) >= from);
+  }
+  if (toDateRaw) {
+    const to = new Date(toDateRaw);
+    to.setHours(23, 59, 59, 999);
+    logs = logs.filter((a) => new Date(a.createdAt) <= to);
+  }
   return logs;
-}, [activityArray, actionFilter, search]);
+}, [activityArray, actionFilter, search, fromDateRaw, toDateRaw]);
 
 
   // Sorting
@@ -216,11 +234,18 @@ const filtered = useMemo(() => {
     }
   };
 
-
-
-
-
-
+  const handleClear = () => {
+    setSearch("");  
+    setActionFilter("all");
+    setFromDateRaw(null);
+    setToDateRaw(null);
+    setCurrentPage(1);
+  };
+const anyFilterActive =
+  search !== "" ||
+  actionFilter !== "all" ||
+  fromDateRaw !== null ||
+  toDateRaw !== null;
 
 
 
@@ -229,7 +254,7 @@ const filtered = useMemo(() => {
   return (
     <div className="w-full  py-4">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <Select value={actionFilter} onValueChange={setActionFilter}>
             <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filter by Action" />
@@ -256,8 +281,55 @@ const filtered = useMemo(() => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="From"
+                timezone='Asia/Manila'
+                value={fromDateRaw}
+                onChange={setFromDateRaw}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                    inputProps: { placeholder: 'Start date' }
+                  }
+                }}
+                disableFuture={false}
+                maxDate={toDateRaw}
+                format="yyyy-MM-dd"/>
+              <DatePicker
+                label="To"
+                timezone='Asia/Manila'
+                value={toDateRaw}
+                onChange={setToDateRaw}
+                minDate={fromDateRaw}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                    inputProps: { placeholder: 'Start date' }
+                  }
+                }}
+                disableFuture={false}
+                format="yyyy-MM-dd"/>
+            </LocalizationProvider>
+          </div>
+
         </div>
         <div className="flex gap-2 items-center">
+          {anyFilterActive && (
+            <Button className="
+              bg-white border border-rose-500
+              text-rose-500 hover:bg-rose-500
+              hover:text-white hover:border-0
+              hover:shadow-md hover:shadow-rose-500/25"
+              size="sm"
+              onClick={handleClear}
+            >
+              Clear Filter
+            </Button>
+          )}
           <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Rows" />

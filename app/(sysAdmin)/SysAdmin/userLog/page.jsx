@@ -6,7 +6,6 @@ import UserSessionTable from './_component/userLogpage'
 async function UserLog () {
   const sessions = await getWebhookSessions()
 
-  console.log("All User Sessions: ", sessions)
   return (
     <div className='p-6'>
       <div className="flex flex-col justify-start mb-6">

@@ -4,6 +4,12 @@ import { getStaff, getUnauthUser } from "@/actions/admin";
 import NotFound from "@/app/not-found";
 import { Button } from "@/components/ui/button";
 import BackButton from "../_components/BackButton";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: '900',
+})
 
 export default async function SubAccountsPage({ params }) {
   const user = await getStaff()
@@ -34,7 +40,7 @@ export default async function SubAccountsPage({ params }) {
           <BackButton id={id}/>
         </div>        
         <div className="flex justify-center items-center">
-          <h1 className="text-2xl text-center font-bold mb-4">Grouped Transcations</h1>
+          <h1 className={`${fontZenKaku.className} text-2xl md:text-3xl text-center mb-4`}>Grouped Transcations</h1>
         </div>
       
       </div>

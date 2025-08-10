@@ -19,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, ChevronsUpDown, ArrowUpWideNarrow, ArrowDownNarrowWide } from "lucide-react";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 function formatToPhilippinesTime(isoString) {
   const date = new Date(isoString);
@@ -45,6 +47,8 @@ const UserSessionTable = ({ sessions = {} }) => {
   const [sortState, setSortState] = useState("asc"); // "asc" | "desc" | "none"
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [fromDateRaw, setFromDateRaw] = useState(null);
+  const [toDateRaw, setToDateRaw] = useState(null);
 
   const activityArray = sessions.data ?? [];
 
@@ -65,8 +69,17 @@ const UserSessionTable = ({ sessions = {} }) => {
           a.user?.Lname?.toLowerCase().includes(search.toLowerCase()) ||
           a.user?.email?.toLowerCase().includes(search.toLowerCase())
       );
+    if (fromDateRaw) {
+      const from = new Date(fromDateRaw);
+      logs = logs.filter((a) => new Date(a.createdAt) >= from);
+    }
+    if (toDateRaw) {
+      const to = new Date(toDateRaw);
+      to.setHours(23, 59, 59, 999);
+      logs = logs.filter((a) => new Date(a.createdAt) <= to);
+    }
     return logs;
-  }, [activityArray, actionFilter, search]);
+  }, [activityArray, actionFilter, search, fromDateRaw, toDateRaw]);
 
   // Sorting (only on Occurred On column)
   const sorted = useMemo(() => {
@@ -138,36 +151,107 @@ const UserSessionTable = ({ sessions = {} }) => {
     all: "All Actions",
   };
 
+  const handleClear = () => {
+    setSearch("");
+    setActionFilter("all");
+    setFromDateRaw(null);
+    setToDateRaw(null);
+  };
+
+  const anyFilterActive =
+    search !== "" ||
+    actionFilter !== "all" ||
+    fromDateRaw !== null ||
+    toDateRaw !== null;
+
+
+
+
+
+
+
+
+
+  
   // Responsive Table
   return (
     <div className="w-full py-4">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center w-full">
-          <Select value={actionFilter} onValueChange={setActionFilter}>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Filter by Action" />
-            </SelectTrigger>
-            <SelectContent>
-              {actionOptions.map((action) => (
-                <SelectItem key={action} value={action}>
-                  {actionDisplayNames[action] || action}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="relative w-full md:w-[240px]">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <Input
-              className="pl-10 w-full border-0"
-              placeholder="Search name or email"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      <div className="flex flex-col lg:flex-row lg:items-end md:justify-between gap-4 mb-4">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center w-full">
+          <div className="flex flex-col md:flex-row gap-1">
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by Action" />
+              </SelectTrigger>
+              <SelectContent>
+                {actionOptions.map((action) => (
+                  <SelectItem key={action} value={action}>
+                    {actionDisplayNames[action] || action}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative w-full md:w-[240px]">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <Input
+                className="pl-10 w-full border border-gray-300"
+                placeholder="Search name or email"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="From"
+                timezone='Asia/Manila'
+                value={fromDateRaw}
+                onChange={setFromDateRaw}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                    inputProps: { placeholder: 'Start date' }
+                  }
+                }}
+                disableFuture={false}
+                maxDate={toDateRaw}
+                format="yyyy-MM-dd"/>
+              <DatePicker
+                label="To"
+                timezone='Asia/Manila'
+                value={toDateRaw}
+                onChange={setToDateRaw}
+                minDate={fromDateRaw}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                    inputProps: { placeholder: 'Start date' }
+                  }
+                }}
+                disableFuture={false}
+                format="yyyy-MM-dd"/>
+            </LocalizationProvider>
           </div>
         </div>
-        <div className="flex gap-2 items-center">
+
+        <div className="flex gap-2 items-center ">
+          {anyFilterActive && (
+            <Button className="
+              bg-white border border-rose-500
+              text-rose-500 hover:bg-rose-500
+              hover:text-white hover:border-0
+              hover:shadow-md hover:shadow-rose-500/25"
+              size="sm"
+              onClick={handleClear}
+            >
+              Clear Filter
+            </Button>
+          )}
           <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Rows" />

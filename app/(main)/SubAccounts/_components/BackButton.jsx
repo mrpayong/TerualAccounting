@@ -3,6 +3,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: '500',
+})
 
 export default function BackButton({id}) {
   const router = useRouter();
@@ -19,7 +25,7 @@ export default function BackButton({id}) {
         type="button" 
         disabled={isLoading}
         variant="outline"
-        className="bg-black text-white hover:border-black hover:bg-white hover:text-black"
+        className={`${fontZenKaku.className} tracking-wide bg-black text-white hover:border-black hover:bg-white hover:text-black`}
         onClick={handleBackLoading}>
       { isLoading
         ? (<>

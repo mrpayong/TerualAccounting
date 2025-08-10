@@ -28,9 +28,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { ArrowLeft, ArrowRight, MoreHorizontal } from 'lucide-react';
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
 
 
 const ITEMS_PER_PAGE = 10;
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 
 function formatManilaDate(dateInput) {
@@ -118,12 +124,25 @@ const ArchiveTable = ({archives}) => {
   setPage(1);
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="w-full">
       {/* Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-4 items-center">
+      <div className={`${fontZenKaku.className} flex flex-col sm:flex-row gap-4 mb-4 items-center`}>
         <div className="flex items-center gap-2">
-          <label htmlFor="from-date" className="font-medium text-sm">
+          <label htmlFor="from-date" className="font-medium text-base">
             FROM
           </label>
           <Input
@@ -131,11 +150,11 @@ const ArchiveTable = ({archives}) => {
             type="date"
             value={fromDate}
             onChange={handleFromDate}
-            className="max-w-[160px]"
+            className="max-w-[160px] font-medium !text-base"
           />
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="to-date" className="font-medium text-sm">
+          <label htmlFor="to-date" className="font-medium text-base">
             TO
           </label>
           <Input
@@ -143,46 +162,50 @@ const ArchiveTable = ({archives}) => {
             type="date"
             value={toDate}
             onChange={handleToDate}
-            className="max-w-[160px]"
+            className="max-w-[160px] font-medium !text-base"
           />
         </div>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={handleClearFilters}
-        className="mt-2 sm:mt-0"
-        type="button"
-      >
-        Clear Filter
-      </Button>
+        {(fromDate || toDate) && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleClearFilters}
+            className="mt-2 sm:mt-0 border hover:border-rose-600 
+            text-black hover:text-rose-600 font-medium tracking-wide
+            hover:bg-transparent" 
+            type="button"
+          >
+            Clear Filter
+          </Button>
+        )}
       </div>
+
         <div className="overflow-x-auto rounded-lg border">
-        <Table>
+        <Table className={`${fontZenKaku.className}`}>
           <TableHeader>
             <TableRow>
-              <TableHead>Date of Action</TableHead>
-              <TableHead>Name/Description</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead className="text-end px-4">Details</TableHead>
+              <TableHead className='font-bold text-base'>Date of Action</TableHead>
+              <TableHead className='font-bold text-base'>Name/Description</TableHead>
+              <TableHead className='font-bold text-base'>Action</TableHead>
+              <TableHead className="font-bold text-base text-end px-4">Details</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedArchives.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={4} className="font-bold text-base text-center py-8">
                   No data to display.
                 </TableCell>
               </TableRow>
             ) : (
               paginatedArchives.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>
+                  <TableCell className='font-normal !text-base'>
                     {item.createdAt
                         ? formatManilaDate(item.createdAt)
                         : "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className='font-normal !text-base'>
                     {item.data?.name || item.data?.particular
                         ? item.data?.particular 
                         : item.data?.name
@@ -190,13 +213,13 @@ const ArchiveTable = ({archives}) => {
                             : item.data?.description
                     }
                   </TableCell>
-                  <TableCell>
+                  <TableCell className='font-normal !text-base'>
                     {(() => {
                         switch (item.action) {
                           case "deleteTransaction":
                             return "Deleted Transaction";
                           case "deleteSubAccount":
-                            return "Deleted Sub Account";
+                            return "Deleted Group Transactions";
                           case "deleteCashflowStatement":
                             return "Deleted Cashflow Statement";
                           default:
@@ -211,10 +234,10 @@ const ArchiveTable = ({archives}) => {
                             <MoreHorizontal className="mr-2 h-4 w-4"/>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="[&>button]:hidden sm:max-w-[425px]">
+                      <DialogContent className={`${fontZenKaku.className} rounded-md [&>button]:hidden sm:max-w-[425px]`}>
                         <DialogHeader>
-                            <DialogTitle>Archive Details</DialogTitle>
-                            <DialogDescription>
+                            <DialogTitle className='text-center !font-bold'>Archive Details</DialogTitle>
+                            <DialogDescription className='text-center font-normal tracking-wide'>
                                 Details of your deleted data.
                             </DialogDescription>
                         </DialogHeader>
@@ -224,63 +247,67 @@ const ArchiveTable = ({archives}) => {
                         {item.entityType === "Transaction" && (
                             <>
                             <div>
-                                <span className="font-semibold">Recorded On:</span>{" "}
-                                <span>{formatManilaDate(item.data.createdAt)}</span>
+                                <span className="font-medium text-base">Recorded On:</span>{" "}
+                                <span className='font-normal text-base'>{formatManilaDate(item.data.createdAt)}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Amount:</span>{" "}
-                                <span>{formatTableAmount(item.data.amount)}</span>
+                                <span className="font-medium text-base">Amount:</span>{" "}
+                                <span className='font-normal text-base'>{formatTableAmount(item.data.amount)}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Particular:</span>{" "}
-                                <span>{item.data.particular}</span>
+                                <span className="font-medium text-base">Ref. Number:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.refNumber}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Description:</span>{" "}
-                                <span>{item.data.description}</span>
+                                <span className="font-medium text-base">Particular:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.particular}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Account ID:</span>{" "}
-                                <span>{item.data.accountId}</span>
+                                <span className="font-medium text-base">Description:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.description}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Transaction ID:</span>{" "}
-                                <span>{item.data.id}</span>
+                                <span className="font-medium text-base">Account ID:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.accountId}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium text-base">Transaction ID:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.id}</span>
                             </div>
                             </>
                         )}
 
                         {/* SubAccount fields */}
-                        {item.entityType === "SubAccount" && (
+                        {item.entityType === "Group Transaction" && (
                             <>
                             <div>
-                                <span className="font-semibold">Name:</span>{" "}
-                                <span>{item.data.name}</span>
+                                <span className="font-medium text-base">Name:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.name}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Created On:</span>{" "}
-                                <span>{formatManilaDate(item.data.createdAt)}</span>
+                                <span className="font-medium text-base">Created On:</span>{" "}
+                                <span className='font-normal text-base'>{formatManilaDate(item.data.createdAt)}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Description:</span>{" "}
-                                <span>{item.data.description}</span>
+                                <span className="font-medium text-base">Description:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.description}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Balance:</span>{" "}
-                                <span>{formatTableAmount(item.data.balance)}</span>
+                                <span className="font-medium text-base">Balance:</span>{" "}
+                                <span className='font-normal text-base'>{formatTableAmount(item.data.balance)}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">Account ID:</span>{" "}
-                                <span>{item.data.accountId}</span>
+                                <span className="font-medium text-base">Account ID:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.accountId}</span>
                             </div>
                             <div>
-                                <span className="font-semibold">SubAccount ID:</span>{" "}
-                                <span>{item.data.id}</span>
+                                <span className="font-medium text-base">SubAccount ID:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.id}</span>
                             </div>
                             {typeof item.data.transactionCount !== "undefined" && (
                                 <div>
-                                <span className="font-semibold">Transaction Count:</span>{" "}
-                                <span>{item.data.transactionCount}</span>
+                                <span className="font-medium text-base">Transaction Count:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.transactionCount}</span>
                                 </div>
                             )}
                             </>
@@ -327,7 +354,7 @@ const ArchiveTable = ({archives}) => {
                         )}
 
                         {/* Fallback for unknown entity types */}
-                        {item.entityType !== "Transaction" && item.entityType !== "SubAccount" && item.entityType !== "CashflowStatement" && (
+                        {item.entityType !== "Transaction" && item.entityType !== "Group Transaction" && item.entityType !== "CashflowStatement" && (
                             <pre className="whitespace-pre-wrap text-xs max-w-[200px] overflow-x-auto">
                             {JSON.stringify(item.data, null, 2)}
                             </pre>
@@ -335,7 +362,12 @@ const ArchiveTable = ({archives}) => {
                         </div>
                       <DialogFooter>
                           <DialogClose asChild>
-                          <Button variant="outline">Close</Button>
+                            <Button 
+                              className='
+                              font-medium hover:font-normal text-sm md:!text-base
+                              hover:bg-rose-600 hover:text-white 
+                              border border-black hover:border-0 tracking-wide'
+                              variant="outline">Close</Button>
                           </DialogClose>
                       </DialogFooter>
                       </DialogContent>

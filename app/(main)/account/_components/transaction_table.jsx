@@ -119,6 +119,8 @@ const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => {
     const isSmallScreen = useIsSmallScreen();
     const [fromDateRaw, setFromDateRaw] = useState(null);
     const [toDateRaw, setToDateRaw] = useState(null);
+    const [dropdownDisabledId, setDropdownDisabledId] = useState(false);
+    const [editLoadingId, setEditLoadingId] = useState(false);
 // Removed duplicate declaration of rowsPerPage
 const rowsPerPage = 10; // Default rows per page
 
@@ -169,18 +171,24 @@ const rowsPerPage = 10; // Default rows per page
     const acount_id = id;
     const handleSingleDelete = async (id) => {
         const result = await Swal.fire({
-            title: `Are you sure?`,
-            text: `You are about to delete this transaction.`,
+            title: `<span class="${fontZenKaku.className} font-bold">Are you sure?</span>`,
+            html: `<span class="${fontZenKaku.className} font-medium">You are about to delete this transaction.</span>`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#d33",
             cancelButtonColor: "#3085d6",
             confirmButtonText: "Confirm",
             cancelButtonText: "Cancel",
+            customClass: {
+              confirmButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
+              cancelButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
+              popup: "max-w-lg w-full p-6 rounded-lg shadow-lg",
+            },
           });
         
           if (result.isConfirmed) {
             deleteFn([id], acount_id);
+            setDropdownDisabledId(true)
           }
     }
     const filteredAndSortedTransactions = useMemo(() => {
@@ -220,7 +228,9 @@ const rowsPerPage = 10; // Default rows per page
                 case "category":
                     comparison = a.category.localeCompare(b.category);
                     break;
-
+                case "createdAt":
+                        comparison = new Date(a.createdAt) - new Date(b.createdAt);
+                        break;
                 default:
                     comparison = 0;
             }
@@ -289,29 +299,34 @@ const rowsPerPage = 10; // Default rows per page
 
     useEffect(() => {
         if (deleted && !deleteLoading) {
-            // console.log("Transactions deleted successfully:", deleted);
-            // toast.error("Selected Transactions Deleted successfully");
+            setDropdownDisabledId(false);
              toast.success(`Deleted successfully`);
              setSelectedIds([]);
         }
     }, [deleted, deleteLoading]);
 
     const handleBulkDelete = async () => {
-
+      setDropdownDisabledId(true);
         const result = await Swal.fire({
-          title: `Are you sure?`,
-          text: `You are about to delete ${selectedIds.length} transactions.`,
+          title: `<span class="${fontZenKaku.className} font-bold">Are you sure?</span>`,
+          html: `<span class="${fontZenKaku.className} font-medium">You are about to delete ${selectedIds.length} transactions.</span>`,
           icon: "warning",
           showCancelButton: true,
           confirmButtonColor: "#d33",
           cancelButtonColor: "#3085d6",
           confirmButtonText: "Confirm",
           cancelButtonText: "Cancel",
+          customClass: {
+            confirmButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
+            cancelButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
+          },
         });
       
         if (result.isConfirmed) {
-          console.log("Deleting transactions with IDs:", selectedIds);
           deleteFn(selectedIds, acount_id); // Call the delete function with selected IDs
+        }
+        if(!result.isConfirmed){
+          setDropdownDisabledId(false)
         }
       };
 
@@ -379,6 +394,7 @@ const rowsPerPage = 10; // Default rows per page
           // Ensure forCfs.data.transactions is defined
           if (forCfs.data && Array.isArray(forCfs.data.transactions)) {
             setIsModalOpen(true);
+            setSelectedPeriod(null)
           } 
         }
       }, [forCfs]);
@@ -482,11 +498,6 @@ const rowsPerPage = 10; // Default rows per page
                 description: data.description ? String(data.description).trim() : null,
                 parentName: data.parentName ? String(data.parentName).trim() : null,
               };
-          
-            
-          
-              // Call the server action using useFetch
-           
                await createSubAccountFn(selectedIds, sanitizedData, id);
         };
 
@@ -592,21 +603,23 @@ const rowsPerPage = 10; // Default rows per page
       const totalSubAccountPages = Math.ceil(filteredAndSortedSubAccounts.length / rowsPerPage);
       
       const PaginationControls = ({ currentPage, totalPages, onPageChange }) => (
-        <div className="flex justify-between items-center mt-4">
+        <div className={`${fontZenKaku.className} flex justify-between items-center mt-4`}>
           <Button
             variant="outline"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
+            className="font-medium !text-base"
           >
             Previous
           </Button>
-          <span className="text-sm">
+          <span className="font-medium !text-base">
             Page {currentPage} of {totalPages}
           </span>
           <Button
             variant="outline"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
+            className="font-medium !text-base"
           >
             Next
           </Button>
@@ -690,21 +703,21 @@ const rowsPerPage = 10; // Default rows per page
         const amountColor = transaction.type === "EXPENSE" ? "text-red-500" : "text-green-500";
 
         Swal.fire({
-          title: `<h2 class="text-lg font-semibold text-blue-600">
+          title: `<h2 class="${fontZenKaku.className} tracking-wide text-2xl md:text-3xl font-bold text-blue-600">
                     ${transaction.particular || "Transaction Details"}
                   </h2>`,
           html: `
-            <div class="text-left space-y-2">
-              <p><strong>Date of transaction:</strong> ${formatDate(transaction.date)}</p>
-              <p><strong>Amount:</strong><span class="${amountColor}"> ${formatAmount(transaction.amount)}</span></p>
-              <p><strong>Type:</strong> ${transaction.type}</p>
-              <p><strong>Reference number:</strong> ${transaction.refNumber || "N/A"}</p>
-              <p><strong>Account title:</strong> ${transaction.category || "N/A"}</p>
-              <p><strong>Activity type:</strong> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
-              <p><strong>Description:</strong> ${transaction.description || "No description provided."}</p>
-              <p><strong>BIR authority to print number:</strong> ${transaction.printNumber || "N/A"}</p>
-              <p><strong>Recorded on:</strong> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>
-              <p><strong>Edited on:</strong> ${formatUtcDateWithTime(transaction.updatedAt) || "N/A"}</p>              
+            <div class="${fontZenKaku.className} text-left space-y-2">
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Date of transaction:</label> ${formatDate(transaction.date)}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Amount:</label><span class="${amountColor}"> ${formatAmount(transaction.amount)}</span></p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Type:</label> ${transaction.type}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Reference number:</label> ${transaction.refNumber || "N/A"}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Account title:</label> ${transaction.category || "N/A"}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Activity type:</label> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Description:</label> ${transaction.description || "No description provided."}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>BIR authority to print number:</label> ${transaction.printNumber || "N/A"}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Recorded on:</label> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Edited on:</label> ${formatUtcDateWithTime(transaction.updatedAt) || "N/A"}</p>              
             </div>
             <div class="text-center mt-4">
               <p class="text-xs text-neutral-400 italic">
@@ -848,6 +861,7 @@ const rowsPerPage = 10; // Default rows per page
           toast.error("Error deleting group.")
         } else {
           deleteGroupFn(groupToDeleteId, id);
+          setGroupToDeleteId(null)
         }
       }
 
@@ -936,15 +950,17 @@ const handleDownloadCDBExcel = () => {
 };
 
 
+const handleEditTransaction = (transactionId) => {
+  setDropdownDisabledId(true);
+  setEditLoadingId(true);
+  router.push(`/transaction/create?edit=${transactionId}`);
+};
 
+  const [tableBg, setTableBg] = useState(null)
 
-
-
-
-
-
-
-
+  const tableBgHandler = (id) => {
+    setTableBg(id)
+  }
 
 
 
@@ -974,17 +990,18 @@ const handleDownloadCDBExcel = () => {
        {subAccountLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {deleteGroupLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {cfsLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {editLoadingId && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
       {/* FILTERS */}
         <div className="lg:flex flex-row items-center justify-between gap-4 mb-4">
           <div className="flex flex-col 
-            sm:flex-row py-1 sm:items-center gap-4 justify-start lg:overflow-y-hidden
+            sm:flex-row py-2 sm:items-center gap-4 justify-start lg:overflow-y-hidden
             md:overflow-x-auto md:max-w-full  md:gap-3">
 
               <div className='flex flex-col sm:flex-row gap-4'>
                 <div className='relative flex'>
                     <Search className='absolute left-2 top-2.5 h-4 text-muted-foreground'/>
                     <Input 
-                        className="pl-8 text-xs w-full md:w-64 lg:w-80 ml-1"
+                        className={`${fontZenKaku.className} font-normal pl-8 !text-base w-full md:w-64 lg:w-80 ml-1`}
                         placeholder="Search Ref#, Particular, Description"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -993,22 +1010,23 @@ const handleDownloadCDBExcel = () => {
 
                 <div className='flex flex-col lg:flex-row md:flex-row gap-2'>
                   <Select  value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className=" bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+                      <SelectTrigger className={`${fontZenKaku.className} font-bold bg-gradient-to-r 
+                                        from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
                                           border border-blue-500/30 hover:border-blue-500/50
                                           shadow-lg shadow-blue-500/20
                                           transition-all duration-300
                                           px-6 py-3 rounded-full
-                                          font-semibold text-sm
+                                          text-sm tracking-wide
                                           flex items-center gap-2
                                           hover:scale-105
                                           justify-center 
-                                          text-center">
+                                          text-center`}>
                           <SelectValue placeholder="All Types"/>
                       </SelectTrigger>
 
                       <SelectContent>
-                          <SelectItem value='INCOME'>Income</SelectItem>
-                          <SelectItem value='EXPENSE'>Expense</SelectItem>
+                          <SelectItem className={`${fontZenKaku.className} font-medium `} value='INCOME'>Income</SelectItem>
+                          <SelectItem className={`${fontZenKaku.className} font-medium `} value='EXPENSE'>Expense</SelectItem>
                       </SelectContent>
                   </Select>
 
@@ -1018,24 +1036,23 @@ const handleDownloadCDBExcel = () => {
                     className="w-[140px] text-sm"
                   >
                     <SelectTrigger
-                      className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+                      className={`${fontZenKaku.className} font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
                                   border border-blue-500/30 hover:border-blue-500/50
                                   shadow-lg shadow-blue-500/20
                                   transition-all duration-300
-                                  px-6 py-3 rounded-full
-                                  font-semibold text-sm
+                                  px-6 py-3 rounded-full text-sm
                                   flex items-center gap-2
                                   hover:scale-105
-                                  justify-center 
-                                  text-center">
+                                  justify-center tracking-wide
+                                  text-center`}>
                       <SelectValue placeholder="All Activities" />
                     </SelectTrigger>
 
                     <SelectContent>
                       {/* <SelectItem value="">All Activities</SelectItem> */}
-                      <SelectItem value="OPERATION">Operating</SelectItem>
-                      <SelectItem value="INVESTMENT">Investing</SelectItem>
-                      <SelectItem value="FINANCING">Financing</SelectItem>
+                      <SelectItem className={`${fontZenKaku.className} font-medium`} value="OPERATION">Operating</SelectItem>
+                      <SelectItem className={`${fontZenKaku.className} font-medium`} value="INVESTMENT">Investing</SelectItem>
+                      <SelectItem className={`${fontZenKaku.className} font-medium`} value="FINANCING">Financing</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -1094,10 +1111,11 @@ const handleDownloadCDBExcel = () => {
                           "shadow-lg shadow-blue-500/20",
                           "transition-all duration-300",
                           "px-4 sm:px-6 py-2 sm:py-3 rounded-full",
-                          "font-semibold text-sm",
+                          "text-sm",
                           "flex items-center gap-2",
                           "hover:scale-105",
-                          "w-full sm:w-auto" //Make it full width on small screen
+                          "w-full sm:w-auto",
+                          `${fontZenKaku.className} font-bold` //Make it full width on small screen
                       )}>
                         <PlusCircleIcon/> Cashflow Statement
                       </Button>
@@ -1108,7 +1126,7 @@ const handleDownloadCDBExcel = () => {
                       style={{ zIndex: 0 }}
                     >
                       <div className="flex flex-col gap-2 mb-2">
-                        <h2 className="text-lg font-semibold text-black">Generate Cashflow Statement</h2>
+                        <h2 className={`${fontZenKaku.className} font-medium text-lg text-black`}>Generate Cashflow Statement</h2>
                         <div >
                           <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
                             {PERIOD_LABELS.map(({ label, value }) => (
@@ -1119,11 +1137,11 @@ const handleDownloadCDBExcel = () => {
                                   disabled={!periodCashflowMap[value]}
                                   id={`checkbox-${value}`}
                                 />
-                                <label htmlFor={`checkbox-${value}`} className={periodCashflowMap[value] ? "" : "text-gray-400"}>
+                                <label htmlFor={`checkbox-${value}`} className={periodCashflowMap[value] ? `${fontZenKaku.className} font-normal` : `${fontZenKaku.className} font-normal text-gray-400`}>
                                   {label}
                                 </label>
                                 {periodCashflowMap[value] && (
-                                  <span className="ml-1 text-xs text-gray-500">
+                                  <span className={`${fontZenKaku.className} font-medium ml-1 text-xs text-gray-500`}>
                                     (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
                                   </span>
                                 )}
@@ -1148,7 +1166,7 @@ const handleDownloadCDBExcel = () => {
                                     : ""
                                 }
                                 className={`
-                                  absolute top-0 left-0 w-full text-sm bg-black/20 text-gray-800 border-purple-500/30
+                                  ${fontZenKaku.className} font-normal tracking-wider !text-base absolute top-0 left-0 w-full bg-black/20 text-gray-800 border-purple-500/30
                                   placeholder:text-gray-400 focus-visible:ring-purple-500
                                   focus-visible:border-purple-500 transition-all duration-300
                                   ${selectedPeriod && periodCashflowMap[selectedPeriod]
@@ -1165,7 +1183,7 @@ const handleDownloadCDBExcel = () => {
                                 onChange={handleSample}
                                 placeholder="0.00"
                                 className={`
-                                  w-full text-sm bg-black/20 text-gray-800 border-purple-500/30
+                                  ${fontZenKaku.className} font-normal !text-base tracking-wider w-full bg-black/20 text-gray-800 border-purple-500/30
                                   placeholder:text-gray-400 focus-visible:ring-purple-500
                                   focus-visible:border-purple-500 transition-all duration-300
                                   ${selectedPeriod && periodCashflowMap[selectedPeriod]
@@ -1178,14 +1196,13 @@ const handleDownloadCDBExcel = () => {
                           </div>
                           <Button
                               variant="outline"
-                              className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+                              className={`${fontZenKaku.className} font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
                                   border border-blue-500/30 hover:border-blue-500/50
                                   shadow-lg shadow-blue-500/20
                                   transition-all duration-300
-                                  px-6 py-3 rounded-full
-                                  font-semibold text-sm
+                                  px-6 py-3 rounded-full !text-base
                                   flex items-center gap-2
-                                  hover:scale-105"
+                                  hover:scale-105`}
                               size="sm"
                               type="submit"
                               disabled={cfsLoading || !response || selectedIds.length === 0}
@@ -1197,7 +1214,7 @@ const handleDownloadCDBExcel = () => {
                           </Button>
                         </div>
                       </form>
-                      <p className="text-xs text-gray-700 mt-4 tracking-wide">
+                      <p className={`${fontZenKaku.className} font-normal text-[0.85rem]/[1rem] text-gray-700 mt-4 tracking-wide`}>
                         Choose previous ending balance from respective period.<br/> 
                         Enter new beginning balance for new period only.
                       </p>
@@ -1327,11 +1344,11 @@ const handleDownloadCDBExcel = () => {
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button
-                        className="
+                        className={`${fontZenKaku.className} font-bold
                         bg-white hover:bg-blue-600 
                           text-black hover:text-white
                           border border-blue-600 hover:border-0
-                          hover:shadow-lg hover:shadow-blue-800/20"
+                          hover:shadow-lg hover:shadow-blue-800/20`}
                         disabled={isDialogOpen || subAccountLoading || deleteGroupLoading} 
                         >
                         Group transactions
@@ -1339,47 +1356,48 @@ const handleDownloadCDBExcel = () => {
                     </DialogTrigger>
                     <DialogContent className="rounded-lg sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
                         <DialogHeader>
-                        <DialogTitle>Group transactions</DialogTitle>
+                        <DialogTitle className={`${fontZenKaku.className} font-bold`}>Group transactions</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                           <div>
-                              <label className="text-sm font-medium">New group name</label>
+                              <label className={`${fontZenKaku.className} !text-base font-medium`}>New group name</label>
                               <input
                               type="text"
                               {...register("name")}
-                              className="w-full p-2 border border-gray-300 rounded" 
+                              className={`${fontZenKaku.className} font-normal w-full p-2 border border-gray-300 rounded` }
                               placeholder="Enter group name"
                               />
-                              {errors.name && (<p className="text-sm text-red-500">{errors.name.message}</p>)}
+                              {errors.name && (<p className={`${fontZenKaku.className} !text-base text-red-500`}>{errors.name.message}</p>)}
                           </div>
 
                           <div>
-                              <label className="text-sm font-medium">Description</label>
+                              <label className={`${fontZenKaku.className} !text-base font-medium`}>Description</label>
                               <textarea
                               {...register("description")}
-                              className="w-full p-2 border border-gray-300 rounded"
+                              className={`${fontZenKaku.className} font-normal w-full p-2 border border-gray-300 rounded`}
                               placeholder="Enter description (optional)"
                               />
                               {errors.description && (
-                              <p className="text-sm text-red-500">{errors.description.message}</p>
+                              <p className={`${fontZenKaku.className} !text-base text-red-500`}>{errors.description.message}</p>
                               )}
                           </div>
 
                           <div>
-                              <label className="text-sm font-medium">Parent group's name</label>
+                              <label className={`${fontZenKaku.className} !text-base font-medium`}>Parent group's name</label>
                               <input
                               type="text"
                               {...register("parentName")}
-                              className="w-full p-2 border border-gray-300 rounded"
+                              className={`${fontZenKaku.className} w-full p-2 border border-gray-300 rounded`}
                               placeholder="Enter parent group name (optional)"
                               />
                               {errors.parentName && (
-                              <p className="text-sm text-red-500">{errors.parentName.message}</p>
+                              <p className={`${fontZenKaku.className} !text-base text-red-500`}>{errors.parentName.message}</p>
                               )}
                           </div>
 
                         <div className="flex justify-end">
-                            <Button type="submit" disabled={subAccountLoading || isCreateGroupDisabled} className="bg-blue-500 text-white">
+                            <Button type="submit" disabled={subAccountLoading || isCreateGroupDisabled} 
+                            className={`${fontZenKaku.className} md:!text-base text-sm bg-blue-500 text-white`}>
                             {subAccountLoading
                               ? (<><Loader2  className="mr-2 h-4 w-4 animate-spin text-blue-300" />Creating group</>)
                               : "Create group"
@@ -1388,7 +1406,7 @@ const handleDownloadCDBExcel = () => {
                         </div>
                         </form>
                         <DialogFooter className="flex md:justify-start md:items-center">
-                          <DialogDescription className="md:flex md:flex-row grid grid-rows-2 items-center text-xs lg:text-sm whitespace-nowrap">
+                          <DialogDescription className={`${fontZenKaku.className} tracking-wide md:flex md:flex-row grid grid-rows-2 items-center text-xs lg:text-sm whitespace-nowrap`}>
                             <span className='flex flex-row'>
                             <Link href='/' className='flex flex-row items-center gap-[0.5] 
                               underline underline-offset-4 hover:text-blue-600 mr-1 ' target="_blank">
@@ -1406,13 +1424,12 @@ const handleDownloadCDBExcel = () => {
                     <Dialog open={isBulkEdit} onOpenChange={setIsBulkEdit}>
                       <DialogTrigger asChild>
                           <Button
-                          className="
+                          className={`${fontZenKaku.className} font-bold
                           bg-white hover:bg-yellow-300
                           text-black hover:text-white
                           border border-yellow-300 hover:border-0
                           hover:shadow-lg hover:shadow-yellow-500/20
-                          px-4 py-2 rounded "
-
+                          px-4 py-2 rounded `}
                           disabled={isDialogOpen || subAccountLoading || deleteGroupLoading} // Disable if no transactions are selected
                           >
                           Edit Activity type
@@ -1420,8 +1437,8 @@ const handleDownloadCDBExcel = () => {
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
                           <DialogHeader>
-                          <DialogTitle>Edit Activity Type</DialogTitle>
-                          <DialogDescription>Select Activity Type to edit opted transactions.</DialogDescription>
+                          <DialogTitle className={`${fontZenKaku.className} font-bold`}>Edit Activity Type</DialogTitle>
+                          <DialogDescription className={`${fontZenKaku.className} font-medium`}>Select Activity Type to edit opted transactions.</DialogDescription>
                           </DialogHeader>
                           <form onSubmit={async (e) => {
                               e.preventDefault();
@@ -1429,10 +1446,10 @@ const handleDownloadCDBExcel = () => {
                             }} className="space-y-4">
                               
                             <div className="flex flex-col gap-1">
-                              <label htmlFor="Activity" className="text-sm font-medium text-gray-700">Activity</label>
+                              <label htmlFor="Activity" className={`${fontZenKaku.className} text-base font-medium text-gray-700`}>Activity</label>
                               <select
                                 id="Activity"
-                                className={`w-full border rounded px-2 py-2 bg-neutral-50 ${
+                                className={`${fontZenKaku.className} text-base font-medium w-full border rounded px-2 py-2 bg-neutral-50 ${
                                   ActivityType ? "text-black" : "text-gray-400"
                                 }`}
                                 onChange={(e) => setActivityType(e.target.value)}
@@ -1440,14 +1457,18 @@ const handleDownloadCDBExcel = () => {
                                 required
                                 disabled={updateLoading}
                               >
-                                <option className="text-gray-400" value="">Select role</option>
-                                <option className="text-blue-500" value="OPERATION">Operating</option>
-                                <option className="text-purple-500" value="FINANCING">Financing</option>
-                                <option className="text-yellow-500" value="INVESTMENT">Investing</option>
+                                <option className="text-base font-medium text-gray-400" value="">Select Activity type</option>
+                                <option className="text-base font-medium text-blue-500" value="OPERATION">Operating</option>
+                                <option className="text-base font-medium text-purple-500" value="FINANCING">Financing</option>
+                                <option className="text-base font-medium text-yellow-500" value="INVESTMENT">Investing</option>
                               </select>
                             </div>
                           <div className="flex justify-end">
-                              <Button type="submit" disabled={updateLoading} className="bg-blue-500 text-white">
+                              <Button type="submit" disabled={updateLoading} 
+                                className={`${fontZenKaku.className} !text-base font-medium 
+                                bg-white hover:bg-yellow-500 
+                                text-black hover:text-white
+                                border border-yellow-500 hover:border-none`}>
                               {updateLoading
                                 ? (<><Loader2  className="mr-2 h-4 w-4 animate-spin text-blue-300" />Editing Activity</>)
                                 : "Edit Activity"
@@ -1460,12 +1481,12 @@ const handleDownloadCDBExcel = () => {
 
                     <Button
                       onClick={handleDownloadCDBExcel}
-                      className="
+                      className={`${fontZenKaku.className} font-bold !text-base
                         bg-white hover:bg-green-600 
                           text-black hover:text-white
                           border border-green-600 hover:border-0
-                          hover:shadow-lg hover:shadow-green-800/20">
-                      <Download className="mr-2 h-4 w-4" />
+                          hover:shadow-lg hover:shadow-green-800/20`}>
+                      <Download className="mr-2 h-4 w-4 font-bold" />
                       Download .xlsx
                     </Button>
                   </>)}
@@ -1474,19 +1495,20 @@ const handleDownloadCDBExcel = () => {
           </div>
 
           <div className="flex items-center gap-2 justify-end">
-            {selectedIds && selectedIds.length > 0 && (
+            {cfsLoading || deleteLoading || selectedIds && selectedIds.length > 0 && (
                 <div className="fixed bottom-4 right-4 z-50">
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={handleBulkDelete}
-                  className="bg-red-500/90 hover:bg-red-500 text-white
+                  className={`bg-red-500/90 hover:bg-red-500 text-white
                     border border-red-500/30 hover:border-red-500/50
                     shadow-lg shadow-red-500/20
                     transition-all duration-300
                     px-4 py-2 rounded-full
-                    font-semibold text-sm
-                    flex items-center gap-2 hover:scale-105"
+                    font-medium !text-base tracking-wide
+                    flex items-center gap-2 hover:scale-105
+                    ${fontZenKaku.className}`}
                 >
                   <Trash className="h-4 w-4" />
                   <span>Delete {selectedIds.length} transactions</span> 
@@ -1502,7 +1524,7 @@ const handleDownloadCDBExcel = () => {
 
       {/* TRANSACTIONS */}
       <Tabs defaultValue='transactions'>
-        <TabsList   className="
+        <TabsList  className={`${fontZenKaku.className} 
           flex flex-row gap-x-2 
           overflow-x-auto md:overflow-x-visible
           whitespace-nowrap
@@ -1511,15 +1533,15 @@ const handleDownloadCDBExcel = () => {
           bg-neutral-300
           rounded-t-md
           px-2 h-12 py-2 shadow-sm
-          ">
-          <TabsTrigger value="transactions" className="flex-shrink-0 px-4 py-2">Transactions tab</TabsTrigger>
-          <TabsTrigger value="subAccounts" className="flex-shrink-0 px-4 py-2">Grouped transactions tab</TabsTrigger>
+          `}>
+          <TabsTrigger disabled={dropdownDisabledId || deleteLoading || deleteGroupLoading} value="transactions" className="font-medium !text-base flex-shrink-0 px-4 py-2">Transactions tab</TabsTrigger>
+          <TabsTrigger disabled={dropdownDisabledId || deleteLoading || deleteGroupLoading} value="subAccounts" className="font-medium !text-base flex-shrink-0 px-4 py-2">Grouped transactions tab</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions">
           <div className="rounded-md border overflow-x-auto">
 
             <Table>
-              <TableHeader className="bg-slate-300">
+              <TableHeader className={`bg-slate-300 ${fontZenKaku.className} `}>
                 <TableRow>
                   <TableHead className="w-[50px] text-center">
                     <Checkbox
@@ -1530,7 +1552,7 @@ const handleDownloadCDBExcel = () => {
                       }
                     />
                   </TableHead>
-                  <TableHead className="text-left cursor-pointer"
+                  <TableHead className="text-left cursor-pointer text-base"
                     onClick={() => handleSort("date")}
                   ><div className="flex items-center">
                   Transaction date
@@ -1542,8 +1564,8 @@ const handleDownloadCDBExcel = () => {
                     ))}
                 </div>
                   </TableHead>
-                  <TableHead className="text-left">Particular</TableHead>
-                  <TableHead className="text-left cursor-pointer"
+                  <TableHead className="text-left text-base">Particular</TableHead>
+                  <TableHead className="text-left cursor-pointer text-base"
                     onClick={() => handleSort("category")}
                     >
                       <div className="flex items-center">
@@ -1556,8 +1578,8 @@ const handleDownloadCDBExcel = () => {
                             ))}
                         </div>
                   </TableHead>
-                  <TableHead className="text-center w-[150px]">Activity type</TableHead>
-                  <TableHead className="text-right cursor-pointer"
+                  <TableHead className="text-center w-[150px] text-base">Activity type</TableHead>
+                  <TableHead className="text-right cursor-pointer text-base"
                     onClick={() => handleSort("amount")}>
                       <div className="flex items-center justify-end">
                           Amount
@@ -1569,7 +1591,7 @@ const handleDownloadCDBExcel = () => {
                             ))}
                         </div>
                   </TableHead>
-                  <TableHead className="text-center"
+                  <TableHead className="text-center text-base hover:cursor-pointer"
                     onClick={() => handleSort("createdAt")}>
                       <div className="flex justify-center">
                         Recorded on
@@ -1581,20 +1603,26 @@ const handleDownloadCDBExcel = () => {
                         ))}
                       </div>
                   </TableHead>
-                  <TableHead className="text-center">Reference number</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead className="text-center text-base">Reference number</TableHead>
+                  <TableHead className="text-center text-base">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="bg-zinc-200">
+              <TableBody className={`bg-zinc-200 ${fontZenKaku.className} font-medium text-base`}>
                 {paginatedTransactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       No Transactions Found
                     </TableCell>
                   </TableRow>
                 ) : (
                   paginatedTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
+                    <TableRow key={transaction.id}
+                      className={
+                        tableBg === transaction.id
+                          ? "bg-sky-100 transition-colors"
+                          : ""
+                      }
+                    >
                       <TableCell className="text-center">
                         <Checkbox
                           onCheckedChange={() => handleSelect(transaction.id)}
@@ -1618,7 +1646,7 @@ const handleDownloadCDBExcel = () => {
                             {getGerundActivity(transaction.Activity)}
                           </TableCell>
                       <TableCell className={cn(
-                              "text-right font-medium",
+                              "text-right font-medium tracking-wide",
                               transaction.type === "EXPENSE"
                                 ? "text-red-500"
                                 : "text-green-500"
@@ -1633,24 +1661,46 @@ const handleDownloadCDBExcel = () => {
                         {transaction.refNumber}
                       </TableCell>
                       <TableCell className='flex justify-around'>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                        <DropdownMenu 
+                          onOpenChange={(open) => setTableBg(open ? transaction.id : null)}>
+                          <DropdownMenuTrigger asChild 
+                            className={dropdownDisabledId
+                              ? ``
+                              : `hover:[box-shadow:inset_0_2px_8px_0_rgba(0,0,0,0.3)]`
+                            }>
                             <Button 
-                              disabled={subAccountLoading || deleteGroupLoading} 
-                              variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
+                              disabled={subAccountLoading || deleteGroupLoading || dropdownDisabledId || deleteLoading} 
+                              variant="ghost" className="h-8 w-8 p-0"
+                              onClick={() =>tableBgHandler(transaction.id)} 
+                              >
+                              <MoreHorizontal className={
+                                dropdownDisabledId
+                                ? `h-4 w-4 text-gray-400`
+                                : `h-4 w-4 text-black`
+                              } />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() =>
-                                    router.push(
-                                      `/transaction/create?edit=${transaction.id}`
-                                    )
-                                  }
-                                  className="text-yellow-400">Edit</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleSingleDelete(transaction.id)}>Delete</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => TransactionDetailshandler(transaction)} className="text-blue-700">Details</DropdownMenuItem>
+                          <DropdownMenuContent className={`${fontZenKaku.className} border border-gray-400 [box-shadow:inset_0_2px_8px_0_rgba(0,0,0,0.3)] bg-transparent backdrop-blur-sm`}>
+                            <DropdownMenuItem 
+                                  onClick={() => handleEditTransaction(transaction.id)}
+                                  className='text-yellow-500 hover:text-black 
+                                  font-medium text-base hover:border-solid hover:border-2 hover:border-yellow-500
+                                  bg-transaparent hover:!bg-yellow-400/45 hover:!backdrop-blur-0
+                                  hover:shadow-md hover:shadow-gray-500 '>
+                                    Edit
+                              </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-rose-600 hover:text-black font-medium text-base
+                              bg-transaparent hover:!bg-rose-600/45 hover:!backdrop-blur-0
+                              hover:border hover:border-rose-600
+                              hover:shadow-md hover:shadow-gray-500" 
+                              onClick={() => handleSingleDelete(transaction.id)}
+                              disabled={dropdownDisabledId}>Delete</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => TransactionDetailshandler(transaction)} 
+                            className="text-blue-700 hover:text-black font-medium text-base
+                              bg-transaparent hover:!bg-[#2563eb73] hover:!backdrop-blur-0
+                              hover:border hover:border-blue-600
+                              hover:shadow-md hover:shadow-gray-500">Details</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -1670,7 +1720,7 @@ const handleDownloadCDBExcel = () => {
         <TabsContent value="subAccounts">
           <div className="rounded-md border overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className={`${fontZenKaku.className}`}>
                 <TableRow>
                   <TableHead className="w-[50px]">
                     <Checkbox
@@ -1682,12 +1732,12 @@ const handleDownloadCDBExcel = () => {
                       }
                     />
                   </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="text-left">Amount</TableHead>
-                  <TableHead className="text-right font-medium">Actions</TableHead>
+                  <TableHead className="tracking-wide font-medium !text-base">Name</TableHead>
+                  <TableHead className="tracking-wide text-left font-medium !text-base">Amount</TableHead>
+                  <TableHead className="tracking-wide text-right font-medium !text-base">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className={`${fontZenKaku.className}`}>
                 {paginatedSubAccounts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
@@ -1703,8 +1753,8 @@ const handleDownloadCDBExcel = () => {
                           checked={selectedSubAccountIds.includes(subAccount.id)}
                         />
                       </TableCell>
-                      <TableCell>{subAccount.name}</TableCell>
-                      <TableCell className="text-left font-medium">
+                      <TableCell className="!text-base font-medium">{subAccount.name}</TableCell>
+                      <TableCell className="text-left !text-base font-medium">
                         {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
                       </TableCell>
                       <TableCell className="flex justify-end items-end">
@@ -1719,7 +1769,7 @@ const handleDownloadCDBExcel = () => {
                           </PopoverTrigger>
                           <PopoverContent 
                             align="end"
-                            className="w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white"
+                            className={`${fontZenKaku.className} w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white`}
                             sideOffset={8}>
 
                             <div className="flex flex-col gap-2">
@@ -1749,35 +1799,35 @@ const handleDownloadCDBExcel = () => {
                         </Popover>
 
                       <Dialog open={openSubAccountInfoId === subAccount.id} onOpenChange={(open) => setOpenSubAccountInfoId(open ? subAccount.id : null)}>
-                          <DialogContent>
+                          <DialogContent className={`${fontZenKaku.className} rounded-lg [&>button:last-child]:hidden`}>
                           <DialogHeader>
-                              <DialogTitle className="text-center">Group Transaction Details</DialogTitle>
-                              <DialogDescription>
+                              <DialogTitle className="tracking-wide font-bold text-2xl md:text-3xl text-center text-blue-600">Group Transaction Details</DialogTitle>
+                              <DialogDescription className="font-normal text-sm text-center">
                                   These details are only about this opened group.
                               </DialogDescription>
                           </DialogHeader>
                             <div className="flex">
                               <div className="flex-1">
-                                <p className="text-sm text-gray-700">
-                                  <strong>Name:</strong> {subAccount.name}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Name:</label> {subAccount.name}
                                 </p>
-                                <p className="text-sm text-gray-700">
-                                  <strong>Balance:</strong> {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Balance:</label> {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
                                 </p>
-                                <p className="text-sm text-gray-700">
-                                  <strong>Parent of:</strong> {`${subAccount.children.length} groups` || "No child group"}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Parent of:</label> {`${subAccount.children.length} groups` || "No child group"}
                                 </p>
-                                <p className="text-sm text-gray-700">
-                                  <strong>Transactions in this group only:</strong> {subAccount.transactions.length || "No Transactions"}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Transactions in this group only:</label> {subAccount.transactions.length || "No Transactions"}
                                 </p>
-                                <p className="text-sm text-gray-700">
-                                  <strong>Description:</strong> {subAccount.description || "No description available"}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Description:</label> {subAccount.description || "No description available"}
                                 </p>
-                                <p className="text-sm text-gray-700">
-                                  <strong>Created On:</strong> {formatUtcDateWithTime(subAccount.createdAt) || "No date"}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Created On:</label> {formatUtcDateWithTime(subAccount.createdAt) || "No date"}
                                 </p>
-                                <p className="text-sm text-gray-700">
-                                  <strong>Updated Last:</strong> {subAccount?.updatedAt ? formatUtcDateWithTime(subAccount.updatedAt) : "No date"}
+                                <p className="font-medium text-base text-gray-700">
+                                  <label className='!font-bold !text-medium md:!text-lg'>Updated Last:</label> {subAccount?.updatedAt ? formatUtcDateWithTime(subAccount.updatedAt) : "No date"}
                                 </p>
                               </div>
                             </div>
@@ -1795,16 +1845,15 @@ const handleDownloadCDBExcel = () => {
                       </Dialog>
                           
                       <Dialog open={groupToDeleteId === subAccount.id} onOpenChange={(open) => setGroupToDeleteId(open ? subAccount.id : null)}>
-                          <DialogContent className="[&>button:last-child]:hidden">
+                          <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
                           <DialogHeader>
-                              <DialogTitle className="text-center">Delete this group?</DialogTitle>
-                              <DialogDescription className="text-center">
+                              <DialogTitle className="tracking-wide font-bold text-2xl text-center">Delete this group?</DialogTitle>
+                              <DialogDescription className="text-[14.5px]/[22px] text-center">
                                   Deleting this group will not delete other related child groups. 
                               </DialogDescription>
                           </DialogHeader>
                           <div className="flex flex-col md:flex-row gap-2 justify-center">
                           <DialogFooter>
-                              
                                 <Button 
                                 disabled={deleteGroupLoading}
                                 type="button"
@@ -1812,6 +1861,7 @@ const handleDownloadCDBExcel = () => {
                                 onClick={handleDeleteGroup}
                                 className="border-2 border-green-400 
                                 hover:border-0 hover:bg-green-400 
+                                font-medium !text-base 
                                 text-green-400 hover:text-white">
                                   Yes
                                 </Button>
@@ -1823,6 +1873,7 @@ const handleDownloadCDBExcel = () => {
                                     type="button"
                                     variant="outline"
                                     className="w-auto
+                                    font-medium !text-base
                                     border-rose-600 hover:border-0 hover:bg-rose-600 
                                     text-rose-600 hover:text-white"
                                     >Cancel

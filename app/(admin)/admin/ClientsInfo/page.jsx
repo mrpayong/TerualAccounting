@@ -8,6 +8,19 @@ import React from 'react'
 import ClientCard from './_components/clients-card';
 import { Plus } from 'lucide-react';
 import TestCard from './_components/TestCard';
+import { Unica_One, Zen_Kaku_Gothic_Antique } from 'next/font/google';
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: '400',
+})
+
+const fontUnicaOne = Unica_One({
+  subsets:["latin"],
+  weight: "400",
+})
+
+
 
 const ClientsPage = async () => {
     const accounts = await getUserAccount();
@@ -15,8 +28,8 @@ const ClientsPage = async () => {
   return (
     <div className='p-6'>
       <div className="flex flex-col justify-start mb-6">
-        <span className="text-4xl font-bold">Clients</span>
-        <span className="text-sm text-slate-600 p-0">Accounts of the clients that all the users manage.</span>
+        <span className={`${fontUnicaOne.className} text-6xl md:text-[5rem]/[1] font-normal`}>Clients</span>
+        <span className={`${fontZenKaku.className} text-sm tracking-wide text-slate-600 p-0`}>Accounts of the clients that all the users manage.</span>
       </div>
     <div className='space-y-8'>
 

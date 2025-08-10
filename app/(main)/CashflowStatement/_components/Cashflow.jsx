@@ -27,6 +27,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import Swal from "sweetalert2";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 
 function Cashflow ({cashflows, name}) {
@@ -143,17 +149,22 @@ const handleSwitchChange = (checked) => {
     if (checked) {
     toast.warning("Turn off Quick Edit Mode to view individual cashflow statement.", {
       duration: 180000,
+      className: "tracking-wide",
       actionButtonStyle: {
         backgroundColor: "transparent",
-        color: "#d97706",
-        border: "1px solid #d97706",
+        color: "white",
+        border: "1px solid black",
         padding: "8px 16px",
         borderRadius: "4px",
       },
-      icon: <Pen className="text-amber-600 h-4 w-4"/>,
+      icon: <PenOff className="text-rose-600 h-4 w-4"/>,
       action: {
         label: "Okay",
         onClick: () => toast.dismiss(), // Dismiss toast on button click
+      },
+      style: {
+        background: '#d97706',
+        color: 'white'
       }
     });
   }
@@ -350,15 +361,19 @@ const handleSwitchChange = (checked) => {
 
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+        <div className={`${fontZenKaku.className} mb-8`}>
           <div className="flex flex-row items-center justify-between">
-            <h1 className="text-4xl font-bold text-blue-900 mb-2">
+            <h1 className="text-2xl md:text-5xl font-black text-blue-900 mb-2">
               Cashflow Statements
             </h1>
             <Button
               variant="outline"
               disabled={backLoad}
-              className="border border-black bg-blue-50"
+              className="border border-black bg-blue-50
+              hover:bg-black hover:border-none
+              text-black hover:text-white !h-7 md:!h-9
+              !text-xs md:!text-sm px-2 py-1 md:px-4 md:py-2
+              hover:shadow-md hover:shadow-black/45 transition-all duration-300"
               onClick={handleBackLoad}>
                 {backLoad 
                   ? (<>
@@ -371,7 +386,7 @@ const handleSwitchChange = (checked) => {
             </Button>
           </div>
           
-          <p className="text-blue-600">
+          <p className="text-xs md:text-base text-blue-600">
             These are cashflow statements of {Name}
           </p>
         </div>
@@ -420,11 +435,11 @@ const handleSwitchChange = (checked) => {
 
 
         {/* Transactions Table */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+        <div className={`${fontZenKaku.className} bg-white rounded-xl shadow-lg p-6 border border-blue-100`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex flex-row items-center justify-center gap-2">
               <h2 className="text-2xl font-bold text-blue-900 capitalize">
-                {activeTab} Cashflows
+                {deterimeTimeFrame(activeTab)} Cashflows
               </h2>
                {cardClickedLoad
                   ? (<Loader2 className="h-5 w-5 text-gray-500 animate-spin"/>) 
@@ -433,8 +448,8 @@ const handleSwitchChange = (checked) => {
             </div>
             {cashflows.length === 0
               ? ("")
-              : ( <div className="flex items-center space-x-2">
-                  <label>Quick Edit Mode</label>
+              : ( <div className="flex font-medium items-center space-x-2 whitespace-nowrap">
+                  <label className="text-sm md:text-base">Quick Edit Mode</label>
                   <Switch 
                       checked={editButtonShow}
                       onCheckedChange={handleSwitchChange}
@@ -458,7 +473,7 @@ const handleSwitchChange = (checked) => {
                     key={period}
                     value={period}
                     disabled={cardClickedLoad}
-                    className="!rounded-button whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                    className="!rounded-button font-medium !text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white"
                   >
                     {deterimeTimeFrame(period.charAt(0).toUpperCase() + period.slice(1))}
                   </TabsTrigger>
@@ -497,7 +512,7 @@ const handleSwitchChange = (checked) => {
                     <div className="h-[500px] w-full overflow-y-auto overflow-x-auto md:overflow-x-hidden">
                       <div className="space-y-4 min-w-[600px] md:min-w-0">
                       {filteredRecords.length === 0 
-                        ? (<span>THIS PERIOD IS EMPTY</span>)
+                        ? (<span className="text-slate-600">This period is empty.</span>)
                         : (
                             filteredRecords.map((record) => (
                               // <Link >
@@ -530,10 +545,10 @@ const handleSwitchChange = (checked) => {
                                                     <Trash className="h-6 w-6 text-red-600 cursor-pointer"/>
                                                 </Button>
                                               </DialogTrigger>
-                                              <DialogContent className="sm:max-w-[425px]">
+                                              <DialogContent className="sm:max-w-[425px] [&>button]:hidden">
                                                 <DialogHeader>
                                                   <DialogTitle >
-                                                    <label className="flex justify-center">
+                                                    <label className="font-medium font-base flex justify-center">
                                                       Delete this Cashflow Statement?
                                                     </label>
                                                     </DialogTitle>
@@ -541,7 +556,10 @@ const handleSwitchChange = (checked) => {
                                                 <div className="flex justify-center">
                                                 <DialogFooter>
                                                   <DialogClose asChild>
-                                                    <Button 
+                                                    <Button
+                                                      className="font-medium !text-base
+                                                      bg-white border border-black text-black
+                                                      hover:bg-black hover:border-none hover:text-white" 
                                                       onClick={handleCancelDeleteCfsId}
                                                       variant="outline">Cancel</Button>
                                                   </DialogClose>
@@ -550,7 +568,7 @@ const handleSwitchChange = (checked) => {
                                                     onClick={handleDeleteCFS}
                                                     type="button"
                                                     variant="outline"
-                                                    className="w-auto
+                                                    className="w-auto font-medium !text-base
                                                     border-rose-600 hover:border-0 hover:bg-rose-600 
                                                     text-rose-600 hover:text-white"
                                                     >Delete
@@ -576,7 +594,7 @@ const handleSwitchChange = (checked) => {
                                           
                                       </div>
                                       <div className="flex flex-col py-4 justify-center">
-                                        <span className="text-sm text-blue-600">
+                                        <span className="font-medium text-base text-blue-600">
                                             Created On: {formatDate(record.createdAt)}
                                           </span>
                                       </div>
@@ -605,12 +623,12 @@ const handleSwitchChange = (checked) => {
                                             <TooltipProvider>
                                               <Tooltip>
                                                 <TooltipTrigger>
-                                                  <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
+                                                  <span className="font-medium text-base text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
                                                     {formatAmount(record.startBalance)}
                                                   </span>
                                                 </TooltipTrigger>
                                                 <TooltipContent className="bg-gradient-to-br from-blue-50 to-blue-200 text-blue-900 p-4 rounded-lg shadow-md border border-blue-300">
-                                                  <p className="text-sm font-medium">
+                                                  <p className="font-medium text-sm">
                                                     <strong className="text-gold-600">Beginning Balance:</strong> {formatAmount(record.startBalance)}
                                                   </p>
                                                 </TooltipContent>
@@ -637,12 +655,12 @@ const handleSwitchChange = (checked) => {
                                     <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger>
-                                          <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
+                                          <span className="font-medium text-base text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
                                             {formatAmount(record.endBalance)}
                                           </span>
                                         </TooltipTrigger>
                                         <TooltipContent className="bg-gradient-to-br from-blue-50 to-blue-200 text-blue-900 p-4 rounded-lg shadow-md border border-blue-300">
-                                          <p className="text-sm font-medium">
+                                          <p className="font-medium text-sm">
                                             <strong className="text-gold-600">Ending Balance:</strong> {formatAmount(record.endBalance)}
                                           </p>
                                         </TooltipContent>
@@ -665,7 +683,7 @@ const handleSwitchChange = (checked) => {
                                           )
                                         : (
                                       <span
-                                        className={`font-semibold text-lg ${
+                                        className={`font-medium text-xl ${
                                           record.netChange > 0
                                             ? "text-green-600"
                                             : record.netChange < 0

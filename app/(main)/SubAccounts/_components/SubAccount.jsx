@@ -7,6 +7,12 @@ import { toast } from "sonner";
 import { BarLoader } from "react-spinners";
 import { Badge } from "@/components/ui/badge";
 import Swal from "sweetalert2";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const SubAccount = ({ subAccount, level = 0}) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -66,68 +72,6 @@ const SubAccount = ({ subAccount, level = 0}) => {
       toast.error("Transaction not removed.");
     }
   }, [removeTransactionError, removeTransactionLoading])
-
-  // return (
-  //   <div className="border border-gray-300 rounded-lg p-4">
-  //     {/* Sub-Account Header */}
-  //     <div className="flex justify-between items-center">
-  //       <div>
-  //         <h3 className="text-lg font-semibold">{subAccount.name}</h3>
-  //         <p className="text-sm text-gray-500">
-  //           {subAccount.description || "No description available"}
-  //         </p>
-  //         <p className="text-sm font-medium">
-  //           Balance: {subAccount.balance !== null ? `${formatAmount(subAccount.balance)}` : "N/A"}
-  //         </p>
-  //       </div>
-  //       <button
-  //         onClick={() => setIsExpanded(!isExpanded)}
-  //         className="text-blue-500 hover:underline"
-  //       >
-  //         {isExpanded ? "Collapse" : "Expand"}
-  //       </button>
-  //     </div>
-
-  //     {/* Sub-Account Details */}
-  //     {isExpanded && (
-  //       <div className="mt-4 space-y-4">
-  //         {/* Transactions */}
-  //         <div>
-  //           <h4 className="text-md font-semibold">Transactions</h4>
-  //           {subAccount.transactions.length === 0 ? (
-  //             <p className="text-sm text-gray-500">No transactions available.</p>
-  //           ) : (
-  //             <ul className="list-disc list-inside">
-  //               {subAccount.transactions.map((transaction) => (
-  //                 <li key={transaction.id} className="text-sm">
-  //                   <p>Type: {transaction.type}</p>
-  //                   <p>Description: {transaction.description}</p>
-  //                   <p>Amount: ${formatAmount(transaction.amount)}</p>
-  //                   <p>Date: {new Date(transaction.date).toLocaleDateString()}</p>
-  //                 </li>
-  //               ))}
-  //             </ul>
-  //           )}
-  //         </div>
-
-  //         {/* Child Sub-Accounts */}
-  //         {subAccount.children && subAccount.children.length > 0 && (
-  //           <div>
-  //             <h4 className="text-md font-semibold">Child Group</h4>
-  //             <div className="ml-4 space-y-4">
-  //               {subAccount.children.map((child) => (
-  //                 <SubAccount key={child.id} subAccount={child} />
-  //               ))}
-  //             </div>
-  //           </div>
-  //         )}
-  //       </div>
-  //     )}
-  //   </div>
-  // );
-
-
-
 
   const {
     loading: updateBalanceLoading,
@@ -254,7 +198,7 @@ const totalAmount = getTotalAmount(subAccount);
         } 
         `}
       >
-        <td className="py-2 px-4">
+        <td className={`${fontZenKaku.className} py-2 px-4`}>
           <div
             className="flex items-center"
             style={{ marginLeft: `${level * 20}px` }} // Indentation for hierarchy
@@ -265,15 +209,15 @@ const totalAmount = getTotalAmount(subAccount);
             >
               {isExpanded ? <ChevronUp className="text-xs"/> : <ChevronDown className="text-xs"/>}
             </button>
-            <span className="font-semibold text-blue-900">{subAccount.name}</span>
+            <span className="font-medium text-lg text-blue-900">{subAccount.name}</span>
             
           </div>
         </td>
-        <td className="py-2 px-4 text-xs text-gray-500">
+        <td className={`${fontZenKaku.className} font-medium py-2 px-4 text-sm text-gray-500`}>
           <label>Transactions + Grouped child: </label>
-          <label>{formatAmount(totalAmount)}</label>
+          <label className="tracking-wide">{formatAmount(totalAmount)}</label>
         </td>
-        <td className="py-2 px-4 flex flex-row items-center text-gold-600 font-medium">
+        <td className={`${fontZenKaku.className} py-2 px-4 flex flex-row items-center text-gold-600 font-medium`}>
           {labelControl && subAccountId === subAccount.id
             ? (
               <input
@@ -285,15 +229,14 @@ const totalAmount = getTotalAmount(subAccount);
               
               )
             : (
-              <label>
+              <label className="tracking-wide text-base">
                 {subAccount.balance !== null ? formatAmount(subAccount.balance) : "N/A"}
               </label>
             )
           }
           </td>
           {isBalanceMismatch && (
-<td className="py-2 px-4 text-gray-500">
-          
+          <td className="py-2 px-4 text-gray-500">
             <div className="flex flex-row gap-2 items-center px-2">
               {balanceEditButton
                 ? (
@@ -331,14 +274,14 @@ const totalAmount = getTotalAmount(subAccount);
         <>
           {/* Transactions */}
           {subAccount.transactions.length > 0 && (
-            <tr className="bg-gray-50">
+            <tr className={`${fontZenKaku.className} bg-gray-50`}>
               <td colSpan="3" className="py-2 px-4">
-                <h4 className="text-md font-semibold text-blue-800">Transactions list</h4>
+                <h4 className="text-lg font-medium tracking-wide text-blue-800">Transactions list</h4>
                 <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
                   {subAccount.transactions.map((transaction) => (
                     <li className="list-none grid grid-cols-3 justify-center py-2" key={transaction.id}>
-                      <p className="text-start ml-2">{transaction.description}</p>
-                      <p className="text-center">{formatAmount(transaction.amount)}</p>
+                      <p className="font-medium text-base text-start ml-2">{transaction.description}</p>
+                      <p className="font-medium text-base text-center">{formatAmount(transaction.amount)}</p>
                       <p className="text-center mr-2">
                       <button 
                         onClick={() => handleRemoveTransaction(transaction.id)}
@@ -349,7 +292,7 @@ const totalAmount = getTotalAmount(subAccount);
                     </li>
                     
                   ))}
-                  <li className="list-none grid grid-cols-3 justify-center py-2 font-semibold border-t border-gray-200">
+                  <li className="list-none grid grid-cols-3 justify-center py-2 font-medium text-[1.1rem]/[1rem] border-t border-gray-200">
                     <span className="text-start ml-2">Total</span>
                     <span className="text-center">
                       {formatAmount(

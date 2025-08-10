@@ -42,7 +42,9 @@ function formatManilaDateTime(dateInput) {
   }).format(date);
 }
 async function activityLog({userId, action, args, timestamp}){
+  
   try {
+    console.log("log function: ", userId, action, args, timestamp)
     const dateTime = formatManilaDateTime(timestamp);
     
     await db.activityLog.create({
@@ -454,7 +456,6 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
     const totalInvesting = InvestingIncomes - InvestingExpenses;
     const totalFinancing = FinancingIncomes - FinancingExpenses;
 
-    console.log(totalOperating)
 
     // --- Calculate netChange ---
     const netChange = totalOperating + totalInvesting + totalFinancing;
@@ -1483,20 +1484,21 @@ export async function updateTotalOperating(cfsId, newValue) {
       select: {
         id: true,
         accountId: true,
+        activityTotal: true, 
       }
       
     });
     if (!cashflow) throw new Error("Cashflow not found.");
 
-    const activityTotal = Array.isArray(cashflow.activityTotal)
-      ? [...cashflow.activityTotal]
-      : [0, 0, 0];
+    const activityTotal = cashflow.activityTotal
 
-    activityTotal[0] = Number(newValue);
+    const newActivityTotal = [activityTotal[0] = Number(newValue), 
+    activityTotal[1]=activityTotal[1], activityTotal[2]=activityTotal[2]]
 
+    console.log("update", newActivityTotal)
     const updated = await db.cashFlow.update({
       where: { id: cfsId },
-      data: { activityTotal }
+      data: { activityTotal: newActivityTotal }
     });
 
     const updateLog = await activityLog({
@@ -1523,6 +1525,7 @@ export async function updateTotalOperating(cfsId, newValue) {
     revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
     return { success: true, data: updated };
   } catch (error) {
+    console.log("error: ", error)
     throw new Error("Error updating activity total")
   }
 }
@@ -1538,19 +1541,21 @@ export async function updateTotalInvesting(cfsId, newValue) {
       select: {
         id: true,
         accountId: true,
+        activityTotal: true,
       }
     });
     if (!cashflow) throw new Error("Cashflow not found.");
 
-    const activityTotal = Array.isArray(cashflow.activityTotal)
-      ? [...cashflow.activityTotal]
-      : [0, 0, 0];
+    const activityTotal = cashflow.activityTotal
 
-    activityTotal[1] = Number(newValue);
+    const newActivityTotal = [
+      activityTotal[0] = activityTotal[0],
+      activityTotal[1] = Number(newValue),
+      activityTotal[2] = activityTotal[2]]
 
     const updated = await db.cashFlow.update({
       where: { id: cfsId },
-      data: { activityTotal }
+      data: { activityTotal: newActivityTotal }
     });
 
         const updateLog = await activityLog({
@@ -1592,22 +1597,23 @@ export async function updateTotalFinancing(cfsId, newValue) {
         select: {
           id: true,
           accountId: true,
+          activityTotal: true,
         }
     });
     if (!cashflow) throw new Error("Cashflow not found.");
 
 
+    const activityTotal = cashflow.activityTotal
 
-    const activityTotal = Array.isArray(cashflow.activityTotal)
-      ? [...cashflow.activityTotal]
-      : [0, 0, 0];
-
-    activityTotal[2] = Number(newValue);
+    const newActivityTotal = [
+      activityTotal[0] = activityTotal[0],
+      activityTotal[1] = activityTotal[1],
+      activityTotal[2] = Number(newValue)]
 
     const updated = await db.cashFlow.update({
       where: { id: cfsId },
       data: { 
-        activityTotal
+        activityTotal: newActivityTotal
       }
     });
 

@@ -26,6 +26,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { accountSchema } from "@/app/lib/schema";
 import { BarLoader } from "react-spinners";
 import { useRouter } from "next/navigation";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 // Type options
 const INDIVIDUAL_TYPES = [
@@ -265,10 +272,10 @@ const ClientInfoCard = ({ accountProfile }) => {
   return (
  <div className="w-full max-w-5xl mx-auto flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2 sm:px-4 pt-6">
+      <div className={`${fontZenKaku.className} flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2 sm:px-4 pt-6`}>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-1">{accountProfile.name}</h1>
-          <p className="text-gray-500 text-xs"> Created On: {formatManilaDate(accountProfile.createdAt)}.{" "}Edited Last: {formatManilaDate(accountProfile.updatedAt)}.</p>
+          <h1 className="text-2xl sm:text-4xl font-black text-blue-900 mb-1">{accountProfile.name}</h1>
+          <p className="text-gray-500 text-sm font-normal tracking-wide"> Created On: {formatManilaDate(accountProfile.createdAt)}.{" "}Edited Last: {formatManilaDate(accountProfile.updatedAt)}.</p>
         </div>
         <div className="flex gap-2">
           {editMode ? (
@@ -282,7 +289,7 @@ const ClientInfoCard = ({ accountProfile }) => {
                 }}
                 disabled={isSubmitting}
                 className="bg-white hover:bg-rose-400 hover:shadow-lg hover:shadow-rose-400/20
-                  text-slate-800 hover:text-white font-semibold 
+                  text-slate-800 hover:text-white font-medium hover:font-normal !text-base 
                   border border-rose-400 hover:border-0"
               >
                 Cancel
@@ -292,7 +299,7 @@ const ClientInfoCard = ({ accountProfile }) => {
                 form="client-info-form"
                 className="
                   bg-white hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-400/20
-                  text-slate-800 hover:text-white font-semibold 
+                  text-slate-800 hover:text-white font-medium hover:font-normal !text-base 
                   border border-emerald-400 hover:border-0
                   px-6 py-2 rounded-lg shadow transition"
                 disabled={updateLoading}
@@ -304,7 +311,7 @@ const ClientInfoCard = ({ accountProfile }) => {
             <Button
               className="
             bg-white hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-400/20
-              text-slate-800 hover:text-white font-semibold 
+              text-slate-800 hover:text-white font-medium hover:font-normal !text-base
               border border-blue-400 hover:border-0 px-6 py-2 
               rounded-lg shadow transition w-full md:w-auto"
               disabled={isReturnLoad}
@@ -315,7 +322,7 @@ const ClientInfoCard = ({ accountProfile }) => {
             <Button
               className="
             bg-white hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-400/20
-              text-slate-800 hover:text-white font-semibold 
+              text-slate-800 hover:text-white font-medium hover:font-normal !text-base
               border border-blue-400 hover:border-0 px-6 py-2 
               rounded-lg shadow transition w-full md:w-auto"
               onClick={handleLoading}
@@ -330,6 +337,7 @@ const ClientInfoCard = ({ accountProfile }) => {
           )}
         </div>
       </div>
+
       {updateLoading && (
         <div className="w-full flex justify-center py-2">
           <BarLoader width="100%" color="#09090b" />
@@ -340,7 +348,7 @@ const ClientInfoCard = ({ accountProfile }) => {
       <form
         id="client-info-form"
         onSubmit={handleSubmit(onSubmit)}
-        className="contents"
+        className={`${fontZenKaku.className} contents`}
         autoComplete="off"
       >
         <fieldset disabled={updateLoading || isSubmitting} style={{ opacity: updateLoading || isSubmitting ? 0.6 : 1 }}>
@@ -349,24 +357,24 @@ const ClientInfoCard = ({ accountProfile }) => {
           <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-3 mb-4">
               <User className="h-7 w-7 text-blue-600 bg-blue-100 rounded-lg p-1" />
-              <h2 className="font-semibold text-lg">Basic Information</h2>
+              <h2 className="font-bold text-lg">Basic Information</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Account Name */}
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Account Name</label>
+                <label className="block font-medium !text-base text-gray-500 mb-1">Account Name</label>
                 {editMode ? (
                   <>
                     <Input {...register("name")} />
-                    {errors.name && <p className="text-xs text-red-500">Account name is Required.</p>}
+                    {errors.name && <p className="font-medium !text-base text-red-500">Account name is Required.</p>}
                   </>
                 ) : (
-                  <div className="rounded-lg bg-gray-50 px-3 py-2">{accountProfile.name}</div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2 font-medium !text-base">{accountProfile.name}</div>
                 )}
               </div>
               {/* Account Type */}
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Business Type</label>
+                <label className="block font-medium !text-base text-gray-500 mb-1">Business Type</label>
                 {editMode ? (
                   <>
                     <Select
@@ -386,13 +394,13 @@ const ClientInfoCard = ({ accountProfile }) => {
                         </SelectGroup>
                       </SelectContent>
                     </Select>
-                    {errors.type && <p className="text-xs text-red-500">Business type is required.</p>}
+                    {errors.type && <p className="font-medium !text-base text-red-500">Business type is required.</p>}
                   </>
                 ) : (
                   <Badge className={
                       accountProfile.isIndividual
-                        ? "bg-violet-100 text-violet-700 px-3 py-1 rounded-lg"
-                        : "bg-blue-100 text-blue-700 px-3 py-1 rounded-lg"
+                        ? "bg-violet-100 text-violet-700 px-3 py-1 rounded-lg font-medium !text-base hover:bg-violet-50 hover:text-violet-700 hover:border-violet-700"
+                        : "bg-blue-100 text-blue-700 px-3 py-1 rounded-lg font-medium !text-base hover:bg-blue-50 hover:text-blue-700 hover:border-blue-700"
                          }>
                     {accountTypeLabel(accountProfile.type)}
                   </Badge>
@@ -400,33 +408,33 @@ const ClientInfoCard = ({ accountProfile }) => {
               </div>
               {/* Owner */}
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Owner</label>
+                <label className="block font-medium !text-base text-gray-500 mb-1">Owner</label>
                 {editMode ? (
                   <>
                     <Input {...register("owner")} />
-                    {errors.owner && <p className="text-xs text-red-500">Owner's name is required.</p>}
+                    {errors.owner && <p className="font-medium !text-base text-red-500">Owner's name is required.</p>}
                   </>
                 ) : (
-                  <div className="rounded-lg bg-gray-50 px-3 py-2">{accountProfile.owner}</div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2 font-medium !text-base">{accountProfile.owner}</div>
                 )}
               </div>
               {/* Business Line */}
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Business Line</label>
+                <label className="block font-medium !text-base text-gray-500 mb-1">Business Line</label>
                 {editMode ? (
                   <>
                     <Input {...register("businessLine")} />
                     {errors.businessLine && (
-                      <p className="text-xs text-red-500">Business line is requied.</p>
+                      <p className="font-medium !text-base text-red-500">Business line is requied.</p>
                     )}
                   </>
                 ) : (
-                  <div className="rounded-lg bg-gray-50 px-3 py-2">{accountProfile.businessLine}</div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2 font-medium !text-base">{accountProfile.businessLine}</div>
                 )}
               </div>
               {/* Birth Date */}
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Birth Date</label>
+                <label className="block font-medium !text-base text-gray-500 mb-1">Birth Date</label>
                 {editMode ? (
                   <>
                     <Input
@@ -435,11 +443,11 @@ const ClientInfoCard = ({ accountProfile }) => {
                       max={new Date().toISOString().slice(0, 10)}
                     />
                     {errors.birthDate && (
-                      <p className="text-xs text-red-500">Birth date is required.</p>
+                      <p className="font-medium !text-base text-red-500">Birth date is required.</p>
                     )}
                   </>
                 ) : (
-                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                  <div className="rounded-lg bg-gray-50 px-3 py-2 font-medium !text-base">
                     {accountProfile.birthDate
                       ? new Date(accountProfile.birthDate).toLocaleDateString(undefined, {
                           year: "numeric",
@@ -452,14 +460,14 @@ const ClientInfoCard = ({ accountProfile }) => {
               </div>
               {/* Individual Account */}
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Business Category</label>
+                <label className="block font-medium !text-base text-gray-500 mb-1">Business Category</label>
                 {editMode ? (
                  <div className="flex items-center gap-2">
                   <Switch
                     checked={isIndividual}
                     onCheckedChange={(v) => setValue("isIndividual", v, { shouldValidate: true })}
                   />
-                  <span className="text-xs text-slate-900">
+                  <span className="font-medium !text-base text-slate-900">
                     {isIndividual ? "Individual" : "Non-Individual"}
                   </span>
                 </div>
@@ -467,8 +475,8 @@ const ClientInfoCard = ({ accountProfile }) => {
                   <Badge
                     className={
                       accountProfile.isIndividual
-                        ? "bg-violet-100 text-violet-700"
-                        : "bg-blue-100 text-blue-700"
+                        ? "bg-violet-100 text-violet-700 font-medium !text-base hover:bg-violet-50 hover:text-violet-700 hover:border-violet-700"
+                        : "bg-blue-100 text-blue-700 font-medium !text-base hover:bg-blue-50 hover:text-blue-700 hover:border-blue-700"
                     }
                   >
                     {accountProfile.isIndividual ? "Individual" : "Non-Individual"}
@@ -482,7 +490,7 @@ const ClientInfoCard = ({ accountProfile }) => {
           <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-3 mb-4">
               <Phone className="h-7 w-7 text-green-600 bg-green-100 rounded-lg p-1" />
-              <h2 className="font-semibold text-lg">Contact Information</h2>
+              <h2 className="font-bold text-lg">Contact Information</h2>
             </div>
             <div className="grid grid-cols-1 gap-4">
               {/* Email */}
@@ -524,7 +532,7 @@ const ClientInfoCard = ({ accountProfile }) => {
           <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-3 mb-4">
               <MapPin className="h-7 w-7 text-purple-600 bg-purple-100 rounded-lg p-1" />
-              <h2 className="font-semibold text-lg">Address Information</h2>
+              <h2 className="font-bold text-lg">Address Information</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Street */}
@@ -639,7 +647,7 @@ const ClientInfoCard = ({ accountProfile }) => {
           <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-3 mb-4">
               <Landmark  className="h-7 w-7 text-orange-600 bg-orange-100 rounded-lg p-1" />
-              <h2 className="font-semibold text-lg">Tax & Business Information</h2>
+              <h2 className="font-bold text-lg">Tax & Business Information</h2>
             </div>
             <div className="grid grid-cols-1 gap-4">
               {/* TIN Numbers */}

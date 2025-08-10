@@ -4,15 +4,33 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Download, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MyPDFcfsPage from "../[id]/[cfsID]/pdf/route";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
 
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
+function useIsSmallScreen(breakpoint = 640) { // Tailwind's 'sm' is 640px
+  const [isSmall, setIsSmall] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsSmall(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [breakpoint]);
+
+  return isSmall;
+}
 
 function CashflowDetails({ cashflow }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(null);
   const [goBack, setGoBack] = useState(false);
+  const isSmallScreen = useIsSmallScreen();
 
   // const handleBack = () => {
   //   setGoBack(true);
@@ -81,7 +99,9 @@ function CashflowDetails({ cashflow }) {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "PHP",
-    }).format(amount);
+      minimumFractionDigits:3,
+      maximumFractionDigits:3,
+    }).format((amount));
   };
 
 
@@ -100,12 +120,11 @@ function CashflowDetails({ cashflow }) {
 
   return (
     <div className="p-4">
-      <Card className="bg-lime-200">
+      <Card className={`${fontZenKaku.className} bg-amber-200`}>
         <CardHeader>
-          <CardTitle className="text-lg sm:text-2xl">
-            <div className="flex flex-row items-center justify-between">
+          <CardTitle className="!font-bold text-xl md:text-3xl">
+            <div className="flex flex-col sm:whitespace-nowrap md:flex-row items-center justify-center sm:justify-between">
               Cashflow Statement Details
-
               <PDFDownloadLink 
                 document={<MyPDFcfsPage cashflow={cashflow} subAccounts={cashflow.subAccounts} transactions={cashflow.transactions} />}
                 fileName={`${cashflow.periodCashFlow}_Cashflow_Statement_${cashflow.id}.pdf`}
@@ -113,10 +132,10 @@ function CashflowDetails({ cashflow }) {
                 
                 {({ blob, url, loading, error }) => {
                     if (!loading){
-                        return <Button className="bg-black text-white hover:bg-green-700" >
+                        return <Button className="bg-black text-white !font-medium !h-7 md:!h-9 !text-xs md:!text-base hover:bg-green-700" >
                         <div className='flex items-center gap-1'>
-                        <Download className="mr-2 sm:mr-3 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
-                            Download
+                        <Download className="mr-0 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
+                            {isSmallScreen ? '' :'Download'}
                         </div></Button>
                     }
                     else if (loading){<Loader2 className="h-4 w-4 animate-spin"/>,"Downloading PDF."}
@@ -132,7 +151,7 @@ function CashflowDetails({ cashflow }) {
           <div className="space-y-4">
             {/* Operating Activities */}
             <div>
-              <h4 className="text-md sm:text-lg font-semibold">
+              <h4 className="text-base md:text-lg font-bold">
                 Operating Activities:
               </h4>
               <ul className="list-none p-0">
@@ -141,24 +160,24 @@ function CashflowDetails({ cashflow }) {
                     key={item.id || index} // Use index as fallback for solo transactions
                     className="flex justify-between items-center py-1 border-b border-gray-400 hover:bg-green-400"
                   >
-                    <span className="text-sm sm:text-base">
+                    <span className="font-medium text-sm md:text-base">
                       {item.name || item.description} {/* Sub-account name or transaction description */}
                     </span>
                     <span
-                      className={`text-sm sm:text-base ${getColorClass(
+                      className={`font-medium text-sm md:text-base ${getColorClass(
                         item.type
                       )}`}
                     >
-                      {formatTableAmount(item.balance?.toFixed(3) || item.amount.toFixed(3))}
+                      {formatTableAmount(item.balance || item.amount)}
                     </span>
                   </li>
                 ))}
                 <li className="flex justify-between items-center py-1 font-bold border-b border-gray-600">
-                  <span className="text-sm sm:text-base">
+                  <span className="font-bold text-sm md:text-base">
                     Net Cash from Operating Activities
                   </span>
-                  <span className="text-sm sm:text-base">
-                    {formatTableAmount(cashflow.activityTotal[0].toFixed(3))}
+                  <span className="font-medium text-sm md:text-base">
+                    {formatTableAmount(cashflow.activityTotal[0])}
                   </span>
                 </li>
               </ul>
@@ -166,7 +185,7 @@ function CashflowDetails({ cashflow }) {
 
             {/* Investing Activities */}
             <div>
-              <h4 className="text-md sm:text-lg font-semibold">
+              <h4 className="text-base md:text-lg font-bold">
                 Investing Activities:
               </h4>
               <ul className="list-none p-0">
@@ -175,24 +194,24 @@ function CashflowDetails({ cashflow }) {
                     key={item.id || index}
                     className="flex justify-between items-center py-1 border-b border-gray-400 hover:bg-green-400"
                   >
-                    <span className="text-sm sm:text-base">
+                    <span className="font-medium text-sm md:text-base">
                       {item.name || item.description}
                     </span>
                     <span
-                      className={`text-sm sm:text-base ${getColorClass(
+                      className={`font-medium text-sm md:text-base ${getColorClass(
                         item.type
                       )}`}
                     >
-                      {formatTableAmount(item.balance?.toFixed(3) || item.amount.toFixed(3))}
+                      {formatTableAmount(item.balance || item.amount)}
                     </span>
                   </li>
                 ))}
                 <li className="flex justify-between items-center py-1 font-bold border-b border-gray-600">
-                  <span className="text-sm sm:text-base">
+                  <span className="font-medium text-sm md:text-base">
                     Net Cash from Investing Activities
                   </span>
-                  <span className="text-sm sm:text-base">
-                    {formatTableAmount(cashflow.activityTotal[1].toFixed(3))}
+                  <span className="font-medium text-sm md:text-base">
+                    {formatTableAmount(cashflow.activityTotal[1])}
                   </span>
                 </li>
               </ul>
@@ -200,7 +219,7 @@ function CashflowDetails({ cashflow }) {
 
             {/* Financing Activities */}
             <div>
-              <h4 className="text-md sm:text-lg font-semibold">
+              <h4 className="text-base md:text-lg font-bold">
                 Financing Activities:
               </h4>
               <ul className="list-none p-0">
@@ -209,24 +228,24 @@ function CashflowDetails({ cashflow }) {
                     key={item.id || index}
                     className="flex justify-between items-center py-1 border-b border-gray-400 hover:bg-green-400"
                   >
-                    <span className="text-sm sm:text-base">
+                    <span className="font-medium text-sm md:text-base">
                       {item.name || item.description}
                     </span>
                     <span
-                      className={`text-sm sm:text-base ${getColorClass(
+                      className={`font-medium text-sm md:text-base ${getColorClass(
                         item.type
                       )}`}
                     >
-                      {formatTableAmount(item.balance?.toFixed(3) || item.amount.toFixed(3))}
+                      {formatTableAmount(item.balance || item.amount)}
                     </span>
                   </li>
                 ))}
                 <li className="flex justify-between items-center py-1 font-bold border-b border-gray-600">
-                  <span className="text-sm sm:text-base">
+                  <span className="font-medium text-sm md:text-base">
                     Net Cash from Financing Activities
                   </span>
-                  <span className="text-sm sm:text-base">
-                    {formatTableAmount(cashflow.activityTotal[2].toFixed(3))}
+                  <span className="font-medium text-sm md:text-base">
+                    {formatTableAmount(cashflow.activityTotal[2])}
                   </span>
                 </li>
               </ul>
@@ -235,23 +254,23 @@ function CashflowDetails({ cashflow }) {
             {/* Summary */}
             <div className="space-y-2 mt-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base">Gross:</span>
-                <span className="text-sm sm:text-base">
-                  {formatTableAmount(cashflow.netChange.toFixed(3))}
+                <span className="font-medium text-base md:text-lg">Gross:</span>
+                <span className="font-medium text-base md:text-lg">
+                  {formatTableAmount(cashflow.netChange)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base">
+                <span className="font-medium text-base md:text-lg">
                   Beginning Net Cash:
                 </span>
-                <span className="text-sm sm:text-base">
-                  {formatTableAmount(cashflow.startBalance.toFixed(3))}
+                <span className="font-medium text-base md:text-lg">
+                  {formatTableAmount(cashflow.startBalance)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base">Ending Balance:</span>
-                <span className="text-sm sm:text-base">
-                  {formatTableAmount(cashflow.endBalance.toFixed(3))}
+                <span className="font-medium text-base md:text-lg">Ending Balance:</span>
+                <span className="font-medium text-base md:text-lg">
+                  {formatTableAmount(cashflow.endBalance)}
                 </span>
               </div>
             </div>
@@ -261,7 +280,15 @@ function CashflowDetails({ cashflow }) {
             <Button
               onClick={() => handleEditLoading("editCashflow")}
               disabled={isLoading !== null}
-              className="mt-4 px-4 py-2 flex flex-row justify-between items-center bg-amber-400 text-black rounded"
+              className="mt-4 px-4 py-2 
+              flex flex-row justify-between 
+              font-medium !text-base
+              items-center 
+              border border-black hover:border-0
+              bg-transparent hover:bg-amber-400
+              text-black 
+              hover:shadow-md hover:shadow-gray-500/45
+              rounded"
             >
               {isLoading === "editCashflow" ? (
                 <>
@@ -273,7 +300,13 @@ function CashflowDetails({ cashflow }) {
               )}
             </Button>
           <Button 
-            className="mt-4 px-4 py-2 flex flex-row justify-between items-center"
+            className="mt-4 px-4 py-2 
+            font-medium !text-base
+            flex flex-row justify-between items-center
+            bg-black hover:bg-amber-400/30
+            text-white hover:text-black
+            hover:border hover:border-black
+            hover:shadow-md hover:shadow-gray-500/45"
             onClick={() => handleEditLoading("back")}
             disabled={isLoading !== null}>
             {isLoading === "back" ? (

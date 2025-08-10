@@ -15,6 +15,7 @@ import {
   Legend,
   CartesianGrid,
 } from 'recharts'
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google'
 
 // Tailwind color palette for pie chart
 const PIE_COLORS = [
@@ -25,16 +26,24 @@ const PIE_COLORS = [
   '#a78bfa', // purple-400
   '#f472b6', // pink-400
   '#38bdf8', // sky-400
+  '#e879f9', 
+  '#818cf8'
 ]
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
+
 
 const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+    <div className={`${fontZenKaku.className} grid grid-cols-1 md:grid-cols-2 gap-6 w-full`}>
       {/* Area Chart Card */}
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Client Activity Trend</CardTitle>
-          <CardDescription className="p-0">
+          <CardTitle className='font-bold text-xl tracking-wide'>Client Activity Trend</CardTitle>
+          <CardDescription className="font-normal p-0">
             Count of transactions of each client of the firm.
           </CardDescription>
         </CardHeader>
@@ -45,7 +54,7 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
                 <AreaChart data={lineChartData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fontWeight: 500 }}
                     interval={0}
                     angle={-20}
                     textAnchor="end"
@@ -55,7 +64,7 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
                     tick={{ fontSize: 12 }}
                   />
                   <RechartsTooltip
-                    contentStyle={{ fontSize: 14 }}
+                    contentStyle={{ fontSize: 14, fontWeight: 500  }}
                     formatter={(value) => [`${value}`, 'Transactions']}
                   />
                   <CartesianGrid strokeDasharray="3 3" />
@@ -77,7 +86,7 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
       {/* Pie Chart Card */}
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Client Distribution</CardTitle>
+          <CardTitle className='font-bold text-xl tracking-wide'>Client Distribution</CardTitle>
         </CardHeader>
         <CardContent className="p-6 py-0 h-[320px] flex flex-col items-center justify-center">
           <ResponsiveContainer width="100%" height={300}>
@@ -99,7 +108,7 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
                 verticalAlign="bottom"
                 align="center"
                 iconType="circle"
-                wrapperStyle={{ fontSize: 13 }}
+                wrapperStyle={{ fontSize: 13, fontWeight: 500  }}
                 formatter={(value) =>
                   value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
                 }
@@ -119,7 +128,7 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
-        <CardFooter className="text-sm flex justify-center text-gray-500">
+        <CardFooter className="text-sm flex justify-center text-gray-500 font-normal">
           Clients of the firm based on the type of account. 
         </CardFooter>
       </Card>

@@ -465,7 +465,7 @@ export async function createSubAccount(transactionIds, data, id) {
         accountId: true,
       },
     });
-
+    console.log("transactions: ", transactions)
     // Transaction type and Activity type consistency validations
         // validate transcations to have same transaction type
     const validationResult = validateTransactionTypes(transactions);
@@ -618,7 +618,7 @@ export async function createSubAccount(transactionIds, data, id) {
       //    MAIN PROBLEM: PARENT SUB ACCOUNT AND TRANSACTIONS RELATION NOT CREATED WHEN INSERTING ONLY. (MEANS NO DATA.NAME IS PASSED)
       console.log("if created new Group: ", subAccount.subAccount.id)
       console.log("if inserting only: ", parentSubAccount.id)
-      if ((subAccount.code === 201 || parentSubAccount.id) && transactionIds && transactionIds.length > 0) {
+      if ((subAccount.code === 201 || (subAccount.code === 200 && transactionIds.length > 0) || parentSubAccount.id) && transactionIds && transactionIds.length > 0) {
         console.log("[5.5] Create New Sub account and Transactions Relation")
         try {
           await tx.subAccountTransaction.createMany({

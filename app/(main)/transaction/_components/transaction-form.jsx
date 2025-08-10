@@ -139,15 +139,24 @@ const AddTransactionForm = ({
   
     useEffect(() => {
         if (transactionResult?.success && !transactionLoading) {
+            
             toast.success(
                 editMode
                     ? "Transaction updated successfully."
-                    : "Transaction created successfully."
+                    : "Transaction created successfully.", {
+                        duration: editMode
+                            ? 1000
+                            : 0
+                    }
                 );
             reset();
-            editMode
-            ? router.push(`/account/${transactionResult.data.accountId}`)
-            : ""
+        editMode
+            ? setTimeout(() => {
+                const promise = () => new Promise((resolve) => setTimeout(() => resolve({ name: 'Sonner' }), 2000));
+                router.push(`/account/${transactionResult.data.accountId}`);
+                toast.promise(promise, { loading: 'Going back'});
+            }, 1000)
+            : ''
         }
     }, [transactionResult, transactionLoading, editMode]);
 

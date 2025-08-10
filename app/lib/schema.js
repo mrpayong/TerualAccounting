@@ -26,7 +26,7 @@ export const accountSchema = z.object({
     province: z.string().min(1, "Province is required."),
     region: z.string().min(1, "Region is required."), 
 
-    businessLine: z.string().min(0, "Line of business is required."),
+    businessLine: z.string().min(3, "Line of business is required."),
     tin: z.tuple([
         z.string().regex(/^\d{3}$/, "First TIN segment must be 3 digits"),
         z.string().regex(/^\d{3}$/, "Second TIN segment must be 3 digits"),
