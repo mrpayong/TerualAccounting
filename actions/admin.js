@@ -233,25 +233,6 @@ export async function getStaff() {
             throw new UnauthorizedError("[STF]You are not a user. Notifying System Admin");
         }
 
-        const headersList = await headers();
-        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
-         const city = headersList.get('x-geo-city') || "unkown city"
-        const country = headersList.get('x-geo-country') || "unkown country"
-        
-        const metaData = JSON.stringify({
-            message: "Unauthorized user attempting to access a prohibited page.[STF]",
-            ip_Add: ip,
-            city: city,
-            country: country
-        })
-        await db.unauthz.create({
-          data: {  
-            IP: ip,
-            action:"getUnauthUser",
-            meta: metaData
-            }
-        })
-
         const user = await db.user.findUnique({
             where: {clerkUserId: userId},
         });
@@ -286,17 +267,13 @@ export async function getStaff() {
 export async function getUnauthUser() {
     const {userId} = await auth();
 
-    if (userId) {
+    if (!userId) {
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
-        const city = headersList.get('x-geo-city') || "unkown city"
-        const country = headersList.get('x-geo-country') || "unkown country"
         
         const metaData = JSON.stringify({
-            message: "Unauthorized user attempting to access a prohibited page.[getUnth]",
+            message: "Unauthorized user attempting to access a prohibited page.",
             ip_Add: ip,
-            city: city,
-            country: country
         })
         await db.unauthz.create({
           data: {  
