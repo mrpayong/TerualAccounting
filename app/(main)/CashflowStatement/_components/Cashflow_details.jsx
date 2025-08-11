@@ -32,6 +32,7 @@ function CashflowDetails({ cashflow }) {
   const [goBack, setGoBack] = useState(false);
   const isSmallScreen = useIsSmallScreen();
 
+
   // const handleBack = () => {
   //   setGoBack(true);
   //   router.back();

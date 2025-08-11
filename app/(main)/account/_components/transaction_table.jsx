@@ -801,11 +801,16 @@ const rowsPerPage = 10; // Default rows per page
 
 
       const PERIOD_LABELS = [
+        { label: "Previous Daily", value: "DAILY" }, 
         { label: "Previous Weekly", value: "WEEKLY" },
         { label: "Previous Semi Annual", value: "SEMI_ANNUAL" },
         { label: "Previous Monthly", value: "MONTHLY" },
         { label: "Previous Annual", value: "ANNUAL" },
+        { label: "Previous Quarterly", value: "QUARTERLY" },
+        { label: "Previous Fiscal", value: "FISCAL_YEAR" },
       ];
+
+
 
       const periodCashflowMap = useMemo(() => {
         const map = {};
@@ -815,6 +820,7 @@ const rowsPerPage = 10; // Default rows per page
         return map;
       }, [recentCashflows]);
 
+      const existingPeriodLabels = PERIOD_LABELS.filter(({ value }) => periodCashflowMap[value]);
 
       const [selectedPeriod, setSelectedPeriod] = useState(null);
 
@@ -1131,8 +1137,11 @@ const handleEditTransaction = (transactionId) => {
                       <div className="flex flex-col gap-2 mb-2">
                         <h2 className={`${fontZenKaku.className} font-medium text-lg text-black`}>Generate Cashflow Statement</h2>
                         <div >
-                          <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
-                            {PERIOD_LABELS.map(({ label, value }) => (
+                          {/* <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
+                            {existingPeriodLabels.length === 0 ? (
+                              <li className="text-gray-400">No previous periods found.</li>
+                              ) : (
+                                existingPeriodLabels.map(({ label, value }) => (
                               <li key={value} className="flex flex-row items-center gap-1">
                                 <Checkbox
                                   checked={selectedPeriod === value}
@@ -1140,17 +1149,39 @@ const handleEditTransaction = (transactionId) => {
                                   disabled={!periodCashflowMap[value]}
                                   id={`checkbox-${value}`}
                                 />
-                                <label htmlFor={`checkbox-${value}`} className={periodCashflowMap[value] ? `${fontZenKaku.className} font-normal` : `${fontZenKaku.className} font-normal text-gray-400`}>
-                                  {label}
-                                </label>
-                                {periodCashflowMap[value] && (
+                                 <label htmlFor={`checkbox-${value}`} className={`${fontZenKaku.className} font-normal`}>
+                                    {label}
+                                  </label>
+                                
                                   <span className={`${fontZenKaku.className} font-medium ml-1 text-xs text-gray-500`}>
                                     (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
                                   </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
+                                
+                              </li>))
+                              )}
+                          </ul> */}
+
+                          <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
+  {existingPeriodLabels.length === 0 ? (
+    <li className="text-gray-400">No previous periods found.</li>
+  ) : (
+    existingPeriodLabels.map(({ label, value }) => (
+      <li key={value} className="flex flex-row items-center gap-1">
+        <Checkbox
+          checked={selectedPeriod === value}
+          onCheckedChange={() => handleCheckboxChange(value)}
+          id={`checkbox-${value}`}
+        />
+        <label htmlFor={`checkbox-${value}`} className={`${fontZenKaku.className} font-normal`}>
+          {label}
+        </label>
+        <span className={`${fontZenKaku.className} font-medium ml-1 text-xs text-gray-500`}>
+          (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
+        </span>
+      </li>
+    ))
+  )}
+</ul>
                         </div>
                       </div>
                     

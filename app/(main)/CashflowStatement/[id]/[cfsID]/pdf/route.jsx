@@ -139,7 +139,7 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
       </Document>
     );
   }
-
+  console.log('cashflow[1]: ', cashflow)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
@@ -149,11 +149,30 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
     });
   };
 
-
+  const deterimeTimeFrame = (period) => {
+    switch (period) {
+      case "DAILY":
+        return "Daily";
+      case "WEEKLY":
+        return "Weekly";
+      case "MONTHLY":
+        return "Monthly";
+      case "ANNUAL":
+        return "Annual";
+      case "QUARTERLY":
+        return "Quarterly";
+      case "FISCAL_YEAR":
+        return "Fiscal"
+      case "SEMI_ANNUAL":
+        return "Semi Annual";
+      default:
+        "" // Default classification for longer ranges
+        break;
+    }
+  }
 
   const timeFrame = cashflow.periodCashFlow
-    ? cashflow.periodCashFlow.charAt(0) + cashflow.periodCashFlow.slice(1).toLowerCase()
-    : "Cashflow";
+
   const statementDate = cashflow.date
     ? new Date(cashflow.date).toLocaleDateString(undefined, {
         year: "numeric",
@@ -215,12 +234,17 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
   const sortedInvestingEntries = buildSortedEntries("INVESTMENT");
   const sortedFinanceEntries = buildSortedEntries("FINANCING");
 
+  const transactionDates = transactions.map((transaction) => 
+    new Date(transaction.date)
+  )
+
+  console.log("transactionDates",transactionDates)
+  const startDate =  new Date(Math.min(...transactionDates));
+  const endDate = new Date(Math.max(...transactionDates));
 
 
-
-
-
-
+  const formattedStartDate = formatDate(startDate, 'MMMM dd, yyyy');
+  const formattedEndDate = formatDate(endDate, 'MMMM dd, yyyy')
 
 
 
@@ -242,9 +266,13 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
               <Image src="/PDFlogo2.png" style={styles.logo} />
               <View style={styles.letterheadText}>
                 <Text style={styles.title}>Teruel Accounting</Text>
-                <Text style={styles.subtitle}>{timeFrame} Cashflow Statement</Text>
+                <Text style={styles.subtitle}>{deterimeTimeFrame(timeFrame)} Cashflow Statement</Text>
                 <Text style={styles.subtitle}>
-                  {statementDate ? `As of: ${statementDate}` : ""}
+                  {/* {statementDate ? `As of: ${statementDate}` : ""} */}
+                  {startDate.toDateString() === endDate.toDateString()
+                      ? <Text style={styles.subtitle}>As of: {formattedStartDate}</Text>
+                      : <Text style={styles.subtitle}>For the period: {formattedStartDate} - {formattedEndDate}</Text>
+                    }
                 </Text>
               </View>
             </View>

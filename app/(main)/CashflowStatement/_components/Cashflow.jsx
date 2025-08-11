@@ -296,6 +296,8 @@ const handleSwitchChange = (checked) => {
 
   const deterimeTimeFrame = (period) => {
     switch (period) {
+      case "DAILY":
+        return "Daily";
       case "SEMI_ANNUAL":
         return "Semi Annual";
       case "WEEKLY":
@@ -338,8 +340,10 @@ const handleSwitchChange = (checked) => {
 
 
 
-
-
+  const PERIODS = ["DAILY", "WEEKLY", "MONTHLY", "SEMI_ANNUAL", "ANNUAL", "QUARTERLY", "FISCAL_YEAR"];
+  const existingPeriods = PERIODS.filter(period =>
+    cashflowRecords.some(record => record.periodCashFlow === period)
+  );
 
 
 
@@ -467,13 +471,13 @@ const handleSwitchChange = (checked) => {
           >
             <div className="w-full overflow-x-auto md:overflow-x-visible">
             <TabsList className="grid grid-cols-5 min-w-[500px] gap-2 bg-blue-50 p-1 rounded-lg mb-6">
-              {["WEEKLY", "MONTHLY", "SEMI_ANNUAL", "ANNUAL", "FISCAL_YEAR"].map(
+              {existingPeriods.map(
                 (period) => (
                   <TabsTrigger
                     key={period}
                     value={period}
                     disabled={cardClickedLoad}
-                    className="!rounded-button font-medium !text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                    className="font-medium !text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white"
                   >
                     {deterimeTimeFrame(period.charAt(0).toUpperCase() + period.slice(1))}
                   </TabsTrigger>

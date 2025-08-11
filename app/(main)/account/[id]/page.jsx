@@ -47,7 +47,6 @@ async function AccountsPage({ params }) {
   const accountData = await getAccountWithTransactions(id);
   const subAccounts = await getSubAccounts(id);
   const recentCashflows = await getCashflowEnding(id)
-  // console.log("recentCashflows", fetchedCashflows);
 
   // const recentCashflows = fetchedCashflows.latestCashflows;
 
@@ -55,7 +54,6 @@ async function AccountsPage({ params }) {
   // console.info("THE ACCOUNT DATUM:  ",accountData)
 
   // const cashflow = await getCashflow(id);
-  //     console.log("CASHFLOW DATA ACCOUNT PAGE:", cashflow);
 
   if (!accountData) {
     notFound();

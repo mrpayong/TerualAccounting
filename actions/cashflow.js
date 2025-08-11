@@ -308,15 +308,17 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
 
     const earliestMonth = earliestDate.getMonth(); // 0 = Jan, 11 = Dec
     const latestMonth = latestDate.getMonth();
+    const monthsDiff = Math.abs(latestMonth - earliestMonth) + 1;
     const isFirstHalf = (month) => month >= 0 && month <= 5;
     const isSecondHalf = (month) => month >= 6 && month <= 11;
 
-    if ((isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
-      (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth))) 
-      {
-        periodCashFlow = "SEMI_ANNUAL";
-      } else {
+
         switch (true) {
+            case (monthsDiff === 6 &&(
+                (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
+                (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth)))):
+              periodCashFlow = "SEMI_ANNUAL";
+              break;
             case dateRangeInDays <= 1:
               periodCashFlow = "DAILY";
               break;
@@ -336,7 +338,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
               periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
               break;
         }
-      }
+      
     
     
 
@@ -701,7 +703,7 @@ export async function getCashflowEnding(accountId){
     }
 
   
-    const periods = ["SEMI_ANNUAL", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"]; // Add others if needed
+    const periods = ["DAILY","SEMI_ANNUAL", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"]; // Add others if needed
 
 
     const latestCashflows = await Promise.all(

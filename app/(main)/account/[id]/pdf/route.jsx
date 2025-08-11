@@ -150,7 +150,6 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     );
   }
 
-  console.log("cashflow data:",cashflow, transactions, subAccounts);
   const transactionDates = transactions.map((transaction) => 
     new Date(transaction.date)
   )
@@ -170,6 +169,8 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
         return "Quarterly";
       case "FISCAL_YEAR":
         return "Fiscal"
+      case "SEMI_ANNUAL":
+        return "Semi Annual";
       default:
         "" // Default classification for longer ranges
         break;
