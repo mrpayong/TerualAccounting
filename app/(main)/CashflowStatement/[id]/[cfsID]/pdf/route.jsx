@@ -140,7 +140,6 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
     );
   }
 
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
@@ -191,7 +190,7 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
   const buildSortedEntries = (activity) => {
     const txEntries = groupTransactionsByActivity(activity).map((transaction) => ({
       type: transaction.type,
-      description: transaction.description,
+      description: transaction.particular || transaction.description,
       amount: transaction.type === "EXPENSE" ? -transaction.amount : transaction.amount,
       isTransaction: true,
     }));
@@ -258,7 +257,7 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
           </View>
           {sortedOperatingEntries.map((entry, index) => (
             <View style={styles.row} key={index}>
-              <Text style={styles.leftCell}>{entry.description}</Text>
+              <Text style={styles.leftCell}>{entry.particular || entry.description}</Text>
               <Text style={{
                 ...styles.rightCell,
                 color: entry.type === "INCOME" ? "green" : "red",
@@ -278,7 +277,7 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
           </View>
           {sortedInvestingEntries.map((entry, index) => (
             <View style={styles.row} key={index}>
-              <Text style={styles.leftCell}>{entry.description}</Text>
+              <Text style={styles.leftCell}>{entry.particular ||entry.description}</Text>
               <Text style={{
                 ...styles.rightCell,
                 color: entry.type === "INCOME" ? "green" : "red",
@@ -298,7 +297,7 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
           </View>
           {sortedFinanceEntries.map((entry, index) => (
             <View style={styles.row} key={index}>
-              <Text style={styles.leftCell}>{entry.description}</Text>
+              <Text style={styles.leftCell}>{entry.particular || entry.description}</Text>
               <Text style={{
                 ...styles.rightCell,
                 color: entry.type === "INCOME" ? "green" : "red",

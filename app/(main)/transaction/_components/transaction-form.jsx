@@ -32,6 +32,7 @@ const AddTransactionForm = ({
     accountId,
     ScannerUserId
 }) => {
+    const [buttonsDisabled, setButtonsDisabled] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const editId = searchParams.get("edit");
@@ -97,7 +98,7 @@ const AddTransactionForm = ({
         },
     });
 
-
+console.log(errors.printNumber)
     const {
         loading: transactionLoading,
         fn: transactionFn,
@@ -109,13 +110,14 @@ const AddTransactionForm = ({
     const isRecurring = watch("isRecurring");
     const date = watch("date");
     const printNumber = watch("printNumber");
-    
+    console.log('date: ', date)
 
     const filteredCategories = categories.filter(
         (category) => category.type === type
     );
     
     const onSubmit = async (data) => {
+        
         const formData = {
             ...data,
             amount: parseFloat(data.amount),
@@ -132,8 +134,10 @@ const AddTransactionForm = ({
         }
         if (editMode) {
             transactionFn(editId, formData);
+            setButtonsDisabled(true);
         } else{
             transactionFn(formData);
+            setButtonsDisabled(true);
         }
     };
   
@@ -150,13 +154,14 @@ const AddTransactionForm = ({
                     }
                 );
             reset();
+            
         editMode
             ? setTimeout(() => {
                 const promise = () => new Promise((resolve) => setTimeout(() => resolve({ name: 'Sonner' }), 2000));
                 router.push(`/account/${transactionResult.data.accountId}`);
-                toast.promise(promise, { loading: 'Going back'});
+                toast.promise(promise, { loading: 'Going back, please wait.'});
             }, 1000)
-            : ''
+            : setButtonsDisabled(false);
         }
     }, [transactionResult, transactionLoading, editMode]);
 
@@ -397,6 +402,7 @@ const AddTransactionForm = ({
                 <div className="space-y-2">
                     {/* <label className="text-sm font-medium">Date of transaction</label> */}
                     <DatePicker
+                    timezone="Asia/Manila"
                     label={date ? formatDate(date) : "Pick a date"}
                     value={date} // Watch the "date" field from react-hook-form
                     onChange={(date) => {
@@ -499,17 +505,25 @@ const AddTransactionForm = ({
             <Button
                 type="button"
                 variant="outline"
-                className="w-full border-2 border-black hover:bg-neutral-900 hover:text-white"
-                disabled={transactionLoading}
-                onClick={() => router.back()}>
+                className="w-full border border-black hover:bg-neutral-900 hover:text-white
+                hover:shadow-md hover:shadow-black/30"
+                disabled={transactionLoading || buttonsDisabled}
+                onClick={() => {setButtonsDisabled(true); router.back();}}>
                     Back 
             </Button>
 
             <Button
                 type="button"
                 variant="outline"
-                disabled={transactionLoading}
-                className="w-full border-2 border-yellow-400 text-yellow-400"
+                disabled={transactionLoading 
+                    || editMode === true 
+                    || buttonsDisabled
+                }
+                className="w-full
+                bg-white text-yellow-500
+                hover:bg-yellow-500 hover:text-black
+                hover:border-0 border border-yellow-500
+                hover:shadow-md hover:shadow-yellow-500/50"
                 onClick={() => {reset(); setScannedReceipt(null);}} // Reset the form fields
             >
                 Reset
@@ -517,9 +531,13 @@ const AddTransactionForm = ({
 
             <Button
                 type="submit"
-                className="w-full"
+                className="w-full
+                hover:bg-green-500 hover:text-white
+                bg-white text-black
+                hover:border-0 border border-green-500
+                hover:shadow-md hover:shadow-green-500/50"
 
-                disabled={transactionLoading}>
+                disabled={transactionLoading || buttonsDisabled}>
                     {transactionLoading
                         ? (<>
                             <Loader2 className='mr-2 h-4 w-4 animate-spin'/>

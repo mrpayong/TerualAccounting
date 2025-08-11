@@ -123,7 +123,6 @@ const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => {
     const [editLoadingId, setEditLoadingId] = useState(false);
 // Removed duplicate declaration of rowsPerPage
 const rowsPerPage = 10; // Default rows per page
-
     const {
         register,
         handleSubmit,
@@ -216,26 +215,30 @@ const rowsPerPage = 10; // Default rows per page
 
         // Apply Sorting
         result.sort((a, b) => {
-            let comparison = 0;
+          let comparison = 0;
+          
+          function getSignedAmount(tx) {
+            return tx.type === "EXPENSE" ? -Math.abs(tx.amount) : Math.abs(tx.amount);
+          }
 
-            switch (sortConfig.field) {
-                case "date":
-                    comparison = new Date(a.date) - new Date(b.date);
-                    break;
-                case "amount": 
-                    comparison = a.amount - b.amount;
-                    break;
-                case "category":
-                    comparison = a.category.localeCompare(b.category);
-                    break;
-                case "createdAt":
-                        comparison = new Date(a.createdAt) - new Date(b.createdAt);
-                        break;
-                default:
-                    comparison = 0;
-            }
-            
-            return sortConfig.direction === "asc" ? comparison : -comparison; 
+          switch (sortConfig.field) {
+              case "date":
+                  comparison = new Date(a.date) - new Date(b.date);
+                  break;
+              case "amount": 
+                  comparison = getSignedAmount(a) - getSignedAmount(b);
+                  break;
+              case "category":
+                  comparison = a.category.localeCompare(b.category);
+                  break;
+              case "createdAt":
+                      comparison = new Date(a.createdAt) - new Date(b.createdAt);
+                      break;
+              default:
+                  comparison = 0;
+          }
+          
+          return sortConfig.direction === "asc" ? comparison : -comparison; 
         })
 
         if (fromDateRaw || toDateRaw) {
@@ -798,8 +801,8 @@ const rowsPerPage = 10; // Default rows per page
 
 
       const PERIOD_LABELS = [
-        { label: "Previous Daily", value: "DAILY" },
         { label: "Previous Weekly", value: "WEEKLY" },
+        { label: "Previous Semi Annual", value: "SEMI_ANNUAL" },
         { label: "Previous Monthly", value: "MONTHLY" },
         { label: "Previous Annual", value: "ANNUAL" },
       ];

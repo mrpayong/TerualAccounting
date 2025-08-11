@@ -296,8 +296,8 @@ const handleSwitchChange = (checked) => {
 
   const deterimeTimeFrame = (period) => {
     switch (period) {
-      case "DAILY":
-        return "Daily";
+      case "SEMI_ANNUAL":
+        return "Semi Annual";
       case "WEEKLY":
         return "Weekly";
       case "MONTHLY":
@@ -467,7 +467,7 @@ const handleSwitchChange = (checked) => {
           >
             <div className="w-full overflow-x-auto md:overflow-x-visible">
             <TabsList className="grid grid-cols-5 min-w-[500px] gap-2 bg-blue-50 p-1 rounded-lg mb-6">
-              {["DAILY", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"].map(
+              {["WEEKLY", "MONTHLY", "SEMI_ANNUAL", "ANNUAL", "FISCAL_YEAR"].map(
                 (period) => (
                   <TabsTrigger
                     key={period}

@@ -82,13 +82,11 @@ export async function createTransaction(data) {
     if (existingTransaction) {
       throw new Error("Reference number already exists.");
     }
-
+    console.log("Data before processing: ", data)
       const absAmount = Math.sign(data.amount) === -1 
         ? Math.abs(data.amount)
         : data.amount
   
-console.log("absolute amount: ", absAmount, typeof absAmount)
-console.log("Report:", data.amount, "is now", absAmount, typeof absAmount)
     // Calculate new balance
     // const balanceChange = data.type === "EXPENSE" 
     //   ? -data.amount 
@@ -227,7 +225,7 @@ console.log("[4]")
 console.log("[5]")
       const data = JSON.parse(cleanedText);
       console.log("Parsed data:", data);
-      if (!data.printNumber || data.printNumber.trim() === "") {
+      if (!data.merchantName) {
         throw new ValidationError("System: No BIR Authority to Print number detected.");
       }
 

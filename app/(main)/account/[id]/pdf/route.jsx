@@ -150,6 +150,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     );
   }
 
+  console.log("cashflow data:",cashflow, transactions, subAccounts);
   const transactionDates = transactions.map((transaction) => 
     new Date(transaction.date)
   )
@@ -246,7 +247,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     // Map OperatingTransactions into a unified structure
     ...OperatingTransactions.map((transaction) => ({
       type: transaction.type,
-      description: transaction.description,
+      description: transaction.particular || transaction.description,
       amount: transaction.type === "EXPENSE" ? -transaction.amount : transaction.amount,
       isTransaction: true, // Mark as a transaction
     })),
@@ -270,7 +271,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     // Map InvestingTransactions into a unified structure
     ...InvestingTransactions.map((transaction) => ({
       type: transaction.type,
-      description: transaction.description,
+      description: transaction.particular || transaction.description,
       amount: transaction.type === "EXPENSE" ? -transaction.amount : transaction.amount,
       isTransaction: true, // Mark as a transaction
     })),
@@ -294,7 +295,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     // Map FinanceTransactions into a unified structure
     ...FinanceTransactions.map((transaction) => ({
       type: transaction.type,
-      description: transaction.description,
+      description: transaction.particular || transaction.description,
       amount: transaction.type === "EXPENSE" ? -transaction.amount : transaction.amount,
       isTransaction: true, // Mark as a transaction
     })),
@@ -379,7 +380,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
           {/* OPERATING ACTIVITIES */}
           {sortedOperatingEntries.map((entry, index) => (
             <View style={styles.row} key={index}>
-              <Text style={styles.leftCell}>{entry.description}</Text>
+              <Text style={styles.leftCell}>{entry.particular || entry.description}</Text>
               <Text style={{
                 ...styles.rightCell,
                 color: entry.type === "INCOME" ? "green" : "red", // Green for INCOME, Red for EXPENSE

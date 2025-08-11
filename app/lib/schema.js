@@ -78,7 +78,7 @@ export const transactionSchema = z.object({
     Activity: z.enum(["OPERATION", "INVESTMENT", "FINANCING"]),
     amount: z.string().min(1, "Amount is required"),
     refNumber: z.string().min(1, "Reference number is required"),
-    printNumber: z.string().min(1, "Print number is required"),
+    printNumber: z.string().min(0, "Print number is required"),
     description: z.string().optional(),
     particular: z.string().optional(),
     date: z.date({required_error: "Date is required"}),

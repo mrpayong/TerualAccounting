@@ -55,6 +55,13 @@ function CashflowDetails({ cashflow }) {
     return <p>No cashflow details available.</p>;
   }
 
+  const sortIncomeExpense = (arr) => {
+  return [...arr].sort((a, b) => {
+    if (a.type === b.type) return 0;
+    if (a.type === "INCOME") return -1;
+    return 1;
+  });
+};
 
   // Helper function to get the color class based on transaction type
   const getColorClass = (type) => {
@@ -63,7 +70,7 @@ function CashflowDetails({ cashflow }) {
 
   // Group sub-accounts and solo transactions by Activity
   const groupedData = {
-    OPERATION: [
+    OPERATION: sortIncomeExpense([
       ...cashflow.subAccounts.filter(
         (subAccount) =>
           subAccount.transactions.length > 0 &&
@@ -72,8 +79,8 @@ function CashflowDetails({ cashflow }) {
       ...cashflow.transactions.filter(
         (transaction) => transaction.Activity === "OPERATION"
       ),
-    ],
-    INVESTMENT: [
+    ]),
+    INVESTMENT: sortIncomeExpense([
       ...cashflow.subAccounts.filter(
         (subAccount) =>
           subAccount.transactions.length > 0 &&
@@ -82,8 +89,8 @@ function CashflowDetails({ cashflow }) {
       ...cashflow.transactions.filter(
         (transaction) => transaction.Activity === "INVESTMENT"
       ),
-    ],
-    FINANCING: [
+    ]),
+    FINANCING: sortIncomeExpense([
       ...cashflow.subAccounts.filter(
         (subAccount) =>
           subAccount.transactions.length > 0 &&
@@ -92,7 +99,7 @@ function CashflowDetails({ cashflow }) {
       ...cashflow.transactions.filter(
         (transaction) => transaction.Activity === "FINANCING"
       ),
-    ],
+    ]),
   };
 
   const formatTableAmount = (amount) => {
@@ -103,7 +110,6 @@ function CashflowDetails({ cashflow }) {
       maximumFractionDigits:3,
     }).format((amount));
   };
-
 
 
 
@@ -161,7 +167,7 @@ function CashflowDetails({ cashflow }) {
                     className="flex justify-between items-center py-1 border-b border-gray-400 hover:bg-green-400"
                   >
                     <span className="font-medium text-sm md:text-base">
-                      {item.name || item.description} {/* Sub-account name or transaction description */}
+                      {item.name || item.particular || item.description || 'No Transaction Name'} {/* Sub-account name or transaction description */}
                     </span>
                     <span
                       className={`font-medium text-sm md:text-base ${getColorClass(
@@ -195,7 +201,7 @@ function CashflowDetails({ cashflow }) {
                     className="flex justify-between items-center py-1 border-b border-gray-400 hover:bg-green-400"
                   >
                     <span className="font-medium text-sm md:text-base">
-                      {item.name || item.description}
+                      {item.name || item.particular || item.description || 'No Transaction Name'}
                     </span>
                     <span
                       className={`font-medium text-sm md:text-base ${getColorClass(
@@ -229,7 +235,7 @@ function CashflowDetails({ cashflow }) {
                     className="flex justify-between items-center py-1 border-b border-gray-400 hover:bg-green-400"
                   >
                     <span className="font-medium text-sm md:text-base">
-                      {item.name || item.description}
+                      {item.name || item.particular || item.description || 'No Transaction Name'}
                     </span>
                     <span
                       className={`font-medium text-sm md:text-base ${getColorClass(

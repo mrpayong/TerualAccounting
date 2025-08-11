@@ -306,26 +306,38 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
 
     let periodCashFlow;
 
-    switch (true) {
-      case dateRangeInDays <= 1:
-        periodCashFlow = "DAILY";
-        break;
-      case dateRangeInDays <= 7:
-        periodCashFlow = "WEEKLY";
-        break;
-      case dateRangeInDays <= 31:
-        periodCashFlow = "MONTHLY";
-        break;
-      case dateRangeInDays >= 365:
-        periodCashFlow = "ANNUAL";
-        break;
-      case dateRangeInDays >= 120:
-        periodCashFlow = "QUARTERLY";
-        break;
-      default:
-        periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
-        break;
-    }
+    const earliestMonth = earliestDate.getMonth(); // 0 = Jan, 11 = Dec
+    const latestMonth = latestDate.getMonth();
+    const isFirstHalf = (month) => month >= 0 && month <= 5;
+    const isSecondHalf = (month) => month >= 6 && month <= 11;
+
+    if ((isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
+      (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth))) 
+      {
+        periodCashFlow = "SEMI_ANNUAL";
+      } else {
+        switch (true) {
+            case dateRangeInDays <= 1:
+              periodCashFlow = "DAILY";
+              break;
+            case dateRangeInDays <= 7:
+              periodCashFlow = "WEEKLY";
+              break;
+            case dateRangeInDays <= 31:
+              periodCashFlow = "MONTHLY";
+              break;
+            case dateRangeInDays >= 365:
+              periodCashFlow = "ANNUAL";
+              break;
+            case dateRangeInDays >= 120:
+              periodCashFlow = "QUARTERLY";
+              break;
+            default:
+              periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
+              break;
+        }
+      }
+    
     
 
     // filter by Activity type
@@ -519,6 +531,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
               Activity: true,
               type: true,
               description: true,
+              particular:true,
               amount: true,
               date: true,
               accountId: true,
@@ -670,7 +683,6 @@ export async function getCashflow(accountId, userId, cashFlowId) {
 
 export async function getCashflowEnding(accountId){
   try {
-    
     const {userId} = await auth();
     if(!userId){
       throw new Error("Unauthorized.")
@@ -689,7 +701,7 @@ export async function getCashflowEnding(accountId){
     }
 
   
-    const periods = ["DAILY", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"]; // Add others if needed
+    const periods = ["SEMI_ANNUAL", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"]; // Add others if needed
 
 
     const latestCashflows = await Promise.all(
@@ -761,6 +773,7 @@ export async function getCashflowById(cfsID) {
             description: true,
             amount: true,
             Activity: true,
+            particular:true, 
             date: true,
           },
         },

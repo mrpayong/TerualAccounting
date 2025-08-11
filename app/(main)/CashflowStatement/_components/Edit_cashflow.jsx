@@ -82,8 +82,15 @@ export default function EditCashflow({ cashflow }) {
       maximumFractionDigits:3,
     }).format((amount));
   };
+  const ACTIVITY_ORDER = ["OPERATION", "INVESTMENT", "FINANCING"];
 
-  
+    const sortIncomeExpense = (arr) => {
+    return [...arr].sort((a, b) => {
+      if (a.type === b.type) return 0;
+      if (a.type === "INCOME") return -1;
+      return 1;
+    });
+  };
 
 const groupedTransactions = cashflow.transactions.reduce((acc, tx) => {
   const key = tx.Activity || "OTHER";
@@ -91,6 +98,10 @@ const groupedTransactions = cashflow.transactions.reduce((acc, tx) => {
   acc[key].push(tx);
   return acc;
 }, {});
+
+Object.keys(groupedTransactions).forEach(key => {
+  groupedTransactions[key] = sortIncomeExpense(groupedTransactions[key]);
+});
 
 const activityTotal = cashflow.activityTotal || [0,0,0];
 
@@ -450,74 +461,75 @@ const ACTIVITY_LABELS = {
           <h2 className="text-xl text-center items-center gap-3 justify-center border-black border-b-2 border-t-2 font-bold">Transactions</h2>
           {/* </div> */}
           
-          {Object.entries(groupedTransactions).map(([activity, txs]) => (
-            <div key={activity} className="mb-4">
-              <h3 className="text-lg font-bold">{ACTIVITY_LABELS[activity] || activity}</h3>
-              <ul>
-                {txs.map((transaction) => (
-                  <li key={transaction.id} className="flex flex-row justify-between items-center hover:bg-green-400">
-                    <span className="text-base font-medium flex flex-row gap-2 items-center">
-                      {transaction.particular || transaction.description || <span className="italic text-gray-400">No description</span>} 
-                      {UpdateTransactionInputField && UpdateTransactionId === transaction.id
-                        ? (isLoadingUpdateTransaction
-                            ? (<Loader2 className="w-4 h-4 animate-spin"/>)
-                            : (
-                          <input
-                          type="number"
-                          name="amount"
-                          value={UpdateTransactionInput}
-                          onChange={e => setUpdateTransactionInput(e.target.value)}
-                          className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
-                        /> )
-                        )
-                        : (
-                            <span
-                              className={
-                                transaction.type === "EXPENSE"
-                                  ? "text-red-500 font-mono tracking-wide"
-                                  : transaction.type === "INCOME"
-                                  ? "text-green-600 font-mono tracking-wide"
-                                  : ""
-                              }
-                            >
-                              {transaction.type === "EXPENSE" ? "-" : ""}
-                              {formatTableAmount(transaction.amount)}
-                          </span>
+          {ACTIVITY_ORDER.filter(activity => groupedTransactions[activity])
+            .map(activity => (
+              <div key={activity} className="mb-4">
+                <h3 className="text-lg font-bold">{ACTIVITY_LABELS[activity] || activity}</h3>
+                <ul>
+                  {groupedTransactions[activity].map((transaction) => (
+                    <li key={transaction.id} className="flex flex-row justify-between items-center hover:bg-green-400">
+                      <span className="text-base font-medium flex flex-row gap-2 items-center">
+                        {transaction.particular || transaction.description || <span className="italic text-gray-400">No description</span>} 
+                        {UpdateTransactionInputField && UpdateTransactionId === transaction.id
+                          ? (isLoadingUpdateTransaction
+                              ? (<Loader2 className="w-4 h-4 animate-spin"/>)
+                              : (
+                            <input
+                            type="number"
+                            name="amount"
+                            value={UpdateTransactionInput}
+                            onChange={e => setUpdateTransactionInput(e.target.value)}
+                            className="border border-gray-300 rounded px-2 py-1 w-25 font-mono"
+                          /> )
                           )
-                          
+                          : (
+                              <span
+                                className={
+                                  transaction.type === "EXPENSE"
+                                    ? "text-red-500 font-mono tracking-wide"
+                                    : transaction.type === "INCOME"
+                                    ? "text-green-600 font-mono tracking-wide"
+                                    : ""
+                                }
+                              >
+                                {transaction.type === "EXPENSE" ? "-" : ""}
+                                {formatTableAmount(transaction.amount)}
+                            </span>
+                            )
+                            
+                        }
+                      </span>
+                      
+                      {UpdateTransactionInputField && UpdateTransactionId === transaction.id
+                        ? ( <div className="flex flex-row gap-2 items-center">
+                              <Button 
+                                variant="ghost"
+                                onClick={UpdateCancelTransationField}>
+                                <X className="text-red-600"/>
+                              </Button>
+                              <Button 
+                                onClick={handleUpdateTransaction}
+                                variant="ghost">
+                                <Check className="text-green-600"/>
+                              </Button>
+                            </div>)
+                        : (
+                          <Button
+                            onClick={() => UpdateActiveTransationField(transaction)}
+                            variant="ghost"
+                            className="text-yellow-500 hover:text-purple-600"
+                            > 
+                            <SquarePen  />
+                            </Button>
+                        )
                       }
-                    </span>
                     
-                    {UpdateTransactionInputField && UpdateTransactionId === transaction.id
-                      ? ( <div className="flex flex-row gap-2 items-center">
-                            <Button 
-                              variant="ghost"
-                              onClick={UpdateCancelTransationField}>
-                              <X className="text-red-600"/>
-                            </Button>
-                            <Button 
-                              onClick={handleUpdateTransaction}
-                              variant="ghost">
-                              <Check className="text-green-600"/>
-                            </Button>
-                          </div>)
-                      : (
-                        <Button
-                           onClick={() => UpdateActiveTransationField(transaction)}
-                          variant="ghost"
-                          className="text-yellow-500 hover:text-purple-600"
-                          > 
-                          <SquarePen  />
-                          </Button>
-                      )
-                    }
-                  
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
 
 
-            </div>
+              </div>
           ))}
         </div>
 
