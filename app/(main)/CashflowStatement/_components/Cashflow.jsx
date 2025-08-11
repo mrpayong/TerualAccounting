@@ -37,7 +37,8 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 function Cashflow ({cashflows, name}) {
   const router = useRouter(); // For navigation
-  const [activeTab, setActiveTab] = useState("DAILY");
+  const period = [...new Set(cashflows.map(c => c.periodCashFlow))];
+  const [activeTab, setActiveTab] = useState(period[0] || ""); // Default to the first period or empty string
   const [isLoading, setIsLoading] = useState(false);
   const [cardClickedLoad, setCardClickedLoad] = useState(false);
 
@@ -257,15 +258,15 @@ const handleSwitchChange = (checked) => {
     setOpenDeleteDialog(true);
   }
 
-    const handleCancelDeleteCfsId = () =>{
+  const handleCancelDeleteCfsId = () =>{
     setDeleteCfsId("id");
     setOpenDeleteDialog(false);
   }
 
   const handleDeleteCFS = () => {
+    setOpenDeleteDialog(false);
     if (deleteCfsId) {
       deleteCFSfn(deleteCfsId);
-      setOpenDeleteDialog(false);
       setCardClickedLoad(true);
     } else {
       console.log("Error deleting Cashflow Statement");
@@ -275,9 +276,7 @@ const handleSwitchChange = (checked) => {
   useEffect(() => {
     if(deletedCFS && !deleteCFSLoading){
       setCardClickedLoad(false)
-      setOpenDeleteDialog(false)
       setDeleteCfsId("")
-     
       toast.success("Deleted Cashflow.");
     }
   },[deletedCFS, deleteCFSLoading]);
@@ -516,7 +515,7 @@ const handleSwitchChange = (checked) => {
                     <div className="h-[500px] w-full overflow-y-auto overflow-x-auto md:overflow-x-hidden">
                       <div className="space-y-4 min-w-[600px] md:min-w-0">
                       {filteredRecords.length === 0 
-                        ? (<span className="text-slate-600">This period is empty.</span>)
+                        ? (<span className="text-slate-600">Pick a period.</span>)
                         : (
                             filteredRecords.map((record) => (
                               // <Link >
@@ -539,7 +538,7 @@ const handleSwitchChange = (checked) => {
                                         className={`w-12 h-12 rounded-full flex items-center justify-center bg-sky-100`}
                                       >{editButtonShow
                                         ? (<>
-                                            <Dialog>
+                                            <Dialog onOpenChange={setOpenDeleteDialog}>
                                               <DialogTrigger asChild>
                                                 <Button 
                                                   className="border-0 bg-none rounded-full hover:bg-sky-100 
@@ -561,6 +560,7 @@ const handleSwitchChange = (checked) => {
                                                 <DialogFooter>
                                                   <DialogClose asChild>
                                                     <Button
+                                                      disabled={deleteCFSLoading}
                                                       className="font-medium !text-base
                                                       bg-white border border-black text-black
                                                       hover:bg-black hover:border-none hover:text-white" 

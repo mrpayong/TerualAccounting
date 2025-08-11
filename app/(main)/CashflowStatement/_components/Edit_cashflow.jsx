@@ -504,10 +504,12 @@ const ACTIVITY_LABELS = {
                         ? ( <div className="flex flex-row gap-2 items-center">
                               <Button 
                                 variant="ghost"
+                                disabled={isLoadingUpdateTransaction}
                                 onClick={UpdateCancelTransationField}>
                                 <X className="text-red-600"/>
                               </Button>
                               <Button 
+                                disabled={isLoadingUpdateTransaction}
                                 onClick={handleUpdateTransaction}
                                 variant="ghost">
                                 <Check className="text-green-600"/>
@@ -517,6 +519,7 @@ const ACTIVITY_LABELS = {
                           <Button
                             onClick={() => UpdateActiveTransationField(transaction)}
                             variant="ghost"
+                            disabled={isLoadingUpdateTransaction}
                             className="text-yellow-500 hover:text-purple-600"
                             > 
                             <SquarePen  />
@@ -593,17 +596,17 @@ const ACTIVITY_LABELS = {
               {TotalOpInputField && UpdateOpId === cashflow.id
                 ? (
                   <div className="flex flex-row gap-2 items-center ml-2">
-                    <Button variant="ghost" onClick={UpdateCancelOpField}>
+                    <Button disabled={isLoadingTotalOp} variant="ghost" onClick={UpdateCancelOpField}>
                       <X className="text-red-600" />
                     </Button>
-                    <Button variant="ghost" onClick={handleTotalOp}>
+                    <Button disabled={isLoadingTotalOp} variant="ghost" onClick={handleTotalOp}>
                       <Check className="text-green-600" />
                     </Button>
                   </div>
                 )
                 : (
            
-                  <Button
+                  <Button disabled={isLoadingTotalOp}
                     onClick={() => UpdateActiveOpField(cashflow)}
                     variant="ghost"
                     className="text-yellow-500 hover:text-purple-600 ml-2"
@@ -641,16 +644,16 @@ const ACTIVITY_LABELS = {
               {TotalInvInputField && UpdateInvId === cashflow.id
                 ? (
                   <div className="flex flex-row gap-2 items-center ml-2">
-                    <Button variant="ghost" onClick={UpdateCancelInvField}>
+                    <Button disabled={isLoadingTotalInv} variant="ghost" onClick={UpdateCancelInvField}>
                       <X className="text-red-600" />
                     </Button>
-                    <Button variant="ghost" onClick={handleTotalInv}>
+                    <Button disabled={isLoadingTotalInv} variant="ghost" onClick={handleTotalInv}>
                       <Check className="text-green-600" />
                     </Button>
                   </div>
                 )
                 : (
-                  <Button
+                  <Button disabled={isLoadingTotalInv}
                     onClick={() => UpdateActiveInvField(cashflow)}
                     variant="ghost"
                     className="text-yellow-500 hover:text-purple-600 ml-2"
@@ -688,16 +691,16 @@ const ACTIVITY_LABELS = {
               {TotalFncInputField && UpdateFncId === cashflow.id
                 ? (
                   <div className="flex flex-row gap-2 items-center ml-2">
-                    <Button variant="ghost" onClick={UpdateCancelFncField}>
+                    <Button disabled={isLoadingTotalFnc} variant="ghost" onClick={UpdateCancelFncField}>
                       <X className="text-red-600" />
                     </Button>
-                    <Button variant="ghost" onClick={handleTotalFnc}>
+                    <Button disabled={isLoadingTotalFnc} variant="ghost" onClick={handleTotalFnc}>
                       <Check className="text-green-600" />
                     </Button>
                   </div>
                 )
                 : (
-                  <Button
+                  <Button disabled={isLoadingTotalFnc}
                     onClick={() => UpdateActiveFncField(cashflow)}
                     variant="ghost"
                     className="text-yellow-500 hover:text-purple-600 ml-2"
@@ -737,16 +740,16 @@ const ACTIVITY_LABELS = {
                 {StartBalanceInputField && UpdateStartBalanceId === cashflow.id
                   ? (
                     <div className="flex flex-row gap-2 items-center ml-2">
-                      <Button variant="ghost" onClick={UpdateCancelStartBalanceField}>
+                      <Button disabled={isLoadingUpdateBegBal} variant="ghost" onClick={UpdateCancelStartBalanceField}>
                         <X className="text-red-600" />
                       </Button>
-                      <Button variant="ghost" onClick={handleUpdateStartBalance}>
+                      <Button disabled={isLoadingUpdateBegBal} variant="ghost" onClick={handleUpdateStartBalance}>
                         <Check className="text-green-600" />
                       </Button>
                     </div>
                   )
                   : (
-                    <Button
+                    <Button disabled={isLoadingUpdateBegBal}
                       onClick={() => UpdateActiveStartBalanceField(cashflow)}
                       variant="ghost"
                       className="text-yellow-500 hover:text-purple-600 ml-2"
@@ -785,16 +788,16 @@ const ACTIVITY_LABELS = {
                 {netInputField && UpdateNetChangeId === cashflow.id
                   ? (
                     <div className="flex flex-row gap-2 items-center ml-2">
-                      <Button variant="ghost" onClick={UpdateCancelNetChangeField}>
+                      <Button disabled={isLoadingUpdateNet} variant="ghost" onClick={UpdateCancelNetChangeField}>
                         <X className="text-red-600" />
                       </Button>
-                      <Button variant="ghost" onClick={handleUpdateNetChange}>
+                      <Button disabled={isLoadingUpdateNet} variant="ghost" onClick={handleUpdateNetChange}>
                         <Check className="text-green-600" />
                       </Button>
                     </div>
                   )
                   : (
-                    <Button
+                    <Button disabled={isLoadingUpdateNet}
                       onClick={() => UpdateActiveNetChangeField(cashflow)}
                       variant="ghost"
                       className="text-yellow-500 hover:text-purple-600 ml-2"
@@ -833,16 +836,16 @@ const ACTIVITY_LABELS = {
                 {EndBalInputField && UpdateEndBalId === cashflow.id
                   ? (
                     <div className="flex flex-row gap-2 items-center ml-2">
-                      <Button variant="ghost" onClick={UpdateCancelEndBalField}>
+                      <Button disabled={isLoadingEndBal} variant="ghost" onClick={UpdateCancelEndBalField}>
                         <X className="text-red-600" />
                       </Button>
-                      <Button variant="ghost" onClick={handleEndBal}>
+                      <Button disabled={isLoadingEndBal} variant="ghost" onClick={handleEndBal}>
                         <Check className="text-green-600" />
                       </Button>
                     </div>
                   )
                   : (
-                    <Button
+                    <Button disabled={isLoadingEndBal}
                       onClick={() => UpdateActiveEndBalField(cashflow)}
                       variant="ghost"
                       className="text-yellow-500 hover:text-purple-600 ml-2"

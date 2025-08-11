@@ -255,81 +255,88 @@ const anyFilterActive =
     <div className="w-full  py-4">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <Select value={actionFilter} onValueChange={setActionFilter}>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Filter by Action" />
-            </SelectTrigger>
-            <SelectContent>
-              {actionOptions.map((action) => (
-                <SelectItem key={action} value={action}>
-                  {action === "all"
-                    ? "All Actions"
-                    :  getActionLabel(action)}
-                </SelectItem>
-              ))}
-              
-            </SelectContent>
-          </Select>
-          <div className="relative w-full md:w-[240px]">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <Input
-              className="pl-10 w-full border-0"
-              placeholder="Search user or activity"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="">
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by Action" />
+              </SelectTrigger>
+              <SelectContent>
+                {actionOptions.map((action) => (
+                  <SelectItem key={action} value={action}>
+                    {action === "all"
+                      ? "All Actions"
+                      :  getActionLabel(action)}
+                  </SelectItem>
+                ))}
+                
+              </SelectContent>
+            </Select>
+            <div className="relative w-full md:w-[240px]">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <Input
+                className="pl-10 w-full border-0"
+                placeholder="Search user or activity"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="From"
+                  timezone='Asia/Manila'
+                  value={fromDateRaw}
+                  onChange={setFromDateRaw}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                      inputProps: { placeholder: 'Start date' }
+                    }
+                  }}
+                  disableFuture={false}
+                  maxDate={toDateRaw}
+                  format="yyyy-MM-dd"/>
+                <DatePicker
+                  label="To"
+                  timezone='Asia/Manila'
+                  value={toDateRaw}
+                  onChange={setToDateRaw}
+                  minDate={fromDateRaw}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                      inputProps: { placeholder: 'Start date' }
+                    }
+                  }}
+                  disableFuture={false}
+                  format="yyyy-MM-dd"/>
+              </LocalizationProvider>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="From"
-                timezone='Asia/Manila'
-                value={fromDateRaw}
-                onChange={setFromDateRaw}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
-                    inputProps: { placeholder: 'Start date' }
-                  }
-                }}
-                disableFuture={false}
-                maxDate={toDateRaw}
-                format="yyyy-MM-dd"/>
-              <DatePicker
-                label="To"
-                timezone='Asia/Manila'
-                value={toDateRaw}
-                onChange={setToDateRaw}
-                minDate={fromDateRaw}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
-                    inputProps: { placeholder: 'Start date' }
-                  }
-                }}
-                disableFuture={false}
-                format="yyyy-MM-dd"/>
-            </LocalizationProvider>
+          <div className="">
+            {anyFilterActive && (
+              <Button className="
+                bg-white border border-rose-500
+                text-rose-500 hover:bg-rose-500
+                hover:text-white hover:border-0
+                hover:shadow-md hover:shadow-rose-500/25"
+                size="sm"
+                onClick={handleClear}
+              >
+                Clear Filter
+              </Button>
+            )}
           </div>
 
         </div>
+
+
+        
         <div className="flex gap-2 items-center">
-          {anyFilterActive && (
-            <Button className="
-              bg-white border border-rose-500
-              text-rose-500 hover:bg-rose-500
-              hover:text-white hover:border-0
-              hover:shadow-md hover:shadow-rose-500/25"
-              size="sm"
-              onClick={handleClear}
-            >
-              Clear Filter
-            </Button>
-          )}
           <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Rows" />

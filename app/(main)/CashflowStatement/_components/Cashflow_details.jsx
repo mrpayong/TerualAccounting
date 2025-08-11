@@ -72,34 +72,37 @@ function CashflowDetails({ cashflow }) {
   // Group sub-accounts and solo transactions by Activity
   const groupedData = {
     OPERATION: sortIncomeExpense([
+      ...cashflow.transactions.filter(
+        (transaction) => transaction.Activity === "OPERATION"
+      ),      
       ...cashflow.subAccounts.filter(
         (subAccount) =>
           subAccount.transactions.length > 0 &&
           subAccount.transactions[0].Activity === "OPERATION"
       ),
-      ...cashflow.transactions.filter(
-        (transaction) => transaction.Activity === "OPERATION"
-      ),
+
     ]),
     INVESTMENT: sortIncomeExpense([
+      ...cashflow.transactions.filter(
+        (transaction) => transaction.Activity === "INVESTMENT"
+      ),      
       ...cashflow.subAccounts.filter(
         (subAccount) =>
           subAccount.transactions.length > 0 &&
           subAccount.transactions[0].Activity === "INVESTMENT"
       ),
-      ...cashflow.transactions.filter(
-        (transaction) => transaction.Activity === "INVESTMENT"
-      ),
+
     ]),
     FINANCING: sortIncomeExpense([
+      ...cashflow.transactions.filter(
+        (transaction) => transaction.Activity === "FINANCING"
+      ),      
       ...cashflow.subAccounts.filter(
         (subAccount) =>
           subAccount.transactions.length > 0 &&
           subAccount.transactions[0].Activity === "FINANCING"
       ),
-      ...cashflow.transactions.filter(
-        (transaction) => transaction.Activity === "FINANCING"
-      ),
+
     ]),
   };
 
@@ -171,9 +174,10 @@ function CashflowDetails({ cashflow }) {
                       {item.name || item.particular || item.description || 'No Transaction Name'} {/* Sub-account name or transaction description */}
                     </span>
                     <span
-                      className={`font-medium text-sm md:text-base ${getColorClass(
-                        item.type
-                      )}`}
+                      className={
+                          "font-medium text-sm md:text-base" +
+                          (item.type ? ` ${getColorClass(item.type)}` : "")
+                        }
                     >
                       {formatTableAmount(item.balance || item.amount)}
                     </span>
@@ -205,9 +209,10 @@ function CashflowDetails({ cashflow }) {
                       {item.name || item.particular || item.description || 'No Transaction Name'}
                     </span>
                     <span
-                      className={`font-medium text-sm md:text-base ${getColorClass(
-                        item.type
-                      )}`}
+                      className={
+                          "font-medium text-sm md:text-base" +
+                          (item.type ? ` ${getColorClass(item.type)}` : "")
+                        }
                     >
                       {formatTableAmount(item.balance || item.amount)}
                     </span>
@@ -239,9 +244,10 @@ function CashflowDetails({ cashflow }) {
                       {item.name || item.particular || item.description || 'No Transaction Name'}
                     </span>
                     <span
-                      className={`font-medium text-sm md:text-base ${getColorClass(
-                        item.type
-                      )}`}
+                      className={
+                          "font-medium text-sm md:text-base" +
+                          (item.type ? ` ${getColorClass(item.type)}` : "")
+                        }
                     >
                       {formatTableAmount(item.balance || item.amount)}
                     </span>

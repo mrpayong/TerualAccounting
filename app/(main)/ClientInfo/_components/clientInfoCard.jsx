@@ -699,7 +699,6 @@ const ClientInfoCard = ({ accountProfile }) => {
                 ) : (
                   <div className="rounded-lg bg-gray-50 px-3 py-2">{accountProfile.RDO}</div>
                 )}
-                {errors.RDO && <p className="text-xs text-red-500">RDO is required.</p>}
               </div>
               {/* Head Office */}
               <div>

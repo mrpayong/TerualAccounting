@@ -27,9 +27,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { ArrowLeft, ArrowRight, MoreHorizontal } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowLeft, ArrowRight, MoreHorizontal } from 'lucide-react';
 import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
-
 
 const ITEMS_PER_PAGE = 10;
 
@@ -86,9 +85,30 @@ const ArchiveTable = ({archives}) => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
+  const [sortConfig, setSortConfig] = useState({
+    field: "createdAt",
+    direction: null, // default: newest first
+  });
+
+const handleSort = (field) => {
+  setSortConfig((prev) => {
+    if (prev.field !== field) {
+      return { field, direction: null }; // default
+    }
+    if (prev.direction === null) {
+      return { field, direction: "asc" };
+    }
+    if (prev.direction === "asc") {
+      return { field, direction: "desc" };
+    }
+    return { field, direction: null }; // back to default
+  });
+};
+
+
   // Filtering logic
   const filteredArchives = useMemo(() => {
-    return archiveList.filter((item) => {
+    let result = archiveList.filter((item) => {
       if (!item.createdAt) return false;
       const created = new Date(item.createdAt);
       const from = fromDate ? new Date(fromDate) : null;
@@ -97,7 +117,19 @@ const ArchiveTable = ({archives}) => {
       if (to && created > to) return false;
       return true;
     });
-  }, [archiveList, fromDate, toDate]);
+
+    // Sorting
+    if (sortConfig.field === "createdAt") {
+      result = result.sort((a, b) => {
+        const aDate = new Date(a.createdAt);
+        const bDate = new Date(b.createdAt);
+        if (sortConfig.direction === "asc") return aDate - bDate;
+        // Default and "desc" both sort descending
+        return bDate - aDate;
+      });
+    }
+    return result;
+  }, [archiveList, fromDate, toDate, sortConfig]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredArchives.length / ITEMS_PER_PAGE);
@@ -123,8 +155,6 @@ const ArchiveTable = ({archives}) => {
   setToDate("");
   setPage(1);
 };
-
-
 
 
 
@@ -184,7 +214,23 @@ const ArchiveTable = ({archives}) => {
         <Table className={`${fontZenKaku.className}`}>
           <TableHeader>
             <TableRow>
-              <TableHead className='font-bold text-base'>Date of Action</TableHead>
+              <TableHead
+                className="font-bold text-base cursor-pointer select-none"
+                onClick={() => handleSort("createdAt")}
+              >
+                <div className="flex items-center gap-1">
+                  Date of Action
+                  {sortConfig.field === "createdAt" && (
+                    sortConfig.direction === "asc" ? (
+                      <ArrowUpWideNarrow className="h-4 w-4 text-blue-600" />
+                    ) : sortConfig.direction === "desc" ? (
+                      <ArrowDownNarrowWide className="h-4 w-4 text-blue-600" />
+                    ) : (
+                      <ArrowDownNarrowWide className="h-4 w-4 text-gray-400" /> // default
+                    )
+                  )}
+                </div>
+              </TableHead>
               <TableHead className='font-bold text-base'>Name/Description</TableHead>
               <TableHead className='font-bold text-base'>Action</TableHead>
               <TableHead className="font-bold text-base text-end px-4">Details</TableHead>
