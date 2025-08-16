@@ -725,7 +725,6 @@ const rowsPerPage = 10; // Default rows per page
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Account title:</label> ${transaction.category || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Activity type:</label> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Description:</label> ${transaction.description || "No description provided."}</p>
-              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>BIR authority to print number:</label> ${transaction.printNumber || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Recorded on:</label> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Edited on:</label> ${formatUtcDateWithTime(transaction.updatedAt) || "N/A"}</p>              
             </div>
