@@ -1,5 +1,4 @@
 'use client'
-
 import React from 'react'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card'
 import {
@@ -11,7 +10,12 @@ import {
   Tooltip as RechartsTooltip,
   CartesianGrid,
 } from 'recharts'
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google'
 
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const SysDashboardSectionTwo = ({ activities }) => {
 
@@ -20,10 +24,10 @@ const SysDashboardSectionTwo = ({ activities }) => {
   return (
     <div className="flex-auto h-full w-full">
       {/* Area Chart Card */}
-      <Card className="w-full">
+      <Card className={`${fontZenKaku.className} w-full`}>
         <CardHeader className="pb-0">
-          <CardTitle className="text-bold text-2xl">System Activity Overview</CardTitle>
-          <CardDescription className="p-0">
+          <CardTitle className="!font-bold text-2xl">System Activity Overview</CardTitle>
+          <CardDescription className="p-0 font-normal text-sm tracking-wide">
             Overview of activities of the users.
           </CardDescription>
         </CardHeader>
@@ -34,17 +38,24 @@ const SysDashboardSectionTwo = ({ activities }) => {
                 <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
                   <XAxis
                     dataKey="week"
-                    tick={{ fontSize: 12 }}
+                    tick={{ 
+                      fontSize: 12,
+                      fontWeight: 600
+                     }}
                     interval={0}
                     angle={-20}
                     textAnchor="end"
                   />
                   <YAxis
                     allowDecimals={false}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12,
+                      fontWeight: 600
+                     }}
                   />
                   <RechartsTooltip
-                    contentStyle={{ fontSize: 14 }}
+                    contentStyle={{ fontSize: 14,
+                      fontWeight: 500
+                     }}
                     formatter={(value) => [`${value}`, 'Logs']}
                   />
                   <CartesianGrid strokeDasharray="3 3" />

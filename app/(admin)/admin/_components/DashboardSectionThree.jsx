@@ -89,6 +89,10 @@ function getActionLabel(action) {
       return "Deleted a Group transaction";
     case "deleteCashflowStatement":
       return 'Deleted Cashflow Statement';
+    case 'udpateNetChange':
+      return 'Edited Net Change';
+    case 'updateBalanceQuick':
+      return 'Quick Edit Balance';
     default:
       return action;
   }

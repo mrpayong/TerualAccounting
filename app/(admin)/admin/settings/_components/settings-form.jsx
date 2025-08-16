@@ -49,14 +49,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
-import { BarLoader } from 'react-spinners';
 import { Divider, Skeleton } from '@mui/material';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useUser } from '@clerk/nextjs';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, useCarousel } from "@/components/ui/carousel";
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
 
 
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(false);
@@ -82,9 +85,10 @@ const roles = [
       "Clickable client cards to access account pages",
       "Create transactions (AI-powered receipt scanning)",
       "View and edit transactions",
-      "Edit Cashflow Statements (CFS)",
+      "Edit Cashflow Statements",
       "Access Disbursement & Cash Receipt Books",
-      "Download Cashflow Statement as PDF"
+      "Download Cashflow Statement as PDF",
+      "Download transactions as XLXS file"
     ]
   },
   {
@@ -95,10 +99,10 @@ const roles = [
       "Decision Support System (DSS) with analytics",
       "AI-powered forecasting & task scheduling",
       "Create and manage tasks",
-      "Admin portal dashboard (recent reports)",
+      "Admin portal dashboard",
       "View all activity logs",
       "Access all client information",
-      "View user list and change user roles"
+      "Manage user list"
     ]
   },
   {
@@ -106,9 +110,9 @@ const roles = [
     icon: <LaptopMinimalCheck className="lg:w-6 lg:h-6 sm:w-5 sm:h-5 text-yellow-600" />,
     description: "System Admins have the highest level of access, focusing on system-wide user and session management.",
     accesses: [
-      "System Admin portal dashboard (recent reports)",
+      "System Admin portal dashboard",
       "View all user session logs",
-      "Manage user list (create and delete users)"
+      "Manage user list"
     ]
   }
 ];
@@ -137,10 +141,10 @@ function RoleInfoTab() {
    const isSmallScreen = useMediaQuery("(max-width: 1080px)");
    
   return (
-    <div className="w-full max-w-5xl mx-auto py-6 px-2 sm:px-4">
-      <h2 className="text-3xl font-bold pb-1 text-gray-900">Roles & Access</h2>
+    <div className={`${fontZenKaku.className} w-full max-w-5xl mx-auto py-6 px-2 sm:px-4`}>
+      <h2 className="text-3xl font-black pb-1 text-gray-900">Roles & Access</h2>
       <Divider className='w-auto'/>
-      <span className="text-gray-400 text-sm *:pt-1">
+      <span className="font-normal text-gray-400 text-sm tracking-wide">
         Information of each role and their accesses. This helps clarify permissions for each role.
       </span>
       {isSmallScreen ? (
@@ -162,13 +166,13 @@ function RoleInfoTab() {
                     <div className="flex flex-col gap-1 m-0 p-0 h-36">
                       <div className='flex flex-row items-start justify-start gap-2'>
                         <div className="flex-shrink-0">{role.icon}</div>
-                        <CardTitle className="text-xl">{role.name}</CardTitle>
+                        <CardTitle className="!font-bold text-xl">{role.name}</CardTitle>
                       </div>
-                      <CardDescription className="text-gray-500">{role.description}</CardDescription>
+                      <CardDescription className="font-normal text-sm tracking-wide text-gray-500">{role.description}</CardDescription>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-2">
-                    <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm">
+                    <ul className="list-disc pl-5 space-y-1 text-gray-800 font-medium text-sm">
                       {role.accesses.map((item, idx) => (
                         <li key={idx}>{item}</li>
                       ))}
@@ -197,13 +201,13 @@ function RoleInfoTab() {
                 <div className="flex flex-col gap-1 m-0 p-0 h-36">
                   <div className='flex flex-row items-center justify-start gap-2'>
                     <div className="flex-shrink-0">{role.icon}</div>
-                    <CardTitle className="lg:text-xl">{role.name}</CardTitle>
+                    <CardTitle className="!font-bold lg:text-xl">{role.name}</CardTitle>
                   </div>
-                  <CardDescription className="text-gray-500">{role.description}</CardDescription>
+                  <CardDescription className="font-normal text-sm tracking-wide text-gray-500">{role.description}</CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
-                <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm">
+                <ul className="list-disc pl-5 space-y-1 text-gray-800 font-medium text-sm">
                   {role.accesses.map((item, idx) => (
                     <li key={idx}>{item}</li>
                   ))}
@@ -349,7 +353,7 @@ useEffect(() => {
 
     const handleSingleDelete = async (userIdDelete, deleteClerkId) => {
       const result = await Swal.fire({
-        title: `Delete this user?`,
+        title: `<span class="${fontZenKaku.className} font-bold">Delete this user?</span>`,
         text: `This action cannot be undone.`,
         icon: "warning",
         showCancelButton: true,
@@ -357,6 +361,11 @@ useEffect(() => {
         cancelButtonColor: "#3085d6",
         confirmButtonText: "Delete",
         cancelButtonText: "Cancel",
+        customClass: {
+          title: fontZenKaku.className,
+          confirmButton: `${fontZenKaku.className} font-medium !text-base tracking-wide`,
+          cancelButton: `${fontZenKaku.className} font-medium !text-base tracking-wide`,
+        },
       });
   
       if (result.isConfirmed) {
@@ -516,7 +525,7 @@ useEffect(() => {
   return (
   <div className='space-y-6'>
     <Tabs defaultValue="admins">
-      <TabsList className="w-full justify-start overflow-x-auto overflow-y-hidden py-2 space-x-2 h-auto">
+      <TabsList className={`${fontZenKaku.className} font-medium text-base w-full justify-start overflow-x-auto overflow-y-hidden py-2 space-x-2 h-auto`}>
         <TabsTrigger value="Something">
             <LaptopMinimalCheck className='h-4 w-4 mr-2'/>
             Role information & accesses tab
@@ -532,93 +541,90 @@ useEffect(() => {
               <RoleInfoTab />
       </TabsContent>
 
-
-
-
       <Dialog open={createUserDialog} >
-        <DialogContent className="[&>button]:hidden rounded-xl">
+        <DialogContent className={`[&>button]:hidden rounded-xl ${fontZenKaku.className}`}>
           <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className='!font-bold'>Create New User</DialogTitle>
+            <DialogDescription className='!font-normal tracking-wide'>
               Fill out the form to create a new user.
             </DialogDescription>
           </DialogHeader>
             <form onSubmit={handleSubmit(handleCreateUser)} className="flex flex-col gap-4">
               
               <div className="flex flex-col gap-1">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                <label htmlFor="email" className="text-base font-medium text-gray-700">Email</label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="user@email.com"
-                  className="w-full"
+                  className="w-full font-medium !text-base"
                   {...register("email")}
                   required
                   disabled={createUserLoading}
                 />
-                {errors.email && <span className="text-red-500 text-xs">{errors.email.message}</span>}
+                {errors.email && <span className="text-red-500 font-normal text-sm">{errors.email.message}</span>}
               </div>
 
               
               <div className="flex flex-col gap-1">
-                <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
+                <label htmlFor="username" className="text-base font-medium text-gray-700">Username</label>
                 <Input
                   id="username"
                   placeholder="Letters, Numbers and - or _."
-                  className="w-full"
+                  className="w-full font-medium !text-base"
                   {...register("username")}
                   required
                   disabled={createUserLoading}
                 />
-                {errors.username && <span className="text-red-500 text-xs">{errors.username.message}</span>}
+                {errors.username && <span className="text-red-500 font-normal text-sm">{errors.username.message}</span>}
               </div>
 
               
               <div className="flex flex-col md:flex-row gap-2">
                 <div className="flex flex-col gap-1 w-full">
-                  <label htmlFor="Fname" className="text-sm font-medium text-gray-700">First Name</label>
+                  <label htmlFor="Fname" className="text-base font-medium text-gray-700">First Name</label>
                   <Input
                     id="Fname"
                     placeholder="First Name"
-                    className="w-full"
+                    className="w-full font-medium !text-base"
                     {...register("Fname")}
                     required
                     disabled={createUserLoading}
                   />
-                  {errors.Fname && <span className="text-red-500 text-xs">{errors.Fname.message}</span>}
+                  {errors.Fname && <span className="text-red-500 font-normal text-sm">{errors.Fname.message}</span>}
                 </div>
                 <div className="flex flex-col gap-1 w-full">
-                  <label htmlFor="Lname" className="text-sm font-medium text-gray-700">Last Name</label>
+                  <label htmlFor="Lname" className="text-base font-medium text-gray-700">Last Name</label>
                   <Input
                     id="Lname"
                     placeholder="Last Name"
-                    className="w-full"
+                    className="w-full font-medium !text-base"
                     {...register("Lname")}
                     required
                     disabled={createUserLoading}
                   />
-                  {errors.Lname && <span className="text-red-500 text-xs">{errors.Lname.message}</span>}
+                  {errors.Lname && <span className="text-red-500 font-normal text-sm">{errors.Lname.message}</span>}
                 </div>
               </div>
 
               
               <div className="flex flex-col gap-1">
-                <label htmlFor="role" className="text-sm font-medium text-gray-700">Role</label>
+                <label htmlFor="role" className="text-base font-medium text-gray-700">Role</label>
                 <select
                   id="role"
-                  className={`w-full border rounded px-2 py-2 bg-neutral-50 ${watch("role") ? "text-black" : "text-neutral-400"}`}
+                  className={`font-medium text-base w-full border rounded px-2 py-2 bg-neutral-50 ${watch("role") ? "text-black" : "text-neutral-400"}`}
                   {...register("role")}
                   onChange={e => setValue("role", e.target.value)}
                   value={watch("role")}
                   required
                   disabled={createUserLoading}
                 >
-                  <option className="text-gray-400" value="">Select role</option>
-                  <option className="text-blue-500" value="STAFF">Staff</option>
-                  <option className="text-green-500" value="ADMIN">Admin</option>
-                  <option className='text-yellow-400' value="SYSADMIN">System Admin</option>
+                  <option className="font-medium text-base text-gray-400" value="">Select role</option>
+                  <option className="font-medium text-base text-blue-500" value="STAFF">Staff</option>
+                  <option className="font-medium text-base text-green-500" value="ADMIN">Admin</option>
+                  <option className='font-medium text-base text-yellow-400' value="SYSADMIN">System Admin</option>
                 </select>
-                {errors.role && <span className="text-red-500 text-xs">{errors.role.message}</span>}
+                {errors.role && <span className="text-red-500 font-normal text-sm">{errors.role.message}</span>}
               </div>
 
               
@@ -629,14 +635,14 @@ useEffect(() => {
                 variant="ghost"
                 onClick={() => setCreateUserDialog(false)}
                 disabled={createUserLoading}
-                className="w-full md:w-auto hover:bg-rose-600 hover:text-white"
+                className="w-full font-medium !text-base md:w-auto hover:bg-rose-600 hover:text-white"
                 >
                 Cancel
               </Button>
               </DialogClose>
 
               <Button type="submit" disabled={createUserLoading} 
-                className="w-full md:w-auto
+                className="w-full font-medium !text-base md:w-auto
                   bg-black hover:bg-white 
                   text-white hover:text-black
                   border-0 hover:border hover:border-black hover:shadow-lg
@@ -656,10 +662,10 @@ useEffect(() => {
       </Dialog>
 
       <Dialog open={udpateDialogOpen || openEmailDialog} onOpenChange={setUpdateDialogOpen || setOpenEmailDialog}> 
-        <DialogContent className="[&>button]:hidden">
+        <DialogContent className={`[&>button]:hidden ${fontZenKaku.className} rounded-md`}>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className='!font-bold'>Edit User</DialogTitle>
+            <DialogDescription className='font-normal tracking-wide'>
               Edit information of this user
             </DialogDescription>
           </DialogHeader>
@@ -673,25 +679,25 @@ useEffect(() => {
               className="flex flex-col gap-4">
             
               <div className="flex flex-col gap-1">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                <label htmlFor="email" className="text-base font-medium text-gray-700">Email</label>
                 <Input
                   id="email"
                   type="email"
                   value={emailUpdate}
                   onChange={(e) => setEmailUpdate(e.target.value)}
-                  className="w-full"
+                  className="w-full font-normal !text-base"
                   disabled={updateEmailLoading || udpateDialogOpen}
                 />
               </div>
 
             
               <div className="flex flex-col gap-1">
-                <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
+                <label htmlFor="username" className="text-base font-medium text-gray-700">Username</label>
                 <Input
                   id="username"
                   placeholder="username"
                   value={userNewName}
-                  className="w-full"
+                  className="w-full font-normal !text-base"
                   required
                   onChange={(e) => setUserNewName(e.target.value)}
                   disabled={updateUserLoading || openEmailDialog}
@@ -701,11 +707,11 @@ useEffect(() => {
             
               <div className="flex flex-col md:flex-row gap-2">
                 <div className="flex flex-col gap-1 w-full">
-                  <label htmlFor="Fname" className="text-sm font-medium text-gray-700">First Name</label>
+                  <label htmlFor="Fname" className="text-base font-medium text-gray-700">First Name</label>
                   <Input
                     id="Fname"
                     placeholder="First Name"
-                    className="w-full"
+                    className="w-full font-normal !text-base"
                     required
                     onChange={(e) => setUserNewFname(e.target.value)}
                     value={userNewFname}
@@ -713,11 +719,11 @@ useEffect(() => {
                   />
                 </div>
                 <div className="flex flex-col gap-1 w-full">
-                  <label htmlFor="Lname" className="text-sm font-medium text-gray-700">Last Name</label>
+                  <label htmlFor="Lname" className="text-base font-medium text-gray-700">Last Name</label>
                   <Input
                     id="Lname"
                     placeholder="Last Name"
-                    className="w-full"
+                    className="w-full font-normal !text-base"
                     required
                     onChange={(e) => setUserNewLname(e.target.value)}
                     value={userNewLname}
@@ -737,7 +743,7 @@ useEffect(() => {
                   : () => setUpdateDialogOpen(false)
                   }
                 disabled={updateUserLoading || updateEmailLoading}
-                className="w-full md:w-auto
+                className="w-full md:w-auto font-medium !text-base
                 border-red-500 hover:border-0 hover:bg-red-500 hover:text-white"
                 >
                 Cancel
@@ -749,7 +755,7 @@ useEffect(() => {
               disabled={updateUserLoading || updateEmailLoading} 
               variant="outline"
               // onClick={() => handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName)}
-              className="w-full md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
+              className="w-full font-medium !text-base md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
                 {updateUserLoading || updateEmailLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -764,18 +770,22 @@ useEffect(() => {
         </DialogContent>
       </Dialog>
 
-
-
       <TabsContent value="admins" className="space-y-6 mt-6">
         <Card className="bg-gradient-to-r from-white via-indigo-300/65 to-white">
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <CardHeader className={`${fontZenKaku.className} flex flex-row items-center justify-between gap-4`}>
             <div>
-              <CardTitle>User Table</CardTitle>
-              <CardDescription>
+              <CardTitle className='!font-bold text-lg'>User Table</CardTitle>
+              <CardDescription className='font-normal tracking-wide'>
                 Manage your users in here.
               </CardDescription>
             </div>
-            <Button variant="outline" className="h-10 border border-black bg-opacity-35 hover:bg-white/25" onClick={() => setCreateUserDialog(true)}>
+            <Button variant="outline" 
+              className="h-10
+              font-medium !text-base 
+              hover:border hover:border-black/10 
+              border border-black
+              bg-opacity-35 hover:bg-opacity-35 hover:bg-indigo-300/5
+              hover:shadow-lg hover:shadow-black/20" onClick={() => setCreateUserDialog(true)}>
                 { isSmallScreen
                   ? (<><UserRoundPlus className="h-4 w-4 items-center" /> </>)
                   : (<><UserRoundPlus className="mr-2 h-4 w-4" /> Create User </>)
@@ -790,7 +800,7 @@ useEffect(() => {
               <Input
                 type="search"
                 placeholder="Search name or email"
-                className="pl-9 w-full"
+                className={`${fontZenKaku.className} font-normal !text-base pl-9 w-full`}
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
               />
@@ -840,17 +850,17 @@ useEffect(() => {
               </div>
             ) : usersData?.success && filteredUsers.length > 0 ? (
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
+                <Table className={`${fontZenKaku.className}`}>
+                  <TableHeader className='text-base tracking-wide'>
                     <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead className="hidden sm:table-cell">Username</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="text-center">Role</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className='!font-bold'>User</TableHead>
+                      <TableHead className="!font-bold hidden sm:table-cell">Username</TableHead>
+                      <TableHead className='!font-bold'>Email</TableHead>
+                      <TableHead className="!font-bold text-center">Role</TableHead>
+                      <TableHead className="!font-bold text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className='font-medium text-base'>
                     {filteredUsers.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
@@ -873,12 +883,12 @@ useEffect(() => {
                         <TableCell>{user.email}</TableCell>
                         <TableCell className="text-center">
                           <Badge
-                            className={
+                            className={ 
                               user.role === "ADMIN"
                                 ? "bg-green-800"
                                 : user.role === "SYSADMIN"
                                   ? "bg-yellow-500"
-                                  : "bg-blue-800"
+                                  : "bg-blue-800" 
                             }
                           >
                             {user.role
@@ -902,7 +912,7 @@ useEffect(() => {
                             </PopoverTrigger>
                             <PopoverContent 
                               align="end"
-                              className="w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white"
+                              className={`${fontZenKaku.className} w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white`}
                               sideOffset={8}>
 
                               <div className="flex flex-col gap-2">
@@ -989,13 +999,13 @@ useEffect(() => {
           }}>
           <DialogContent className="[&>button]:hidden max-w-md w-full p-0 rounded-2xl overflow-hidden">
             <div className="bg-blue-50 px-6 pt-6 pb-4">
-              <DialogHeader>
-                <DialogTitle>Change User Role</DialogTitle>
-                <DialogDescription>
+              <DialogHeader className={`${fontZenKaku.className}`}>
+                <DialogTitle className='!font-bold'>Change User Role</DialogTitle>
+                <DialogDescription className='!font-normal tracking-wide'>
                     {confirmRole && (
                       <>Are you sure you want to change the role of{" "}
-                      <span className="font-semibold">{userToChangeRole.Fname} {userToChangeRole.Lname}{" "}</span>to
-                      <span className="font-semibold">{" "}{confirmRole}</span>?</>
+                      <span className="font-bold">{userToChangeRole.Fname} {userToChangeRole.Lname}{" "}</span>to
+                      <span className="font-bold">{" "}{confirmRole}</span>?</>
                     )}
                 </DialogDescription>
               </DialogHeader>
@@ -1023,10 +1033,10 @@ useEffect(() => {
                       ? "text-green-400 group-hover:text-white" 
                       : "text-blue-500"}` //unclicked
                       } />
-                  <span className={`font-medium text-sm ${confirmRole === "STAFF" ? "text-white" : "text-blue-700"}`}>
+                  <span className={`font-medium text-sm md:text-base ${confirmRole === "STAFF" ? "text-white" : "text-blue-700"}`}>
                     {confirmRole === "STAFF" 
                       ? (<><Check className="text-green-400 group-hover:text-white"/>
-                        <label className="text-green-400 group-hover:text-white">Yes</label></>)
+                        <label className="text-green-400 group-hover:text-white font-medium text-base">Yes</label></>)
                       : "Staff"}
                   </span>
               </Button>
@@ -1052,10 +1062,10 @@ useEffect(() => {
                     ? "text-green-400 group-hover:text-white"
                     : "text-purple-500"}
                 `} />
-                <span className={`font-medium text-sm ${confirmRole === "ADMIN" ? "text-white" : "text-purple-700"}`}>
+                <span className={`font-medium text-sm md:text-base ${confirmRole === "ADMIN" ? "text-white" : "text-purple-700"}`}>
                   {confirmRole === "ADMIN"
                     ? (<><Check className="text-green-400 group-hover:text-white"/>
-                      <label className="text-green-400 group-hover:text-white">Yes</label></>)
+                      <label className="text-green-400 group-hover:text-white font-medium text-base">Yes</label></>)
                     : "Admin"}
                 </span>
               </Button>
@@ -1081,10 +1091,10 @@ useEffect(() => {
                     ? "text-green-400 group-hover:text-white"
                     : "text-indigo-500"}
                 `} />
-                <span className={`font-medium text-sm ${confirmRole === "SYSADMIN" ? "text-white" : "text-indigo-700"}`}>
+                <span className={`font-medium text-sm md:text-base ${confirmRole === "SYSADMIN" ? "text-white" : "text-indigo-700"}`}>
                   {confirmRole === "SYSADMIN"
                     ? (<><Check className="text-green-400 group-hover:text-white"/>
-                      <label className="text-green-400 group-hover:text-white">Yes</label></>)
+                      <label className="text-green-400 group-hover:text-white font-medium text-base">Yes</label></>)
                     : <>System<br />Admin</>}
                 </span>
               </Button>
@@ -1100,7 +1110,7 @@ useEffect(() => {
                 variant="ghost"
               >
                 <X className="mb-1 h-6 w-6 text-gray-500" />
-                <span className="text-gray-700 font-medium text-sm">Cancel</span>
+                <span className="text-gray-700 font-medium text-sm md:text-base">Cancel</span>
               </Button>
             </div>
           </DialogContent>

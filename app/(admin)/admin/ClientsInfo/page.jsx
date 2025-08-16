@@ -29,7 +29,7 @@ const ClientsPage = async () => {
     <div className='p-6'>
       <div className="flex flex-col justify-start mb-6">
         <span className={`${fontUnicaOne.className} text-6xl md:text-[5rem]/[1] font-normal`}>Clients</span>
-        <span className={`${fontZenKaku.className} text-sm tracking-wide text-slate-600 p-0`}>Accounts of the clients that all the users manage.</span>
+        <span className={`${fontZenKaku.className} text-sm tracking-wide text-slate-600 p-0`}>Accounts of the clients that all the staffs manage.</span>
       </div>
     <div className='space-y-8'>
 

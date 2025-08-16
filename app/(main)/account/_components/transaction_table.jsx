@@ -955,7 +955,7 @@ const handleDownloadCDBExcel = () => {
 
   // Export
   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  saveAs(new Blob([wbout], { type: "application/octet-stream" }), "cash_disbursement_book.xlsx");
+  saveAs(new Blob([wbout], { type: "application/octet-stream" }), "cash_book.xlsx");
 };
 
 

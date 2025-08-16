@@ -125,7 +125,7 @@ console.log(errors.printNumber)
         
         const sign = Math.sign(formData.amount)
         if(formData.type === "EXPENSE" && sign !== -1){
-            toast.error(`Type and amount mismatch. Expense and ${formData.amount}.`)
+            toast.error(`Type and amount mismatch. Expense and ${formData.amount}. Add "-".`)
             return;
         }
        if(formData.type === "INCOME" && sign !== 1){
@@ -143,7 +143,6 @@ console.log(errors.printNumber)
   
     useEffect(() => {
         if (transactionResult?.success && !transactionLoading) {
-            
             toast.success(
                 editMode
                     ? "Transaction updated successfully."
@@ -164,6 +163,23 @@ console.log(errors.printNumber)
             : setButtonsDisabled(false);
         }
     }, [transactionResult, transactionLoading, editMode]);
+
+
+        useEffect(() => {
+            console.log("Transaction Result: ", transactionResult);
+        if (transactionResult?.success === false) {
+            if(transactionResult.code === 402){
+                toast.error("Reference number already exists.");
+                setButtonsDisabled(false);
+                return;
+            }
+            if(transactionResult.code === 403){
+                toast.error("Account not found.");
+                setButtonsDisabled(false);
+                return;
+            }
+        }
+    }, [transactionResult]);
 
     // const handleScanComplete = (scannedData) => {
     //     console.log(scannedData);
@@ -283,7 +299,7 @@ console.log(errors.printNumber)
 
                     <SelectContent>
                         <SelectItem value="OPERATION">Operating Activity</SelectItem>
-                        <SelectItem value="INVESTMENT">Investment Activity</SelectItem>
+                        <SelectItem value="INVESTMENT">Investing Activity</SelectItem>
                         <SelectItem value="FINANCING">Financing Activity</SelectItem>
                     </SelectContent>
                 </Select>
@@ -371,16 +387,6 @@ console.log(errors.printNumber)
                 </div>
             </div>
         )}
-
-
-
-
-
-
-
-
-
-
 
 
         {isClient ? ('This is never prerendered') :(<div className='space-y-2'>

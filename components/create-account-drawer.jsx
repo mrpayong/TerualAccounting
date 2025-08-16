@@ -176,6 +176,7 @@ const CreateAccountDrawer = ({ children, names }) => {
     <DialogTrigger asChild>{children}</DialogTrigger>
     
     <DialogContent 
+    onInteractOutside={e => e.preventDefault()}
       className="
         [&>button]:hidden
         w-full max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl

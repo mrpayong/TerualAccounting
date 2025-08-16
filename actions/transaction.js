@@ -73,16 +73,17 @@ export async function createTransaction(data) {
     });
 
     if (!account) {
-      throw new Error("Account not found");
+      return{code: 403, success: false, message: "Account not found."}
     }
 
     const existingTransaction = await db.transaction.findUnique({
       where: { refNumber: data.refNumber },
     });
     if (existingTransaction) {
-      throw new Error("Reference number already exists.");
+     return{code: 402, success: false, message: "Reference number already exists."}
+      
     }
-    console.log("Data before processing: ", data)
+    
       const absAmount = Math.sign(data.amount) === -1 
         ? Math.abs(data.amount)
         : data.amount

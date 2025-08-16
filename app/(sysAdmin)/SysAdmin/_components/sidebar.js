@@ -4,6 +4,13 @@ import { BookUser, LayoutDashboard, CalendarClock, Loader2  } from 'lucide-react
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const routes = [
     {
@@ -44,7 +51,7 @@ const Sidebar = () => {
    return (
         <>
             {/* Desktop sidebar */}
-            <div className="hidden md:flex pt-7  h-full flex-col overflow-y-auto bg-white shadow-sm border-r">
+            <div className={`${fontZenKaku.className} hidden md:flex pt-7  h-full flex-col overflow-y-auto bg-white shadow-sm border-r`}>
                 <div className="flex flex-col w-full">
                     {routes.map((route) => {
                         const isLoading = loadingHref === route.href;
@@ -57,7 +64,7 @@ const Sidebar = () => {
                                 tabIndex={isAnyLoading ? -1 : 0}
                                 aria-disabled={isAnyLoading}
                                 className={cn(
-                                    "flex items-center gap-x-2 text-black text-sm font-medium pl-6 transition-all hover:text-slate-600 hover:bg-slate-100/50",
+                                    "flex items-center gap-x-2 text-black text-base font-medium tracking-wide pl-6 transition-all hover:text-slate-600 hover:bg-slate-100/50",
                                     pathname === route.href
                                         ? "text-blue-700 bg-blue-100/50 hover:bg-blue-100 hover:text-blue-700"
                                         : "",
@@ -78,7 +85,7 @@ const Sidebar = () => {
             </div> 
 
             {/* Mobile bottom nav */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t flex justify-around items-center h-16">
+            <div className={`${fontZenKaku.className} md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t flex justify-around items-center h-16`}>
                 {routes.map((route) => {
                     const isLoading = loadingHref === route.href;
                     const isAnyLoading = !!loadingHref;
@@ -90,7 +97,7 @@ const Sidebar = () => {
                             tabIndex={isAnyLoading ? -1 : 0}
                             aria-disabled={isAnyLoading}
                             className={cn(
-                                "flex flex-col items-center justify-center text-black text-xs font-medium transition-all",
+                                "flex flex-col items-center justify-center text-black text-sm font-medium transition-all",
                                 pathname === route.href ? "text-blue-700" : "",
                                 "py-1 flex-1",
                                 isAnyLoading ? "pointer-events-none opacity-50" : ""

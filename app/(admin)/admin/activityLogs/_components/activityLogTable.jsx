@@ -20,9 +20,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
 
 
 function getActionLabel(action) {
@@ -105,6 +106,10 @@ function getActionLabel(action) {
       return "Deleted a Group transaction";
     case "deleteCashflowStatement":
       return 'Deleted Cashflow Statement';
+    case 'udpateNetChange':
+      return 'Edited Net Change';
+    case 'updateBalanceQuick':
+      return 'Quick Edit Balance';
     default:
       return action;
   }
@@ -123,6 +128,11 @@ function formatManilaDate(dateString) {
     timeZone: "Asia/Manila",
   }).format(date);
 }
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const ActivityLogTable = ({activities = {}}) => {
   // State
@@ -252,17 +262,18 @@ const anyFilterActive =
 
 
   return (
-    <div className="w-full  py-4">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <div className="">
+    <div className="w-full py-4">
+      {/* Filter Section */}
+      <div className="flex flex-col lg:flex-row lg:justify-between gap-4 mb-4">
+        <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center">
+          <div className="flex flex-col lg:flex-row lg:flex-wrap gap-2">
             <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className={`${fontZenKaku.className} font-medium !text-base w-full md:w-[180px]`}>
                 <SelectValue placeholder="Filter by Action" />
               </SelectTrigger>
               <SelectContent>
                 {actionOptions.map((action) => (
-                  <SelectItem key={action} value={action}>
+                  <SelectItem className={`${fontZenKaku.className} font-medium !text-base`} key={action} value={action}>
                     {action === "all"
                       ? "All Actions"
                       :  getActionLabel(action)}
@@ -276,7 +287,7 @@ const anyFilterActive =
                 <Search className="h-4 w-4" />
               </span>
               <Input
-                className="pl-10 w-full border-0"
+                className={`${fontZenKaku.className} font-normal !text-base pl-10 w-full border-0`}
                 placeholder="Search user or activity"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -317,6 +328,7 @@ const anyFilterActive =
               </LocalizationProvider>
             </div>
           </div>
+
           <div className="">
             {anyFilterActive && (
               <Button className="
@@ -327,23 +339,22 @@ const anyFilterActive =
                 size="sm"
                 onClick={handleClear}
               >
-                Clear Filter
+                <X className="h-4 w-4" />
               </Button>
             )}
           </div>
-
         </div>
 
 
         
         <div className="flex gap-2 items-center">
           <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
-            <SelectTrigger className="w-[110px]">
+            <SelectTrigger className={`${fontZenKaku.className} font-normal text-base w-[110px]`}>
               <SelectValue placeholder="Rows" />
             </SelectTrigger>
             <SelectContent>
               {[10, 20, 50, 100].map((n) => (
-                <SelectItem key={n} value={n.toString()}>{n} / page</SelectItem>
+                <SelectItem className={`${fontZenKaku.className} font-normal text-base`} key={n} value={n.toString()}>{n} / page</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -352,11 +363,11 @@ const anyFilterActive =
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border bg-white">
-        <Table>
+        <Table className={`${fontZenKaku.className}`}>
           <TableHeader>
             <TableRow>
               <TableHead
-                className="cursor-pointer select-none"
+                className="cursor-pointer select-none font-bold text-base tracking-wide"
                 onClick={() => handleSort("action")}
               >
                 <span className="flex items-center">
@@ -367,7 +378,7 @@ const anyFilterActive =
                 </span>
               </TableHead>
               <TableHead
-                className="cursor-pointer select-none"
+                className="cursor-pointer select-none font-bold text-base tracking-wide"
                 onClick={() => handleSort("createdAt")}
               >
                 <span className="flex items-center">
@@ -378,7 +389,7 @@ const anyFilterActive =
                 </span>
               </TableHead>
               <TableHead
-                className="cursor-pointer select-none"
+                className="cursor-pointer select-none font-bold text-base tracking-wide"
                 onClick={() => handleSort("userId")}
               >
                 <span className="flex items-center">
@@ -401,14 +412,14 @@ const anyFilterActive =
               paginated.map((log) => (
                 <TableRow key={log.id} className="hover:bg-gray-50">
                   <TableCell>
-                    <Badge variant="outline" className="font-medium">
+                    <Badge variant="outline" className="font-medium text-sm tracking-wide">
                       {getActionLabel(log.action)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
+                  <TableCell className="whitespace-nowrap font-medium text-sm">
                     {formatManilaDate(log.createdAt)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium text-sm">
                     {log.user
                       ? `${log.user.Fname || ""} ${log.user.Lname || ""} (${log.user.email})`
                       : log.userId}
@@ -422,11 +433,11 @@ const anyFilterActive =
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 mt-6">
+        <div className={`${fontZenKaku.className} flex flex-wrap justify-center md:justify-end items-center gap-2 mt-6`}>
           <Button
             variant="outline"
             size="sm"
-            className="rounded"
+            className="rounded font-medium !text-base"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
@@ -447,7 +458,7 @@ const anyFilterActive =
                 <Button
                   variant={page === currentPage ? "default" : "outline"}
                   size="sm"
-                  className="rounded"
+                  className="rounded font-medium !text-base"
                   onClick={() => setCurrentPage(page)}
                 >
                   {page}
@@ -457,7 +468,7 @@ const anyFilterActive =
           <Button
             variant="outline"
             size="sm"
-            className="rounded"
+            className="rounded font-medium !text-base"
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >

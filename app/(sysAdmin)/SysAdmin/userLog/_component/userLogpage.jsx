@@ -18,9 +18,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronsUpDown, ArrowUpWideNarrow, ArrowDownNarrowWide } from "lucide-react";
+import { Search, ChevronsUpDown, ArrowUpWideNarrow, ArrowDownNarrowWide, X } from "lucide-react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
 
 function formatToPhilippinesTime(isoString) {
   const date = new Date(isoString);
@@ -39,6 +40,11 @@ function formatToPhilippinesTime(isoString) {
   });
   return `${time} ${dateStr}`;
 }
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const UserSessionTable = ({ sessions = {} }) => {
   // State
@@ -119,25 +125,25 @@ const UserSessionTable = ({ sessions = {} }) => {
     switch (action) {
       case "SESSION-CREATED":
         return (
-          <Badge className="bg-green-100 text-green-700 border-green-400" variant="outline">
+          <Badge className="bg-green-100 text-green-700 border-green-400 font-medium text-sm" variant="outline">
             Logged In
           </Badge>
         );
       case "SESSION-REMOVED":
         return (
-          <Badge className="bg-red-100 text-red-700 border-red-400" variant="outline">
+          <Badge className="bg-red-100 text-red-700 border-red-400 font-medium text-sm" variant="outline">
             Logged Out
           </Badge>
         );
       case "EMAIL-CREATED":
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-400" variant="outline">
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-400 font-medium text-sm" variant="outline">
             OTP Requested
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-400">
+          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-400 font-medium text-sm">
             {action || "Unknown Action"}
           </Badge>
         );
@@ -175,17 +181,18 @@ const UserSessionTable = ({ sessions = {} }) => {
   
   // Responsive Table
   return (
-    <div className="w-full py-4">
-      <div className="flex flex-col lg:flex-row lg:items-end md:justify-between gap-4 mb-4">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center w-full">
-          <div className="flex flex-col md:flex-row gap-1">
+    <div className={`${fontZenKaku.className} w-full py-4`}>
+      {/* Filter Section */}
+      <div className="flex flex-col lg:flex-row lg:justify-between gap-4 mb-4">
+        <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center">
+          <div className="flex flex-col lg:flex-row lg:flex-wrap gap-2">
             <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="font-medium !text-base w-full md:w-[180px]">
                 <SelectValue placeholder="Filter by Action" />
               </SelectTrigger>
               <SelectContent>
                 {actionOptions.map((action) => (
-                  <SelectItem key={action} value={action}>
+                  <SelectItem className="font-medium !text-base"  key={action} value={action}>
                     {actionDisplayNames[action] || action}
                   </SelectItem>
                 ))}
@@ -196,69 +203,73 @@ const UserSessionTable = ({ sessions = {} }) => {
                 <Search className="h-4 w-4" />
               </span>
               <Input
-                className="pl-10 w-full border border-gray-300"
+                className="pl-10 w-full font-normal !text-base border border-gray-300"
                 placeholder="Search name or email"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="From"
+                  timezone='Asia/Manila'
+                  value={fromDateRaw}
+                  onChange={setFromDateRaw}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                      inputProps: { placeholder: 'Start date' }
+                    }
+                  }}
+                  disableFuture={false}
+                  maxDate={toDateRaw}
+                  format="yyyy-MM-dd"/>
+                <DatePicker
+                  label="To"
+                  timezone='Asia/Manila'
+                  value={toDateRaw}
+                  onChange={setToDateRaw}
+                  minDate={fromDateRaw}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
+                      inputProps: { placeholder: 'Start date' }
+                    }
+                  }}
+                  disableFuture={false}
+                  format="yyyy-MM-dd"/>
+              </LocalizationProvider>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="From"
-                timezone='Asia/Manila'
-                value={fromDateRaw}
-                onChange={setFromDateRaw}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
-                    inputProps: { placeholder: 'Start date' }
-                  }
-                }}
-                disableFuture={false}
-                maxDate={toDateRaw}
-                format="yyyy-MM-dd"/>
-              <DatePicker
-                label="To"
-                timezone='Asia/Manila'
-                value={toDateRaw}
-                onChange={setToDateRaw}
-                minDate={fromDateRaw}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    className: 'w-full sm:w-32 md:w-40 bg-white border border-gray-300 rounded px-2 py-1 text-xs',
-                    inputProps: { placeholder: 'Start date' }
-                  }
-                }}
-                disableFuture={false}
-                format="yyyy-MM-dd"/>
-            </LocalizationProvider>
+
+
+          <div className="">
+            {anyFilterActive && (
+              <Button className="
+                bg-white border border-rose-500
+                text-rose-500 hover:bg-rose-500
+                hover:text-white hover:border-0
+                hover:shadow-md hover:shadow-rose-500/25"
+                size="sm"
+                onClick={handleClear}
+              >
+                 <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 
         <div className="flex gap-2 items-center ">
-          {anyFilterActive && (
-            <Button className="
-              bg-white border border-rose-500
-              text-rose-500 hover:bg-rose-500
-              hover:text-white hover:border-0
-              hover:shadow-md hover:shadow-rose-500/25"
-              size="sm"
-              onClick={handleClear}
-            >
-              Clear Filter
-            </Button>
-          )}
           <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
-            <SelectTrigger className="w-[110px]">
+            <SelectTrigger className="w-[110px] font-normal text-base">
               <SelectValue placeholder="Rows" />
             </SelectTrigger>
             <SelectContent>
               {[10, 20, 50, 100].map((n) => (
-                <SelectItem key={n} value={n.toString()}>
+                <SelectItem className='!font-normal text-base' key={n} value={n.toString()}>
                   {n} / page
                 </SelectItem>
               ))}
@@ -270,16 +281,16 @@ const UserSessionTable = ({ sessions = {} }) => {
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border bg-white">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="bg-gray-100 text-gray-800 font-semibold">
+          <TableHeader className="font-bold text-lg">
+            <TableRow> 
+              <TableHead className="bg-gray-100 text-gray-800">
                 Activity
               </TableHead>
               <TableHead
-                className="bg-gray-100 text-center text-gray-800 font-semibold cursor-pointer select-none"
+                className="bg-gray-100 text-center text-gray-800 cursor-pointer select-none"
                 onClick={handleSort}
               >
-                <span className="flex items-center">
+                <span className="flex items-center whitespace-nowrap">
                   Occurred On
                   {sortState === "asc" && (
                     <ArrowUpWideNarrow className="ml-1 text-blue-600" size={18} />
@@ -292,7 +303,7 @@ const UserSessionTable = ({ sessions = {} }) => {
                   )}
                 </span>
               </TableHead>
-              <TableHead className="bg-gray-100 text-gray-800 font-semibold">
+              <TableHead className="bg-gray-100 text-gray-800">
                 User
               </TableHead>
             </TableRow>
@@ -300,13 +311,13 @@ const UserSessionTable = ({ sessions = {} }) => {
           <TableBody>
             {paginated.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8">
+                <TableCell colSpan={3} className="font-medium text-base text-center py-8">
                   No activity logs found.
                 </TableCell>
               </TableRow>
             ) : (
               paginated.map((log) => (
-                <TableRow key={log.id} className="hover:bg-gray-50">
+                <TableRow key={log.id} className="font-medium text-sm hover:bg-gray-50">
                   <TableCell>
                     {renderSessionBadge(log.action)}
                   </TableCell>
@@ -333,7 +344,7 @@ const UserSessionTable = ({ sessions = {} }) => {
           <Button
             variant="outline"
             size="sm"
-            className="rounded"
+            className="rounded font-medium text-sm"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
@@ -354,7 +365,7 @@ const UserSessionTable = ({ sessions = {} }) => {
                 <Button
                   variant={page === currentPage ? "default" : "outline"}
                   size="sm"
-                  className="rounded"
+                  className="rounded font-medium text-sm"
                   onClick={() => setCurrentPage(page)}
                 >
                   {page}
@@ -364,7 +375,7 @@ const UserSessionTable = ({ sessions = {} }) => {
           <Button
             variant="outline"
             size="sm"
-            className="rounded"
+            className="rounded font-medium text-sm"
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
