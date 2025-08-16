@@ -16,6 +16,10 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: "700",
 })
 
+function formatNumber(num) {
+  return new Intl.NumberFormat().format(num);
+}
+
 async function DashboardPage () {
   const accounts = await getUserAccounts();
   

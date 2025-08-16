@@ -35,7 +35,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 })
 
 
-function Cashflow ({cashflows, name}) {
+function Cashflow ({cashflows, name, id}) {
   const router = useRouter(); // For navigation
   const period = [...new Set(cashflows.map(c => c.periodCashFlow))];
   const [activeTab, setActiveTab] = useState(period[0] || ""); // Default to the first period or empty string
@@ -237,7 +237,7 @@ const handleSwitchChange = (checked) => {
 
   const handleBackLoad = () => {
     setBackLoad(true);
-    router.push(`/account/${cashflowRecords[0].accountId}`)
+    router.push(`/account/${id}`)
   };
 
 

@@ -199,7 +199,10 @@ const rowsPerPage = 10; // Default rows per page
         result = result.filter((transaction) =>
             (transaction.particular?.toLowerCase().includes(searchLower) ||
              transaction.description?.toLowerCase().includes(searchLower) ||
-             transaction.refNumber?.toLowerCase().includes(searchLower))
+             transaction.refNumber?.toLowerCase().includes(searchLower) ||
+             transaction.category?.toLowerCase().includes(searchLower)
+             
+            )
         );
         }
 
@@ -256,6 +259,9 @@ const rowsPerPage = 10; // Default rows per page
         }
         return result;
     },[transactions, searchTerm, typeFilter, activityFilter, sortConfig, fromDateRaw, toDateRaw])
+    useEffect(() => {
+      setCurrentTransactionPage(1);
+    }, [searchTerm, typeFilter, activityFilter, fromDateRaw, toDateRaw]);
     const handleSort = (field) => {
         // setSortConfig((current) => ({
         //     field,
@@ -397,7 +403,8 @@ const rowsPerPage = 10; // Default rows per page
           // Ensure forCfs.data.transactions is defined
           if (forCfs.data && Array.isArray(forCfs.data.transactions)) {
             setIsModalOpen(true);
-            setSelectedPeriod(null)
+            setSelectedPeriod(null);
+            setResponse(0.00);
           } 
         }
       }, [forCfs]);
@@ -1011,7 +1018,7 @@ const handleEditTransaction = (transactionId) => {
                     <Search className='absolute left-2 top-2.5 h-4 text-muted-foreground'/>
                     <Input 
                         className={`${fontZenKaku.className} font-normal pl-8 !text-base w-full md:w-64 lg:w-80 ml-1`}
-                        placeholder="Search Ref#, Particular, Description"
+                        placeholder="Search Ref#, Particular, Account title"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -1162,26 +1169,26 @@ const handleEditTransaction = (transactionId) => {
                           </ul> */}
 
                           <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
-  {existingPeriodLabels.length === 0 ? (
-    <li className="text-gray-400">No previous periods found.</li>
-  ) : (
-    existingPeriodLabels.map(({ label, value }) => (
-      <li key={value} className="flex flex-row items-center gap-1">
-        <Checkbox
-          checked={selectedPeriod === value}
-          onCheckedChange={() => handleCheckboxChange(value)}
-          id={`checkbox-${value}`}
-        />
-        <label htmlFor={`checkbox-${value}`} className={`${fontZenKaku.className} font-normal`}>
-          {label}
-        </label>
-        <span className={`${fontZenKaku.className} font-medium ml-1 text-xs text-gray-500`}>
-          (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
-        </span>
-      </li>
-    ))
-  )}
-</ul>
+                            {existingPeriodLabels.length === 0 ? (
+                              <li className="text-gray-400">No previous periods found.</li>
+                            ) : (
+                              existingPeriodLabels.map(({ label, value }) => (
+                                <li key={value} className="flex flex-row items-center gap-1">
+                                  <Checkbox
+                                    checked={selectedPeriod === value}
+                                    onCheckedChange={() => handleCheckboxChange(value)}
+                                    id={`checkbox-${value}`}
+                                  />
+                                  <label htmlFor={`checkbox-${value}`} className={`${fontZenKaku.className} font-normal`}>
+                                    {label}
+                                  </label>
+                                  <span className={`${fontZenKaku.className} font-medium ml-1 text-xs text-gray-500`}>
+                                    (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
+                                  </span>
+                                </li>
+                              ))
+                            )}
+                          </ul>
                         </div>
                       </div>
                     

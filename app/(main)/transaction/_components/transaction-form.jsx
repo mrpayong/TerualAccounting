@@ -98,7 +98,6 @@ const AddTransactionForm = ({
         },
     });
 
-console.log(errors.printNumber)
     const {
         loading: transactionLoading,
         fn: transactionFn,

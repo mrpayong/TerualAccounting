@@ -81,7 +81,6 @@ export async function createTransaction(data) {
     });
     if (existingTransaction) {
      return{code: 402, success: false, message: "Reference number already exists."}
-      
     }
     
       const absAmount = Math.sign(data.amount) === -1 

@@ -20,7 +20,7 @@ async function CashflowPage ({ params }) {
     return (
         <div className="bg-gradient-to-b from-blue-50 to-white">
            
-            <CashflowList cashflows={cashflows} name={accountName}/> {/* Pass data to the child component */}
+            <CashflowList cashflows={cashflows} id={id} name={accountName}/> {/* Pass data to the child component */}
         </div>
     );
 }

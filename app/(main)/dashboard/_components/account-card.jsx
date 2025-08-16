@@ -30,6 +30,11 @@ const fontOrbitron = Orbitron({
   weight: "400",
 })
 
+
+function formatNumber(num) {
+  return new Intl.NumberFormat().format(num);
+}
+
 const AccountCard = ({account}) => { 
     const {
         name, 
@@ -135,7 +140,9 @@ const typenHandle = (type) => {
     >
     <Link href={`/account/${id}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className={`${fontZenKaku.className} text-sm font-normal capitalize tracking-wide`}>{account._count.transactions} Transactions</CardTitle> {/*replace with number of transaction in the account */}
+        <CardTitle className={`${fontZenKaku.className} text-sm font-normal capitalize tracking-wide`}>
+          {formatNumber(account._count.transactions)} Transactions
+        </CardTitle>
       </CardHeader>
 
       <CardContent>

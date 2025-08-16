@@ -40,6 +40,9 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: ["400", "500", "700", "900"],
 })
 
+function formatNumber(num) {
+  return new Intl.NumberFormat().format(num);
+}
 
 function CarouselDots() {
   const { selectedIndex, slideCount, api } = useCarousel()
@@ -126,7 +129,7 @@ const ClientCard = ({ account }) => {
             </p>
           </CardContent>
           <CardFooter className={`${fontZenKaku.className} flex justify-between font-medium text-base text-muted-foreground`}>
-            <span>{_count?.transactions ?? 0} Transactions</span>
+            <span>{formatNumber(_count?.transactions ?? 0)} Transactions</span>
             <Button size="sm" className='font-medium !text-xs tracking-wide' variant="outline" onClick={e => { e.preventDefault(); setOpen(true); }}>
               View Details
             </Button>
