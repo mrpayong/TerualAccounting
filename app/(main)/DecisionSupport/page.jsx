@@ -6,7 +6,7 @@ import SectionFour from './_components/sectionFour';
 import TaskTable from './_components/taskTable';
 import { getTask } from '@/actions/task';
 import { FinancialDataProvider } from './_context/FinancialDataContext';
-import { getAllInflows, getAllOutflows, getAllTransactions} from '@/actions/decisionSupport';
+import { entryCount, getAllInflows, getAllOutflows, getAllTransactions} from '@/actions/decisionSupport';
 import { getUserAccount } from '@/actions/admin';
 
 
@@ -19,9 +19,9 @@ async function DecisionSupport () {
       const inflows = await getAllInflows();
       const outflows = await getAllOutflows();
       const AllTransactions = await getAllTransactions();
+      const entryCounts = await entryCount();
 
       
-    console.log("accounts", accounts)
       const transactions = await getDashboardData();
 
     
@@ -30,6 +30,7 @@ async function DecisionSupport () {
       <div className='flex flex-col gap-5 mx-10'>
         <section>
           <SectionOne 
+            entryCounts={entryCounts}
             accounts={accounts} 
             transactions={transactions || []} 
             tasks={task}

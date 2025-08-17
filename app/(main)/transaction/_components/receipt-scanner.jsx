@@ -32,21 +32,34 @@ const ReceiptScanner = ({onScanComplete, scannedReceipt, ScannerUserId}) => {
     };
 
     useEffect(() => {
-        if(scannedData && !scanReceiptLoading) {
+        if(scannedData && scannedData.code === 200 && !scanReceiptLoading) {
             onScanComplete(scannedData);
             toast.success("AI scanner: Receipt scanned successfully");
         }
     }, [scanReceiptLoading, scannedData]);
 
+    useEffect(() => {
+        if(scannedData?.code === 401) {
+            fileInputRef.current.value = "";
+            toast.error("No Merchant name.");
+            return;
+        }
+        if(scannedData?.code === 500) {
+            fileInputRef.current.value = "";
+            toast.error("Scanning rate limit might be reached.");
+            return;
+        }
+    }, [scannedData]);
+
 
 
     useEffect(() => {
         if(scanError && !scanReceiptLoading) {
-            toast.error("AI scanner: Scanning Failed.",scanError.message);
-            console.log("Error scanning receipt 2 ", scanError);
+            toast.error("AI scanner: Scanning Failed.");
+            console.log("Error scanning receipt ", scanError);
         }
     }, [scanError])
-
+    
 
 
 

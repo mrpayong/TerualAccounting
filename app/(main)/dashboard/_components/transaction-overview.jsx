@@ -327,7 +327,7 @@ const areaChartData = Object.entries(groupedTransactions)
                     
                 </CardHeader>
 
-                <CardContent>
+                <CardContent className='!pb-1 !mb-5'>
                     <div className="overflow-x-auto w-full">
                         <div className='space-y-4'>
                         {topIncomeCategories.length === 0 ? (
@@ -345,7 +345,7 @@ const areaChartData = Object.entries(groupedTransactions)
                                     top: 10,
                                     right: 30,
                                     left: 0,
-                                    bottom: 0,
+                                    bottom: 15,
                                     }}
                                 >
                                     <CartesianGrid strokeDasharray="3 3" />
@@ -353,10 +353,12 @@ const areaChartData = Object.entries(groupedTransactions)
                                         dataKey="category"
                                         tick={{
                                             fontFamily: "Verdana, sans-serif",
-                                            fontSize: isSmallScreen ? "10px" : "14px", // Default font size for small screens
+                                            fontSize: isSmallScreen ? "10px" : "12px", // Default font size for small screens
                                             fontWeight: "400",
                                             className: "text-xs sm:text-sm md:text-base", // Tailwind responsive classes
                                         }}
+                                        angle={-30}
+                                        textAnchor="end"
                                     />
                                     <YAxis
                                         tick={{

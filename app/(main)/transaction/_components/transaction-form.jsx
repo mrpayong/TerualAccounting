@@ -109,7 +109,6 @@ const AddTransactionForm = ({
     const isRecurring = watch("isRecurring");
     const date = watch("date");
     const printNumber = watch("printNumber");
-    console.log('date: ', date)
 
     const filteredCategories = categories.filter(
         (category) => category.type === type
@@ -165,7 +164,6 @@ const AddTransactionForm = ({
 
 
         useEffect(() => {
-            console.log("Transaction Result: ", transactionResult);
         if (transactionResult?.success === false) {
             if(transactionResult.code === 402){
                 toast.error("Reference number already exists.");
@@ -212,7 +210,16 @@ const AddTransactionForm = ({
       };
 
     const handleScanComplete = (scannedData) => {
+        console.log("Scanned Data: ", scannedData);
         if (scannedData) {
+          if(scannedData.code === 401) {
+            setScannedReceipt(null);
+            return;
+          } 
+          if(scannedData.code === 500) {
+            setScannedReceipt(null);
+            return;
+          } 
           setValue("amount", scannedData.amount.toString());
           console.log("amount scanning success")
 
@@ -231,11 +238,8 @@ const AddTransactionForm = ({
           }
           if (scannedData.category) {
             setValue("category", scannedData.category);
-            
-          }console.log("category scanning success:", scannedData.category)
-          console.log("scanning success:", scannedData)
+          }
           setScannedReceipt(scannedData);
-          toast.success("System: Receipt scanned successfully");
         }
       };
 

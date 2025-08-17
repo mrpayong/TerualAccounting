@@ -327,6 +327,20 @@ const [isResponsive, setIsResponsive] = useState(true);
       setForecastLoading(false);
   }
   }
+  useEffect(() => {
+    if (cfsForecastData?.success === false) {
+      toast.error("AI rate limit might have been reached.");
+      console.log("Overall Financial Data Analysis:", cfsForecastData);
+    }
+  }, [cfsForecastData]);
+
+  useEffect(() => {
+    if (inflowOutflowdata?.success === false) {
+      toast.error("AI rate limit might have been reached.");
+      console.log("Overall Financial Data Analysis:", inflowOutflowdata);
+    }
+  }, [inflowOutflowdata]);
+
 
   useEffect(() => {
     if (cfsForecastData) {
@@ -337,11 +351,13 @@ const [isResponsive, setIsResponsive] = useState(true);
         netChange: d.netChange,
         isForecast: false,
       }));
+      console.log("Historical Data:", historical);
       const forecast = (cfsForecastData.forecast || []).map(d => ({
         month: d.month,
         netChange: d.amount,
         isForecast: true,
       }));
+      console.log("Forecast Data:", forecast);
       setAreaChartData([...historical, ...forecast]);
       setCashflowData(cfsForecastData);
       toast.success("Cashflow forecast generated.")
@@ -395,12 +411,21 @@ const forecastStartMonth = firstForecast ? firstForecast.month : null;
     }
   }, [overallFinancialDataLoading, overallFinancialDataAnalysis]);
 
+    useEffect(() => {
+    if (overallFinancialDataAnalysis?.success === false) {
+      setForecastLoading(false)
+      setOverallAnalysisLoading(false);
+      setOverallAnalysis(overallFinancialDataAnalysis);
+      toast.error("AI rate limit might have been reached.");
+      console.log("Overall Financial Data Analysis:", overallFinancialDataAnalysis);
+    }
+  }, [ overallFinancialDataAnalysis]);
 
 
 
 
 
-
+const xProp = areaChartData.find(d => d.isForecast)?.month
 
 
 
@@ -516,7 +541,7 @@ const forecastStartMonth = firstForecast ? firstForecast.month : null;
                       <CartesianGrid strokeDasharray="3 3" />
                       {areaChartData.find(d => d.isForecast) && (
                         <ReferenceLine
-                          x={areaChartData.findIndex(d => d.isForecast)}
+                          x={xProp}
                           stroke="#fbbf24"
                           strokeDasharray="3 3"
                           label={{ value: "Forecast", position: "insideTopRight", fill: "#fbbf24" }}

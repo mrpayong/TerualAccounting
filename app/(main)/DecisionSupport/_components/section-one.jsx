@@ -41,13 +41,7 @@ function getLast6Months() {
 }
 
 
-function formatDateYYYYMMDD(date) {
-  const d = new Date(date);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+
 
 
 function useMediaQuery(query) {
@@ -64,7 +58,7 @@ function useMediaQuery(query) {
   return matches;
 }
 
-const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows}) => {
+const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows, entryCounts}) => {
 const barChartData = React.useMemo(() => {
   // const categoryMap = {};
   // tasks.forEach(task => {
@@ -108,7 +102,6 @@ const barChartData = React.useMemo(() => {
   return Object.values(summary);
 }, [tasks]);
 
-console.log("tasks", tasks)
   
   
 
@@ -183,20 +176,11 @@ const monthlyRevenueData = Object.entries(monthlyRevenue)
   .map(({ _sort, ...rest }) => rest);
 
 
-  const todayStr = formatDateYYYYMMDD(new Date());
-  const yesterdayStr = formatDateYYYYMMDD(new Date(Date.now() - 86400000));
-
-  const transactionsToday = AllTransactions.filter(
-    t => formatDateYYYYMMDD(t.createdAt) === todayStr
-  ).length;
-
-  const transactionsYesterday = AllTransactions.filter(
-    t => formatDateYYYYMMDD(t.createdAt) === yesterdayStr
-  ).length;
-
-
   // top 5 CHART DATA
 const [barType, setBarType] = useState("INCOME");
+
+  const transactionsTodayCount = entryCounts.today
+  const transactionsYesterdayCount = entryCounts.yesterday
 
 const getTopBarCategories = (data) => {
   if (!Array.isArray(data)) return [];
@@ -256,7 +240,7 @@ const summaryCards = [
   {
     title: "Today's Entries",
     description: "Entries from all accounts",
-    value: transactionsToday,
+    value: transactionsTodayCount,
     icon: <CalendarCheck className="h-8 w-8 text-emerald-600" />,
     iconBg: "bg-green-100",
     iconText: "text-green-600",
@@ -264,7 +248,7 @@ const summaryCards = [
   {
     title: "Yesterday's Entries",
     description: "Entries from all accounts",
-    value: transactionsYesterday,
+    value: transactionsYesterdayCount,
     icon: <CalendarClock className="h-8 w-8 text-violet-700" />,
     iconBg: "bg-violet-200",
     iconText: "text-violet-600",

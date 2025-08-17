@@ -177,7 +177,7 @@ export async function scanReceipt(file, ScannerUserId){
         - Total amount (just the number)
         - Date (in ISO format)
         - Description or items purchased (brief summary)
-        - Merchant/store name
+        - Merchant/store name. Primarily look at the top of the receipt.
         - reference number
         - suggest the type of transaction
         - suggested type of transaction (one of: EXPENSE, INCOME)
@@ -226,7 +226,7 @@ console.log("[5]")
       const data = JSON.parse(cleanedText);
       console.log("Parsed data:", data);
       if (!data.merchantName) {
-        throw new ValidationError("System: No BIR Authority to Print number detected.");
+        return {code:401, success: false, message:"No Merchant name."};
       }
 
 console.log("[6]")
@@ -253,6 +253,7 @@ console.log("[6]")
     console.log("[7]")
     
       return{
+        code: 200,
         amount: parseFloat(data.amount),
         refNumber: data.refNumber,
         date: new Date(data.date),
@@ -286,7 +287,7 @@ console.log("[6]")
   }
     console.log("error only:", error)
     console.log("Error scanning the receipt:", error.message);
-    throw new Error(error.message);
+    return {code:500, success: false, message:"Scanning rate limit might be reached."};
   }
 }
 

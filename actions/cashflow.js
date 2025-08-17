@@ -314,34 +314,32 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
 
 
         switch (true) {
-            case (monthsDiff === 6 &&(
-                (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
-                (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth)))):
-              periodCashFlow = "SEMI_ANNUAL";
-              break;
-            case dateRangeInDays <= 1:
-              periodCashFlow = "DAILY";
-              break;
-            case dateRangeInDays <= 7:
-              periodCashFlow = "WEEKLY";
-              break;
-            case dateRangeInDays <= 31:
-              periodCashFlow = "MONTHLY";
-              break;
-            case dateRangeInDays >= 365:
-              periodCashFlow = "ANNUAL";
-              break;
-            case dateRangeInDays >= 120:
-              periodCashFlow = "QUARTERLY";
-              break;
-            default:
-              periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
-              break;
+          case (monthsDiff === 6 &&(
+              (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
+              (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth)))):
+            periodCashFlow = "SEMI_ANNUAL";
+            break;
+          case dateRangeInDays <= 1:
+            periodCashFlow = "DAILY";
+            break;
+          case dateRangeInDays <= 7:
+            periodCashFlow = "WEEKLY";
+            break;
+          case dateRangeInDays <= 31:
+            periodCashFlow = "MONTHLY";
+            break;
+          case dateRangeInDays >= 365:
+            periodCashFlow = "ANNUAL";
+            break;
+          case dateRangeInDays >= 120:
+            periodCashFlow = "QUARTERLY";
+            break;
+          default:
+            periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
+            break;
         }
-      
-    
-    
 
+        
     // filter by Activity type
     const OpeTransactions = TransactionformattedAmount.filter(
       (transaction) => transaction.Activity === "OPERATION"

@@ -5,15 +5,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+
 async function activityLog({userId, action, args, timestamp}){
   try {
-    const dateTime = formatManilaDateTime(timestamp);
-    
     await db.activityLog.create({
       data: {
         userId,
         action,
-        meta: { args, timestamp: dateTime },
+        meta: { args, timestamp },
       },
     })
     return {status: 200, success: true}
@@ -148,7 +147,8 @@ export async function getInflowOutflowForecast(accountId){
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
     select: {
-      role: true
+      role: true,
+      id: true
     }
   });
 
@@ -209,8 +209,6 @@ function accumulateByMonth(transactions) {
 
   const monthlyInflows = accumulateByMonth(inflows);
   const monthlyOutflows = accumulateByMonth(outflows);
-  console.log("before prompt: ",monthlyInflows)
-  console.log("before prompt: ",monthlyOutflows)
   console.log("feeding to prompt...")
   // Prepare prompt
   const prompt = `
@@ -223,7 +221,7 @@ function accumulateByMonth(transactions) {
   - Each array should contain three objects, one for each of the next three months, with "month" (YYYY-MM) and "amount" (number).
   - Do not include any explanations, insights, or extra text outside the JSON.
 
-  Example output:
+  Example output, do not imitate this with future forecast this is only an example:
   {
     "inflowForecast": [
       { "month": "2025-07", "amount": 12345 },
@@ -263,14 +261,20 @@ function accumulateByMonth(transactions) {
   const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
   const forecast = JSON.parse(cleanedText);
 
+
+  const limitedMonthlyInflows = monthlyInflows.slice(-6);
+  const limitedMonthlyOutflows = monthlyOutflows.slice(-6);
+  console.log('limitedMonthlyInflows', limitedMonthlyInflows)
+  console.log('limitedMonthlyOutflows', limitedMonthlyOutflows)
+
   const updateLog = await activityLog({
     userId: user.id,
     action: "getInflowOutflowForecast",
     args: {
       acccount_ID: accountId,
       historical: {
-        inflows: monthlyInflows,
-        outflows: monthlyOutflows,
+        inflows: limitedMonthlyInflows,
+        outflows: limitedMonthlyOutflows,
       },
       inflowForecast: forecast.inflowForecast,
       outflowForecast: forecast.outflowForecast,
@@ -289,8 +293,8 @@ function accumulateByMonth(transactions) {
 
  return {
     historical: {
-      inflows: monthlyInflows,
-      outflows: monthlyOutflows,
+      inflows: limitedMonthlyInflows,
+      outflows: limitedMonthlyOutflows,
     },
     inflowForecast: forecast.inflowForecast,
     outflowForecast: forecast.outflowForecast,
@@ -306,7 +310,8 @@ export async function getCashflowForecast(accountId) {
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
     select: {
-      role: true
+      role: true,
+      id: true
     }
   });
   if (!user) throw new Error("User not found.");
@@ -323,6 +328,7 @@ export async function getCashflowForecast(accountId) {
     },
     orderBy: { date: "asc" },
     select: {
+      description: true,
       date: true,
       netChange: true,
       startBalance: true,
@@ -397,7 +403,6 @@ export async function getCashflowForecast(accountId) {
   const forecast = JSON.parse(cleanedText);
   console.log("Generated forecast:", forecast)
 
-
   const updateLog = await activityLog({
     userId: user.id,
     action: "getCashflowForecast",
@@ -445,6 +450,7 @@ export async function getOverallFinancialDataAnalysis({ cashflowForecast, inflow
     where: { clerkUserId: userId },
     select: {
       role: true, // Include role to check if user is ADMIN
+      id: true
     }
   });
 
@@ -733,3 +739,48 @@ export async function getAllTransactions() {
 
 //     return transactions.map(serializeTransaction);
 // }
+
+
+export async function entryCount() {
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth() + 1; // JS months are 0-based
+  const todayDate = today.getDate();
+
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const yestYear = yesterday.getFullYear();
+  const yestMonth = yesterday.getMonth() + 1;
+  const yestDate = yesterday.getDate();
+
+  // Helper for date-only comparison in SQL (Postgres syntax)
+  const formatDate = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+  const todayStr = formatDate(todayYear, todayMonth, todayDate);
+  const yestStr = formatDate(yestYear, yestMonth, yestDate);
+
+  // Count for today
+  const todayCount = await db.Transaction.count({
+    where: {
+      createdAt: {
+        gte: new Date(`${todayStr}T00:00:00`),
+        lt: new Date(`${todayStr}T23:59:59.999`)
+      }
+    }
+  });
+
+  // Count for yesterday
+  const yesterdayCount = await db.Transaction.count({
+    where: {
+      createdAt: {
+        gte: new Date(`${yestStr}T00:00:00`),
+        lt: new Date(`${yestStr}T23:59:59.999`)
+      }
+    }
+  });
+
+  return {
+    today: todayCount,
+    yesterday: yesterdayCount,
+  };
+}
