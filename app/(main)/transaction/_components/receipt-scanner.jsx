@@ -9,10 +9,7 @@ import { toast } from 'sonner';
 
 const ReceiptScanner = ({onScanComplete, scannedReceipt, ScannerUserId}) => {
     const fileInputRef = useRef();
-    const [isClient, setIsClient] = useState(false);
-        useEffect(() => {
-            setIsClient(true)
-          }, [])
+
 
     const {
         loading: scanReceiptLoading,
@@ -69,7 +66,7 @@ const ReceiptScanner = ({onScanComplete, scannedReceipt, ScannerUserId}) => {
   return (
     <div>
 
-{isClient && (<><input 
+<><input 
         type="file" 
         ref={fileInputRef}
         className='hidden'
@@ -106,7 +103,7 @@ const ReceiptScanner = ({onScanComplete, scannedReceipt, ScannerUserId}) => {
                 }
         </Button>
    
-        </> )}
+        </> 
          
 
 

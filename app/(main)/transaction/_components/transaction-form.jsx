@@ -23,6 +23,13 @@ import ReceiptScanner from './receipt-scanner';
 import { cn } from '@/lib/utils';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700"],
+})
 
 const AddTransactionForm = ({
     accounts, 
@@ -36,11 +43,8 @@ const AddTransactionForm = ({
     const router = useRouter();
     const searchParams = useSearchParams();
     const editId = searchParams.get("edit");
-    const [isClient, setIsClient] = useState(true);
     const [scannedReceipt, setScannedReceipt] = useState(null);
-    useEffect(() => {
-        setIsClient(false)
-      }, [])
+
 
     const getPhilippinesDate = () => {
         const now = new Date();
@@ -269,48 +273,48 @@ const AddTransactionForm = ({
 
   return (
     <form 
-        className='space-y-6'
+        className={`${fontZenKaku.className} space-y-6`}
         onSubmit={handleSubmit(onSubmit)}>
       {/* AI RECEIPT SCANNER */}
       
       {!editMode && <ReceiptScanner scannedReceipt={scannedReceipt} ScannerUserId={ScannerUserId} onScanComplete={handleScanComplete}/>}
 
-      {isClient ? ('This is never prerendered') : ( 
+      
         <div className='grid gap-6 md:grid-cols-2'>
             <div className='space-y-2'>
-                <label className='text-sm font-medium'>Transaction type</label>
+                <label className='text-base font-medium'>Transaction type</label>
                 <Select
                 onValueChange={(value) => setValue("type", value)}
                 value={type}
                 >
-                    <SelectTrigger>
+                    <SelectTrigger className='font-normal text-base'>
                         <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
 
                     <SelectContent>
-                        <SelectItem value="EXPENSE">Expense</SelectItem>
-                        <SelectItem value="INCOME">Income</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="EXPENSE">Expense</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="INCOME">Income</SelectItem>
                     </SelectContent>
                 </Select>
 
                 {errors.type && (
-                    <p className="text-sm text-red-500">Select transaction type</p>
+                    <p className="font-medium text-sm text-red-500">Select transaction type</p>
                 )}
             </div> 
             <div className='space-y-2'>
-                <label className='text-sm font-medium'>Activity type</label>
+                <label className='text-base font-medium'>Activity type</label>
                 <Select
                 onValueChange={(value) => setValue("Activity", value)}
                 value={activityType}
                 >
-                    <SelectTrigger>
+                    <SelectTrigger className='font-normal text-base'>
                         <SelectValue placeholder="Select activity"/>
                     </SelectTrigger>
 
                     <SelectContent>
-                        <SelectItem value="OPERATION">Operating Activity</SelectItem>
-                        <SelectItem value="INVESTMENT">Investing Activity</SelectItem>
-                        <SelectItem value="FINANCING">Financing Activity</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="OPERATION">Operating Activity</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="INVESTMENT">Investing Activity</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="FINANCING">Financing Activity</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -319,62 +323,56 @@ const AddTransactionForm = ({
                 )}
             </div> 
         </div>
-    )}
+    
 
-        {isClient ? ('This is never prerendered') : (  <div className='grid gap-6 md:grid-cols-2'> 
+        <div className='grid gap-6 md:grid-cols-2'> 
                 <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Amount(₱)</label>
+                    <label className='text-base font-medium'>Amount(₱)</label>
                     <Input
+                        className='!font-normal !text-base tracking-wide'
                         type="number" 
                         step="0.01"
                         placeholder="0.00"
                         {...register("amount")}
                     />
                     {errors.amount && (
-                        <p className="text-sm text-red-500">{errors.amount.message}</p>
+                        <p className="font-medium text-sm text-red-500">Invalid amount</p>
                     )}
                 </div>
                 
                 <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Reference number</label>
+                    <label className='text-base font-medium'>Reference number</label>
                     <Input
+                        className='!font-normal !text-base tracking-wide'
                         type="text" 
                         placeholder="Reference number"
                         {...register("refNumber")}
                     />
 
                     {errors.refNumber && (
-                        <p className="text-sm text-red-500">{errors.refNumber.message}</p>
+                        <p className="font-medium text-sm text-red-500">Invalid Reference</p>
                     )}
                 </div> 
                
 
                 <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Company Name</label>
+                    <label className='text-base font-medium'>Company Name</label>
                     <Select
                         onValueChange={(value) => setValue("accountId", value)}
                         defaultValue={getValues("accountId")}>
-                        <SelectTrigger>
+                        <SelectTrigger className='font-normal text-base'>
                             <SelectValue placeholder="Select account"/>
                         </SelectTrigger>
 
                         <SelectContent>
                             {accounts.map((account) => (
                                 <SelectItem
+                                    className='!font-normal !text-sm'
                                     key={account.id}
                                     value={account.id}>
-                                        
                                         {account.name} 
-                                        {/* (₱{parseFloat(account.balance)}) */}
                                 </SelectItem>
                             ))}
-
-                            {isClient && (<CreateAccountDrawer>
-                                <Button 
-                                    variant="ghost"
-                                    className="w-full select-none items-center text-sm outline-none"
-                                    >Create Account</Button>
-                            </CreateAccountDrawer>)}
 
                         </SelectContent>
                     </Select>
@@ -384,36 +382,38 @@ const AddTransactionForm = ({
                     )}
             </div>
             <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Particular</label>
+                    <label className='text-base font-medium'>Particular</label>
                     <Input
+                        className='!font-normal !text-base tracking-wide'
                         type="text" 
                         placeholder="Particular"
                         {...register("particular")}
                     />
 
                     {errors.particular && (
-                        <p className="text-sm text-red-500">{errors.particular.message}</p>
+                        <p className="font-medium text-sm text-red-500">Invalid Particular</p>
                     )}
                 </div>
             </div>
-        )}
+        
 
 
-        {isClient ? ('This is never prerendered') :(<div className='space-y-2'>
-            <label className='text-sm font-medium'>Account title</label>
+        <div className='space-y-2'>
+            <label className='text-base font-medium'>Account title</label>
             <Input
+                className='!font-normal !text-base tracking-wide'
                 {...register("category")}
                 placeholder="Account title"
             />
             {errors.category && (
-                <p className="text-sm text-red-500">{errors.category.message}</p>
+                <p className="text-sm text-red-500">Invalid account title</p>
             )}
-        </div> )}
+        </div> 
         {/* category */}
     
-        {isClient ? ('This is never prerendered') :(
+  
         <div className='space-y-2'>
-            <label className='text-sm font-medium'>Date of transaction</label>
+            <label className='text-base font-medium'>Date of transaction</label>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <div className="space-y-2">
                     {/* <label className="text-sm font-medium">Date of transaction</label> */}
@@ -427,32 +427,14 @@ const AddTransactionForm = ({
                     
                     />
                     {errors.date && (
-                    <p className="text-sm text-red-500">{errors.date.message}</p>
+                    <p className="text-sm text-red-500">Invalid date</p>
                     )}
                 </div>
             </LocalizationProvider>
-            
-            {errors.date && (
-                <p className="text-sm text-red-500">{errors.date.message}</p>
-            )}
 
-        </div>)}
+        </div>
 
-        {/* <div className='hidden'>
-                    <label className='text-sm font-medium'>printNumber</label>
-                    <Input
-                        type="text" 
-                        placeholder="printNumber"
-                        {...register("printNumber")}
-                    />
-
-                    {errors.printNumber && (
-                        <p className="text-sm text-red-500">{errors.printNumber.message}</p>
-                    )}
-                </div> */}
-            {/* date */}
-
-            {isClient ? ('This is never prerendered') :(
+        
             <div className="space-y-2 md:col-span-2">
                 <label htmlFor="description" className="text-sm font-medium">Description</label>
                 <textarea
@@ -465,58 +447,9 @@ const AddTransactionForm = ({
                 {errors.description &&
                     <p className="text-sm text-red-500">{errors.description.message}</p>
                 }
-            </div> )}
-            {/* desc */}
-
-            {/* {isClient ? ('This is never prerendered') :(<div className='flex items-center justify-between rounded-lg border p-3'>
-            <div className="space-y-0 5">
-                <label className='text-sm font-medium cursor-pointer'>
-                Recurring Transaction
-                </label>
-
-                <p className='text-sm text-muted-foreground'>
-                    Set up a recurring schedule for this transaction
-                </p>
-            </div>
+            </div> 
 
 
-            <Switch
-                onCheckedChange={(checked) => setValue("isRecurring", checked)}
-                checked={isRecurring}
-            />    
-        </div>  )} */}
-
-
-
-        {/* recurring */}
-
-        {/* {isRecurring && (
-            
-            <div className='space-y-2'>
-                <label className='text-sm font-medium'>Recurring Interval</label>
-                <Select
-                    onValueChange={(value) => setValue("recurringInterval", value)}
-                    defaultValue={getValues("recurringInterval")}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select Interval"/>
-                    </SelectTrigger>
-
-                    <SelectContent>
-                        <SelectItem value="DAILY">Daily</SelectItem>
-                        <SelectItem value="WEEKLY">Weekly</SelectItem>
-                        <SelectItem value="MONTHLY">Monthly</SelectItem>
-                        <SelectItem value="YEARLY">Yearly</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                {errors.recurringInterval && (
-                    <p className="text-sm text-red-500">{errors.recurringInterval.message}</p>
-                )}
-            </div>  
-        )} */}
-
-
-        {isClient ? ('This is never prerendered') :(
             <div className='flex gap-4'>
             <Button
                 type="button"
@@ -567,7 +500,7 @@ const AddTransactionForm = ({
                             : ("Create Transaction")
                     }
             </Button>
-        </div>  )}
+        </div>  
 
    
     </form>
