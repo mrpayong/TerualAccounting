@@ -436,12 +436,15 @@ const AddTransactionForm = ({
 
         
             <div className="space-y-2 md:col-span-2">
-                <label htmlFor="description" className="text-sm font-medium">Description</label>
+                <label htmlFor="description" className="text-base font-medium">Description</label>
                 <textarea
                 id="description"
                 placeholder="Enter a detailed description"
                 {...register("description")}
-                className="w-full h-32 p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                className="w-full h-32 p-4 border 
+                !font-normal !text-base tracking-wide
+                border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 
+                focus:ring-blue-500 focus:border-blue-500 resize-none"
                 ></textarea>
 
                 {errors.description &&
@@ -455,6 +458,7 @@ const AddTransactionForm = ({
                 type="button"
                 variant="outline"
                 className="w-full border border-black hover:bg-neutral-900 hover:text-white
+                !font-medium !text-base 
                 hover:shadow-md hover:shadow-black/30"
                 disabled={transactionLoading || buttonsDisabled}
                 onClick={() => {setButtonsDisabled(true); router.back();}}>
@@ -468,7 +472,7 @@ const AddTransactionForm = ({
                     || editMode === true 
                     || buttonsDisabled
                 }
-                className="w-full
+                className="w-full !font-medium !text-base 
                 bg-white text-yellow-500
                 hover:bg-yellow-500 hover:text-black
                 hover:border-0 border border-yellow-500
@@ -480,7 +484,7 @@ const AddTransactionForm = ({
 
             <Button
                 type="submit"
-                className="w-full
+                className="w-full !font-medium !text-base 
                 hover:bg-green-500 hover:text-white
                 bg-white text-black
                 hover:border-0 border border-green-500
@@ -497,7 +501,7 @@ const AddTransactionForm = ({
                         </>)
                         : editMode 
                             ? ("Update Transaction") 
-                            : ("Create Transaction")
+                            : ("Add Transaction")
                     }
             </Button>
         </div>  
