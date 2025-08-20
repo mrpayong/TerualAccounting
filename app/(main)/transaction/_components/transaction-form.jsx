@@ -496,7 +496,7 @@ const AddTransactionForm = ({
                             <Loader2 className='mr-2 h-4 w-4 animate-spin'/>
                             {editMode 
                                 ? "Updating"
-                                : "Creating"
+                                : "Adding"
                             }
                         </>)
                         : editMode 
