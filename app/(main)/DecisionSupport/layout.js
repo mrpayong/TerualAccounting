@@ -3,6 +3,12 @@ import {BarLoader} from "react-spinners"
 import DecisionSupport from './page';
 import { getAdmin, getUnauthUser } from '@/actions/admin';
 import NotFound from '@/app/not-found';
+import { Unica_One } from 'next/font/google';
+
+const fontUnicaOne = Unica_One({
+  subsets:["latin"],
+  weight: "400",
+})
 
 const DashboardLayout = async () => {
   const user = await getAdmin()
@@ -15,7 +21,7 @@ const DashboardLayout = async () => {
   
   return (
     <div className='px-5 bg-gray-50'>
-        <h1 className="text-6xl font-bold gradient-title mb-5 mx-10">Decision Support</h1>
+        <h1 className={`text-6xl md:text-[5rem]/[1] px-9 w-full ${fontUnicaOne.className} font-normal tracking-wider text-center md:text-start`}>Decision Support</h1>
 
         
         <Suspense 

@@ -140,7 +140,7 @@ const AddTransactionForm = ({
     };
   
     useEffect(() => {
-        if (transactionResult?.success && !transactionLoading) {
+        if (transactionResult?.code === 200 && transactionResult?.success && !transactionLoading) {
             toast.success(
                 editMode
                     ? "Transaction updated successfully."
@@ -163,6 +163,8 @@ const AddTransactionForm = ({
     }, [transactionResult, transactionLoading, editMode]);
 
 
+
+
         useEffect(() => {
         if (transactionResult?.success === false) {
             if(transactionResult.code === 402){
@@ -172,6 +174,11 @@ const AddTransactionForm = ({
             }
             if(transactionResult.code === 403){
                 toast.error("Account not found.");
+                setButtonsDisabled(false);
+                return;
+            }
+            if (transactionResult.code === 500) {
+                toast.error("Something went wrong. Please try again.");
                 setButtonsDisabled(false);
                 return;
             }

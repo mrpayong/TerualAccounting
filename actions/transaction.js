@@ -130,11 +130,10 @@ export async function createTransaction(data) {
 
     revalidatePath("/dashboard");
     revalidatePath(`/account/${transaction.accountId}`);
-    return { success: true, data: serializeAmount(transaction) };
+    return { code:200, success: true, data: serializeAmount(transaction) };
   } catch (error) {
     console.error("Error creating transaction.",error.message)
-    throw new Error("!");
-    
+    return { code:500, success: false, message:"Failed to create transaction." };
   }
 }
 
@@ -165,7 +164,6 @@ export async function scanReceipt(file, ScannerUserId){
     const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
 
     // converts file into ArrayBuffer
-    console.log("IN BACKEND SCANNING: ", file)
     const arrayBuffer = await file.arrayBuffer();
     
     // convert arrayBuffer to base64
@@ -238,9 +236,7 @@ console.log("[6]")
       args: JSON.stringify(data), 
       timestamp: new Date()
     });
-    console.log("[8]", updateLog, ScannerUserId, typeof ScannerUserId)
     if(updateLog.success === false){
-      console.log("Fallback triggered")
       await db.activityLog.create({
         data: {
           userId: ScannerUserId,
@@ -248,7 +244,6 @@ console.log("[6]")
           meta: {message:"Possible System interruption: Failed to log Scanned Receipt"},
         }
       })
-      console.log("Triggered fallback")
     }
     console.log("[7]")
     
@@ -267,24 +262,6 @@ console.log("[6]")
       }
     
   } catch (error) {
-    if (error instanceof ValidationError) {
-      console.log("Validation Error:", error.message);
-      throw new Error("Error Scanning:[Validation]"); // Re-throw the custom error
-    }
-
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    console.log("PrismaClientKnownRequestError code:", error.code);
-    console.log("PrismaClientKnownRequestError meta:", error.meta);
-    console.log("PrismaClientKnownRequestError message:", error.message);
-  } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
-    console.log("PrismaClientUnknownRequestError message:", error.message);
-    // Sometimes error.meta is available, log it if present
-    if (error.meta) {
-      console.log("PrismaClientUnknownRequestError meta:", error.meta);
-    }
-  } else {
-    console.log("Unknown error:", error);
-  }
     console.log("error only:", error)
     console.log("Error scanning the receipt:", error.message);
     return {code:500, success: false, message:"Scanning rate limit might be reached."};
@@ -432,7 +409,6 @@ export async function updateManyTransaction(transactionIds, ActivityType){
 
 
     console.log("[1] Auth passed")
-    console.log(transactionIds, ActivityType)
     console.log("[2] Fetch transactions")
     const transactions = await db.transaction.findMany({
       where: {
@@ -485,7 +461,6 @@ export async function updateManyTransaction(transactionIds, ActivityType){
     revalidatePath("/dashboard");
     revalidatePath(`/account/${transactions[0].accountId}`);
 
-    console.log("[4] Update Success", updatedTransactions)
     return {success: true}
   } catch (error) {
     console.log("Error editing Activity Type.", error.message)

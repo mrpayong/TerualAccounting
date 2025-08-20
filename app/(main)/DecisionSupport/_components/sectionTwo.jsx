@@ -21,6 +21,7 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip as AreaTooltip, Cartesian
 import { useFinancialData } from '../_context/FinancialDataContext';
 import { BarLoader } from 'react-spinners';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
 
 
 
@@ -92,6 +93,10 @@ const daysOfWeek = [
   "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 ];
 
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const SectionTwo = ({ accounts, transactions }) => {
     const financialChartRef = useRef(null);
@@ -466,13 +471,13 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
     <div className="lg:col-span-2 space-y-6">
       {/* Financial Forecast Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Forecast of Cashflow</CardTitle>
-          <CardDescription>
+        <CardHeader className={`${fontZenKaku.className}`}>
+          <CardTitle className='!font-bold text-xl'>Forecast of Cashflow</CardTitle>
+          <CardDescription className='!font-normal text-sm tracking-wide'>
             Forecasting growth rate from average gross based on provided cashflow records.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={`${fontZenKaku.className}`}>
           <div className="w-full md:px-4">
             {cfsForecastLoading || forecastLoading ? (
                 <ChartSkeleton height="h-[350px]" />
@@ -493,7 +498,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                       <XAxis 
                         dataKey="month"
                         tickFormatter={formatMonthYear}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 11, fontWeight:'500' }}
                         axisLine={false}
                         tickLine={false}
                         interval={0}
@@ -503,7 +508,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                       />
                       <YAxis 
                         tickFormatter={formatAmount}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fontWeight:'500' }}
                         axisLine={false}
                         tickLine={false}
                         width={80}
@@ -516,8 +521,8 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                           if (active && payload && payload.length) {
                             return (
                               <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
-                                <div className="font-semibold text-gray-700">{formatMonthYear(label)}</div>
-                                <div className="text-blue-600 font-bold">
+                                <div className="font-medium text-sm text-gray-700">{formatMonthYear(label)}</div>
+                                <div className="text-blue-600 font-medium text-base">
                                   Gross: {formatAmount(payload[0].value)}
                                 </div>
                               </div>
@@ -543,6 +548,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                         <ReferenceLine
                           x={xProp}
                           stroke="#fbbf24"
+                          className='font-bold text-base'
                           strokeDasharray="3 3"
                           label={{ value: "Forecast", position: "insideTopRight", fill: "#fbbf24" }}
                         />
@@ -557,19 +563,19 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
         <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 py-4">
           
           <Button 
-            className="
+            className={`${fontZenKaku.className}
             !rounded-button whitespace-nowrap 
             shine-effect
             flex items-center gap-1
             bg-black text-white
-            text-sm font-semibold
-            transition
+            text-sm md:!text-base font-meidum
+            tracking-wide transition
             hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
             hover:shadow-lg hover:shadow-blue-500/60
             cursor-pointer
             relative
             overflow-hidden
-            "
+            `}
             type="button"
             disabled={cfsForecastLoading}
             onClick={cfsForecastHandler}>
@@ -584,13 +590,13 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
 
       {/* Cash Flow Projection */}
       <Card>
-        <CardHeader>
-          <CardTitle>Inflow and Outflow Forecast</CardTitle>
-          <CardDescription>
+        <CardHeader className={`${fontZenKaku.className}`}>
+          <CardTitle className="!font-bold text-xl">Inflow and Outflow Forecast</CardTitle>
+          <CardDescription className="!font-normal text-sm tracking-wide">
             The forecast inflow and outflow of cash based on historical data.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={`${fontZenKaku.className}`}>
           <div className="w-full px-2 md:px-4 h-[350px]">
             {inflowOutflowloading || forecastLoading ? (
                 <ChartSkeleton height="h-[350px]" />
@@ -600,14 +606,14 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={barChartData}>
                       <XAxis dataKey="month" 
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fontWeight:'500' }}
                         tickFormatter={formatMonthYear} 
                         interval={0}
                         angle={-30}
                         textAnchor="end"
                         height={60}/>
                       <YAxis 
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fontWeight:'500' }}
                         tickFormatter={formatAmount} 
                         width={80}/>
                       <AreaTooltip 
@@ -615,15 +621,15 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                           if (active && payload && payload.length) {
                             return (
                               <div className="bg-white rounded-lg shadow-lg p-4">
-                                <div className="text-lg mb-2">{formatMonthYear(label)}</div>
+                                <div className="font-medium text-lg mb-2">{formatMonthYear(label)}</div>
                                 <div className="flex flex-col gap-1">
-                                  <div className="flex items-center text-sm">
-                                    <span>Inflow:</span>
-                                    <span className="ml-2 text-green-600">{formatAmount(payload[0].value)}</span>
+                                  <div className="flex items-center">
+                                    <span className='font-medium text-base'>Inflow:</span>
+                                    <span className="font-medium text-base ml-2 text-green-600">{formatAmount(payload[0].value)}</span>
                                   </div>
-                                  <div className="flex items-center text-sm">
-                                    <span>Outflow:</span>
-                                    <span className="ml-2 text-red-600">{formatAmount(payload[1].value)}</span>
+                                  <div className="flex items-center">
+                                    <span className='font-medium text-base'>Outflow:</span>
+                                    <span className="font-medium text-base ml-2 text-red-600">{formatAmount(payload[1].value)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -657,7 +663,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
           </div>
         </CardContent>
         <CardFooter>
-          <span className='text-sm text-neutral-500 p-1'>Forecast starts at blue broken line</span>
+          <span className={`${fontZenKaku.className} font-normal tracking-wide text-sm text-neutral-500 p-1`}>Forecast starts at blue broken line</span>
         </CardFooter>
       </Card>
     </div>
@@ -667,25 +673,25 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
         {/* AI CFS forecast insight */}
       <div className="flex flex-col gap-4 h-auto lg:min-h-[340px]">
         <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Insight on the Forecast</CardTitle>
-            <CardDescription className="text-xs">
+          <CardHeader className={`${fontZenKaku.className}`}>
+            <CardTitle className='!font-bold text-base'>Insight on the Forecast</CardTitle>
+            <CardDescription className="font-normal text-sm tracking-wide">
               {cfsForecastData
                 ? "Here's what the AI thinks base on the historical data and it's forecast."
                 : "Generate the forecast to see AI's insights."
               }
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className={`${fontZenKaku.className} space-y-6`}>
             {cfsForecastData?.insight && (
               <Alert className="mt-4 bg-blue-50 border-blue-200 h-full">
-                <AlertTitle className="flex flex-row items-center"><Brain className='h-4 w-4 mr-2'/> AI Insight</AlertTitle>
-                <AlertDescription>{cfsForecastData.insight}</AlertDescription>
+                <AlertTitle className="text-base !font-bold flex flex-row items-center"><Brain className='h-4 w-4 mr-2'/> AI Insight</AlertTitle>
+                <AlertDescription className='!font-normal !text-base'>{cfsForecastData.insight}</AlertDescription>
                 {cfsForecastData.issuesOrImprovements && cfsForecastData.issuesOrImprovements.length > 0 && (
                   <div className="mt-2">
                     <ul className="list-disc list-inside space-y-1">
                       {cfsForecastData.issuesOrImprovements.map((issue, index) => (
-                        <li key={index}>
+                        <li key={index} className='font-normal text-base'>
                           {issue}
                         </li>
                       ))}
@@ -696,15 +702,15 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
             )}
           </CardContent>
         </Card>
-        <Alert className="bg-sky-200 border-sky-500 h-full">
-          <AlertTitle className="text-zinc-500 flex items-center gap-2">
+        <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 h-full`}>
+          <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
             <Info className="h-6 w-6 text-sky-500" />
             {AIschedData
               ? "AI says the ideal priority today:"
               : "Ideal Priority Today"
             }
           </AlertTitle>
-          <AlertDescription className="text-zinc-500">
+          <AlertDescription className="font-normal text-base text-zinc-500">
             {aiInsight}
           </AlertDescription>
         </Alert>
@@ -712,14 +718,14 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
 
         {/* Weekly Calendar */}
       <Card className="flex-1 flex flex-col">
-        <CardHeader>
-          <CardTitle>Weekly Schedule</CardTitle>
-          <CardDescription>
+        <CardHeader className={`${fontZenKaku.className}`}>
+          <CardTitle className='!font-bold text-base'>Weekly Schedule</CardTitle>
+          <CardDescription className='!font-normal text-sm tracking-wide'>
             Your tasks and appointments for this week
           </CardDescription>
         </CardHeader>
         {/* Make CardContent take all available vertical space and arrange children in a column */}
-        <CardContent className="flex-1 flex flex-col p-0">
+        <CardContent className={`${fontZenKaku.className} flex-1 flex flex-col p-0`}>
           <ScrollArea className="flex-1 min-h-[300px] max-h-[500px] pr-4">
             <div className="space-y-4 px-6 pt-4 pb-2">
               {schedLoading ? (
@@ -738,13 +744,13 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                     <div className={`flex items-center ${day.isToday ? "text-blue-600 font-bold" : "text-gray-700"}`}>
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${day.isToday ? "bg-blue-100" : "bg-gray-100"}`}>
                         <div className="text-center">
-                          <div className="text-xs">{day.dayName}</div>
-                          <div className="text-base font-semibold">{day.dayNumber}</div>
+                          <div className="font-medium text-xs">{day.dayName}</div>
+                          <div className="text-base font-medium">{day.dayNumber}</div>
                         </div>
                       </div>
                       <span className="font-medium text-base">{formatDatePH(day.date)}</span>
                       {day.isToday && (
-                        <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                        <Badge className="font-normal text-base ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100">
                           Today
                         </Badge>
                       )}
@@ -758,16 +764,16 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Badge className={`${task.color} mb-1`}>
+                                      <Badge className={`!font-medium !text-xs ${task.color} mb-1`}>
                                         {task.urgencyLabel}
                                       </Badge>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top" className="max-w-xs text-xs">
+                                    <TooltipContent side="top" className="!font-medium !text-sm max-w-xs">
                                       {task.description}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
-                                <p className="text-sm font-medium">{task.taskName}</p>
+                                <p className="text-base font-medium">{task.taskName}</p>
                               </div>
                             </div>
                           </div>
@@ -775,7 +781,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                       </div>
                     ) : (
                       <div className="ml-13 pl-10 border-l-2 border-gray-200 py-2">
-                        <p className="text-sm text-gray-500 italic">No scheduled tasks</p>
+                        <p className="font-bold text-base text-gray-500">No scheduled tasks</p>
                       </div>
                     )}
                   </div>
@@ -789,19 +795,19 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
             type="button"
             onClick={AIgenerateSchedHandler}
             disabled={schedLoading}
-            className="
+            className={`${fontZenKaku.className}
               w-full !rounded-button whitespace-nowrap 
               shine-effect
               flex items-center gap-1
               bg-black text-white
-              text-sm font-semibold
-              transition
+              text-sm md:!text-base font-medium
+              tracking-wide transition
               hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
               hover:shadow-lg hover:shadow-blue-500/60
               cursor-pointer
               relative
               overflow-hidden
-            ">
+            `}>
             {schedLoading
               ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
               : <Bot className='mr-2'/> 

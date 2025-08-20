@@ -3,8 +3,8 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "7534306e-5c41-4db9-9abc-9ecadb014d48";
-const USER_ID = "0e59c147-d65c-4dd4-b651-2047939fdb29";
+const ACCOUNT_ID = "eba04af3-163b-437f-9df2-971454be23f2";
+const USER_ID = "3d910392-d1fd-4017-b63d-40b4a535fdd8";
 
 // Categories with their typical amount ranges 
 // const CATEGORIES = {
@@ -32,90 +32,78 @@ const USER_ID = "0e59c147-d65c-4dd4-b651-2047939fdb29";
 // Construction-ready categories and realistic ranges (PHP)
 const CATEGORIES = {
   INCOME: [
-    { name: "wholesale-orders", range: [50000, 500000] },
-    { name: "retail-sales", range: [1000, 20000] },
-    { name: "export-sales", range: [100000, 2000000] },
-    { name: "custom-uniform-orders", range: [20000, 300000] },
-    { name: "online-sales", range: [500, 20000] },
-    { name: "scrap-fabric-sales", range: [500, 10000] },
-    { name: "rental-income-equipment", range: [5000, 50000] },
-    { name: "interest-income", range: [500, 5000] },
-    { name: "owner-investment", range: [20000, 500000] },
-    { name: "loan-proceeds", range: [100000, 1000000] },
+    { name: "wedding-shoot", range: [15000, 80000] },
+    { name: "pre-nup-shoot", range: [8000, 30000] },
+    { name: "corporate-event-shoot", range: [10000, 50000] },
+    { name: "portrait-session", range: [2000, 15000] },
+    { name: "product-photography", range: [3000, 20000] },
+    { name: "freelance-gig", range: [2000, 15000] },
+    { name: "stock-photo-sales", range: [500, 5000] },
+    { name: "video-shoot", range: [10000, 40000] },
+    { name: "social-media-content-shoot", range: [3000, 15000] },
+    { name: "other-service-income", range: [1000, 10000] },
   ],
 
   EXPENSE: [
-    // Operating expenses
-    { name: "fabric-and-textiles", range: [5000, 200000] },
-    { name: "thread-and-accessories", range: [1000, 30000] },
-    { name: "labor-payroll", range: [10000, 300000] },
-    { name: "subcontracting-services", range: [20000, 200000] },
-    { name: "dyes-and-chemicals", range: [2000, 50000] },
-    { name: "utilities", range: [1000, 20000] },
-    { name: "packaging-materials", range: [500, 20000] },
-    { name: "logistics-and-delivery", range: [2000, 50000] },
-    { name: "machine-repairs", range: [5000, 100000] },
-    { name: "rent-factory-or-showroom", range: [20000, 200000] },
-    { name: "marketing-and-advertising", range: [2000, 80000] },
-    { name: "office-expenses", range: [1000, 20000] },
-    { name: "training-and-seminars", range: [1000, 20000] },
-    { name: "insurance", range: [2000, 30000] },
-    { name: "taxes-and-permits", range: [2000, 50000] },
+    // Operating
+    { name: "transportation", range: [500, 5000] },
+    { name: "meals-and-snacks", range: [200, 2000] },
+    { name: "utilities", range: [500, 3000] },
+    { name: "internet", range: [1000, 3000] },
+    { name: "printing-and-albums", range: [1000, 10000] },
+    { name: "props-and-backdrops", range: [500, 5000] },
+    { name: "software-subscriptions", range: [500, 2500] }, // Adobe, Lightroom
+    { name: "marketing-and-ads", range: [500, 8000] },
+    { name: "office-supplies", range: [200, 2000] },
 
-    // Financing outflows
-    { name: "loan-repayment", range: [20000, 500000] },
-    { name: "interest-expense", range: [2000, 50000] },
+    // Financing
+    { name: "loan-repayment", range: [2000, 15000] },
+    { name: "interest-expense", range: [500, 3000] },
 
     // Investing (CAPEX)
-    { name: "sewing-machine-purchase", range: [20000, 300000] },
-    { name: "embroidery-machine-purchase", range: [50000, 800000] },
-    { name: "delivery-vehicle-purchase", range: [200000, 2000000] },
-    { name: "factory-renovation", range: [100000, 1500000] },
-    { name: "software-and-it-systems", range: [10000, 200000] },
+    { name: "camera-purchase", range: [30000, 120000] },
+    { name: "lens-purchase", range: [20000, 80000] },
+    { name: "lighting-equipment", range: [5000, 30000] },
+    { name: "laptop-or-pc-upgrade", range: [20000, 80000] },
+    { name: "studio-rental-or-renovation", range: [10000, 50000] },
   ],
 };
 
 
 const CATEGORY_ACTIVITY = {
   // Income
-  "wholesale-orders": "OPERATION",
-  "retail-sales": "OPERATION",
-  "export-sales": "OPERATION",
-  "custom-uniform-orders": "OPERATION",
-  "online-sales": "OPERATION",
-  "scrap-fabric-sales": "OPERATION",
-  "rental-income-equipment": "OPERATION",
-  "interest-income": "INVESTMENT",
-  "owner-investment": "FINANCING",
-  "loan-proceeds": "FINANCING",
+  "wedding-shoot": "OPERATION",
+  "pre-nup-shoot": "OPERATION",
+  "corporate-event-shoot": "OPERATION",
+  "portrait-session": "OPERATION",
+  "product-photography": "OPERATION",
+  "freelance-gig": "OPERATION",
+  "stock-photo-sales": "OPERATION",
+  "video-shoot": "OPERATION",
+  "social-media-content-shoot": "OPERATION",
+  "other-service-income": "OPERATION",
 
   // Expenses (Operating)
-  "fabric-and-textiles": "OPERATION",
-  "thread-and-accessories": "OPERATION",
-  "labor-payroll": "OPERATION",
-  "subcontracting-services": "OPERATION",
-  "dyes-and-chemicals": "OPERATION",
+  "transportation": "OPERATION",
+  "meals-and-snacks": "OPERATION",
   "utilities": "OPERATION",
-  "packaging-materials": "OPERATION",
-  "logistics-and-delivery": "OPERATION",
-  "machine-repairs": "OPERATION",
-  "rent-factory-or-showroom": "OPERATION",
-  "marketing-and-advertising": "OPERATION",
-  "office-expenses": "OPERATION",
-  "training-and-seminars": "OPERATION",
-  "insurance": "OPERATION",
-  "taxes-and-permits": "OPERATION",
+  "internet": "OPERATION",
+  "printing-and-albums": "OPERATION",
+  "props-and-backdrops": "OPERATION",
+  "software-subscriptions": "OPERATION",
+  "marketing-and-ads": "OPERATION",
+  "office-supplies": "OPERATION",
 
   // Expenses (Financing)
   "loan-repayment": "FINANCING",
   "interest-expense": "FINANCING",
 
-  // Expenses (Investing / CAPEX)
-  "sewing-machine-purchase": "INVESTMENT",
-  "embroidery-machine-purchase": "INVESTMENT",
-  "delivery-vehicle-purchase": "INVESTMENT",
-  "factory-renovation": "INVESTMENT",
-  "software-and-it-systems": "INVESTMENT",
+  // Expenses (Investing)
+  "camera-purchase": "INVESTMENT",
+  "lens-purchase": "INVESTMENT",
+  "lighting-equipment": "INVESTMENT",
+  "laptop-or-pc-upgrade": "INVESTMENT",
+  "studio-rental-or-renovation": "INVESTMENT",
 };
 
 // Helper to generate random amount within a range

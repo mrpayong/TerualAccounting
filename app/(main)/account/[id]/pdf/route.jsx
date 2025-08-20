@@ -1,5 +1,3 @@
-
-
 "use client";
 import React from 'react';
 import {  Page,      
@@ -123,21 +121,17 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
 });
-const deterimeTimeFrame = (startDate, endDate) => {
-  const daysDifference = differenceInDays(endDate, startDate);
-  const monthsDifference = differenceInMonths(endDate, startDate)
 
-  switch (true) {
-    case daysDifference === 0:
-      return "Daily";
-    case daysDifference <= 7:
-      return "Weekly";
-    case monthsDifference === 0:
-      return "Monthly";
-    default:
-      return ""
-  }
+
+function getAllSubAccountTransactionDates(subAccounts) {
+  return subAccounts.flatMap(subAccount => 
+    (subAccount.subAccount.transactions || [])
+      .map(tx => new Date(tx.transaction.date))
+      .filter(date => !isNaN(date))
+  );
 }
+
+
 const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
   
   if (!cashflow || cashflow.length === 0) {
@@ -150,9 +144,6 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     );
   }
 
-  const transactionDates = transactions.map((transaction) => 
-    new Date(transaction.date)
-  )
 
 
   const deterimeTimeFrame = (period) => {
@@ -191,13 +182,22 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     });
   };
 
-  const startDate =  new Date(Math.min(...transactionDates));
-  const endDate = new Date(Math.max(...transactionDates));
+  const transactionDates = [
+    ...transactions.map((transaction) => new Date(transaction.date)),
+    ...getAllSubAccountTransactionDates(subAccounts)
+  ];
 
-  const timeFrame = deterimeTimeFrame(startDate, endDate);
+  let startDate, endDate;
+  if (transactionDates.length > 0) {
+    startDate = new Date(Math.min(...transactionDates));
+    endDate = new Date(Math.max(...transactionDates));
+  } else {
+    startDate = endDate = null; // Or set to new Date() if you want a fallback
+  }
 
-  const formattedStartDate = formatDate(startDate, 'MMMM dd, yyyy');
-  const formattedEndDate = formatDate(endDate, 'MMMM dd, yyyy')
+
+  const formattedStartDate = startDate ? formatDate(startDate, 'MMMM dd, yyyy') : "N/A";
+  const formattedEndDate = endDate ? formatDate(endDate, 'MMMM dd, yyyy') : "N/A";
  
   const latestCashflow = cashflow;
   const transactionsIn = transactions;
@@ -337,7 +337,6 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
 
 
 
-
   
   return (
     <Document>
@@ -364,7 +363,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
               <View style={styles.letterheadText}>
                 <Text style={styles.title}>Teruel Accounting</Text>
                 <Text style={styles.subtitle}>{deterimeTimeFrame(cashflow.periodCashFlow)} Cashflow Statement</Text>
-                {startDate.toDateString() === endDate.toDateString()
+                {startDate && endDate && startDate.toDateString() === endDate.toDateString()
                     ? <Text style={styles.subtitle}>As of: {formattedStartDate}</Text>
                     : <Text style={styles.subtitle}>For the period: {formattedStartDate} - {formattedEndDate}</Text>
                   }

@@ -30,7 +30,8 @@ export async function getSuggestedWeeklySchedule() {
     const user = await db.user.findUnique({
     where: { clerkUserId: userId },
     select: {
-      role: true
+      role: true,
+      id:true
     }
     });
 
@@ -328,7 +329,6 @@ export async function getCashflowForecast(accountId) {
     },
     orderBy: { date: "asc" },
     select: {
-      description: true,
       date: true,
       netChange: true,
       startBalance: true,

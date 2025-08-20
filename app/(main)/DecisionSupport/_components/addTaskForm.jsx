@@ -14,6 +14,12 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { DialogClose } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 export default function TaskForm({ onSubmit, onSuccess, initialValues, users, accounts }) {
   const getPhilippinesDate = () => {
@@ -115,7 +121,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
   return (
     <form
       onSubmit={handleSubmit(handleCreateTask)}
-      className="w-full"
+      className={`${fontZenKaku.className} w-full`}
     >
       <div className="flex flex-col md:flex-row gap-6">
         {/* Calendar on the left */}
@@ -141,12 +147,13 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
         <div className="md:flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Task Name */}
           <div className="col-span-1 md:col-span-2">
-             <label className="block text-sm font-medium mb-1" htmlFor="task-name">
+             <label className="block text-base font-medium mb-1" htmlFor="task-name">
               Task Name <span className="text-red-500">*</span>
             </label>
             <TextField
               label="Task Name"
               {...register("taskName")}
+              className='!font-normal !text-base'
               error={!!errors.taskName}
               helperText={errors.taskName?.message}
               fullWidth
@@ -156,7 +163,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
 
           {/* Task Category */}
           <div className="col-span-1 md:col-span-2">
-            <label className="block text-sm font-medium mb-1" htmlFor="task-category">
+            <label className="block text-base font-medium mb-1" htmlFor="task-category">
               Account <span className="text-red-500">*</span>
             </label>
 
@@ -165,13 +172,13 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
               onValueChange={val => setValue("taskCategory", val, { shouldValidate: true })}
               required
             >
-              <SelectTrigger id="task-category" className={errors.taskCategory ? "border-red-500" : ""}>
+              <SelectTrigger id="task-category" className={errors.taskCategory ? "border-red-500" : "" + "font-medium text-base"}>
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
-              <SelectContent >
+              <SelectContent>
                 {fetchedAccounts && fetchedAccounts.length > 0 ? (
                   fetchedAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.name} className="cursor-pointer">
+                    <SelectItem key={account.id} value={account.name} className="cursor-pointer font-normal text-base">
                       {account.name}
                     </SelectItem>
                   ))
@@ -190,6 +197,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
           {/* Task Description */}
           <div className="col-span-1 md:col-span-2">
             <Textarea
+              className='!font-normal !text-base'
               placeholder="Describe the task.(optional)"
               {...register("taskDescription")}
               rows={3}
@@ -202,7 +210,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
       <div className="w-full flex flex-col items-center mt-4 mb-2">
         <label
           htmlFor="urgency-group"
-          className="text-xs font-medium text-gray-700 mb-1"
+          className="text-base font-medium text-gray-700 mb-1"
         >
           Urgency <span className="text-red-500">*</span>
           {errors.urgency && (<p className="text-xs text-red-500 mt-1">Select urgency</p>)}
@@ -221,7 +229,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
                 checkedIcon={<span className="w-6 h-6 rounded-full border-4 border-green-400 bg-green-700 inline-block" />}
               />
             }
-            label={<span className="ml-1">Low Priority</span>}
+            label={<span className="ml-1 font-normal text-base">Low Priority</span>}
           />
           <FormControlLabel
             value="MEDIUM"
@@ -231,7 +239,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
                 checkedIcon={<span className="w-6 h-6 rounded-full border-4 border-yellow-400 bg-yellow-500 inline-block" />}
               />
             }
-            label={<span className="ml-1">Medium Priority</span>}
+            label={<span className="ml-1 font-normal text-base">Medium Priority</span>}
           />
           <FormControlLabel
             value="HIGH"
@@ -241,7 +249,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
                 checkedIcon={<span className="w-6 h-6 rounded-full border-4 border-red-400 bg-red-600 inline-block" />}
               />
             }
-            label={<span className="ml-1">High Priority</span>}
+            label={<span className="ml-1 font-normal text-base">High Priority</span>}
           />
         </RadioGroup>
       </div>
@@ -257,7 +265,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
           text-black hover:text-white
           border border-black hover:border-0
           hover:shadow-lg hover:shadow-black/20
-          md:flex-1"
+          md:flex-1 font-medium !text-base tracking-wide"
         >
           Cancel
         </Button>
@@ -272,18 +280,18 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
           text-black hover:text-white
           border border-yellow-400 hover:border-0
           hover:shadow-lg hover:shadow-yellow-400/50
-          md:flex-1"
+          md:flex-1 font-medium !text-base tracking-wide"
         >
           Clear all
         </Button>
         <Button
           type="submit"
           className="
-          bg-black hover:bg-white
-          text-white hover:text-black
-          hover:border hover:border-black border-0
+          bg-black hover:backdrop-blur-lg
+          text-white hover:text-black hover:bg-opacity-35 hover:bg-black/5
+          hover:border hover:border-black/10 border-0
           hover:shadow-lg hover:shadow-black/20
-           md:flex-1"
+           md:flex-1 font-medium !text-base tracking-wide"
           disabled={taskLoading}
           onClick={() => {console.log("tested")}}
         >

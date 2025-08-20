@@ -376,8 +376,8 @@ const rowsPerPage = 10; // Default rows per page
               return;
             }
         
-            if (selectedIds === null || selectedIds.length === 0) {
-              toast.error(`Select transactions. Beginning balance is ${response}`);
+            if (selectedIds === null || selectedIds.length === 0 && selectedSubAccountIds.length === 0) {
+              toast.error(`Select transactions.`);
               return;
             }
         
@@ -386,9 +386,6 @@ const rowsPerPage = 10; // Default rows per page
           //   // Create the cashflow
           //   await cfsFn(selectedIds, parseFloat(response));
           if (response !== null || selectedIds.length !== 0){
-              console.log("TAKEN DATA: ", "start balance: ", response)
-              console.log("Selected Transactions: ", selectedIds);
-              console.log("Selected Sub Accounts: ", selectedSubAccountIds);
               await cfsFn(selectedIds, parseFloat(response), selectedSubAccountIds, id);
           }
         
@@ -397,8 +394,8 @@ const rowsPerPage = 10; // Default rows per page
       useEffect(() => {
         if (forCfs && forCfs.success) {
           setSelectedIds([])
+          setSelectedSubAccountIds([])
           toast.success("Cashflow statement created successfully.");
-          console.log("CFS data:", forCfs);
     
           // Ensure forCfs.data.transactions is defined
           if (forCfs.data && Array.isArray(forCfs.data.transactions)) {
@@ -407,13 +404,19 @@ const rowsPerPage = 10; // Default rows per page
             setResponse(0.00);
           } 
         }
+        if(forCfs?.code === 403 && forCfs.success === false){
+          toast.error("Invalid beginning balance.");
+        }
+        if(forCfs?.code === 500 && forCfs.success === false){
+          toast.error("Something went wrong. Failed to create cashflow..");
+        }
       }, [forCfs]);
      
 
       useEffect(() => {
         if (errorCfs) {
           toast.error("Failed to create Cashflow statement.");
-          console.error("Error while producing CFS:", errorCfs.message);
+          console.error("Error while producing CFS:");
         }
       }, [errorCfs]);
 
@@ -467,9 +470,7 @@ const rowsPerPage = 10; // Default rows per page
 
     const handleCancelPDFdownload = async() => {
       setIsModalOpen(false);
-      console.log("CANCEL HANDLER: ",forCfs.data.id)
       if (forCfs && forCfs.data && forCfs.data.id) {
-        console.log("Cancelling Cashflow Statement with ID:", forCfs.data.id);
         toast.warning("Cancelling Cashflow Statement creation.")
         // Call the delete function with the ID of the cashflow statement
         await cfsDeleteFn(forCfs.data.id);
@@ -477,19 +478,26 @@ const rowsPerPage = 10; // Default rows per page
     }
 
     useEffect(() => {
-        if (cfsDeleteData && cfsDeleteData.success) {
+        if (cfsDeleteData?.code === 200 && cfsDeleteData.success) {
           toast.info("Cancelled creation of Cashflow Statement.");
-          console.log("Cancelled creating cfs:", cfsDeleteData);
+          setIsModalOpen(false);
+        }
+        if (cfsDeleteData?.code === 404 && cfsDeleteData.success === false) {
+          toast.error("Cashflow not found.");
+          setIsModalOpen(false);
+        }
+        if (cfsDeleteData?.code === 500 && cfsDeleteData.success === false) {
+          toast.error("Something went wrong.");
           setIsModalOpen(false);
         }
       }, [cfsDeleteData]);
 
     useEffect(() => {
-        if (errorCfsDelete) {
-          toast.error("Failed to delete Cashflow statement.");
-          console.error("Error while deleting CFS:", errorCfsDelete.message);
-        }
-      }, [errorCfsDelete]);
+      if (errorCfsDelete) {
+        toast.error("Failed to delete Cashflow statement.");
+        console.error("Error while deleting CFS:", errorCfsDelete.message);
+      }
+    }, [errorCfsDelete]);
 
 
       const { 
@@ -500,7 +508,6 @@ const rowsPerPage = 10; // Default rows per page
         } = useFetch(createSubAccount);
 
         const onSubmit = async (data) => {
-              console.log("Raw Form Data:", data);
               // Sanitize and validate data types
               const sanitizedData = {
                 ...data,
@@ -994,8 +1001,6 @@ const handleEditTransaction = (transactionId) => {
 
 
 
-
-
     
   return (
     
@@ -1245,7 +1250,7 @@ const handleEditTransaction = (transactionId) => {
                                   hover:scale-105`}
                               size="sm"
                               type="submit"
-                              disabled={cfsLoading || !response || selectedIds.length === 0}
+                              disabled={cfsLoading || !response || selectedIds.length === 0 && selectedSubAccountIds.length === 0}
                           >
                           {!cfsLoading
                               ? ("Generate")
@@ -1288,7 +1293,10 @@ const handleEditTransaction = (transactionId) => {
                                         >
                                           {({ blob, url, loading, error }) => {
                                             if (!loading){
-                                              return <Button className="bg-green-600 text-white hover:bg-green-700" onClick={handlePdfDownload} disabled={loading}>
+                                              return <Button className="
+                                                bg-white text-black
+                                                border border-green-600 hover:border-0
+                                                hover:bg-green-600 hover:text-white" onClick={handlePdfDownload} disabled={loading}>
                                               <div className='flex items-center gap-1'>
                                               <Download className="mr-2 sm:mr-3 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
                                                   Download
@@ -1304,7 +1312,12 @@ const handleEditTransaction = (transactionId) => {
                                   }
 
                                   {!loadingCfsDelete 
-                                    ? <Button variant="destructive" onClick={handleCancelPDFdownload}> Cancel </Button>
+                                    ? <Button 
+                                        className='
+                                        bg-white text-black
+                                          border border-red-600 hover:border-0
+                                          hover:bg-red-600 hover:text-white'
+                                        onClick={handleCancelPDFdownload}> Cancel </Button>
                                     : <Button variant="destructive" disabled={true}>Cancelling<Loader2  className="mr-2 h-4 w-4 animate-spin text-gray-500" /></Button>
                                   }
                                   <Button variant="outline" 
@@ -1332,7 +1345,10 @@ const handleEditTransaction = (transactionId) => {
                                           >
                                             {({ blob, url, loading, error }) => {
                                               if (!loading){
-                                                return <Button className="bg-green-600 text-white hover:bg-green-700" onClick={handlePdfDownload} disabled={loading}>
+                                                return <Button className="bg-white text-green-500
+                                                border border-green-500 hover:border-0
+                                                hover:bg-green-500 hover:text-white" 
+                                                onClick={handlePdfDownload} disabled={loading}>
                                                 <div className='flex items-center gap-1'>
                                                 <Download className="mr-2 sm:mr-3 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
                                                     Download
@@ -1348,7 +1364,10 @@ const handleEditTransaction = (transactionId) => {
                                     }
 
                                     {!loadingCfsDelete 
-                                      ? <Button variant="destructive" onClick={handleCancelPDFdownload}>Cancel</Button>
+                                      ? <Button className='
+                                          bg-white text-red-600
+                                          border border-red-600 hover:border-0
+                                          hover:bg-red-600 hover:text-white' onClick={handleCancelPDFdownload}>Cancel</Button>
                                       : <Button variant="destructive" disabled={true}>Cancelling<Loader2  className="mr-2 h-4 w-4 animate-spin text-gray-500" /></Button>
                                     }
                                     <Button 

@@ -5,24 +5,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Bot, Brain, Loader2 } from 'lucide-react';
 import React, { useState } from 'react'
 import { useFinancialData } from '../_context/FinancialDataContext';
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const SectionFour = () => {
 
-
   const { overallAnalysis, overallAnalysisLoading } = useFinancialData();
-
- 
-
-
 
   return (
    <div className="mt-6">
       <Card>
-        <CardHeader className="p-4">
+        <CardHeader className={`${fontZenKaku.className} p-4`}>
           <div className="flex flex-col-reverse md:flex-row md:justify-between gap-2 items-center">
             <div>
-              <CardTitle className="text-center md:text-start">Overall Financial Data Analysis</CardTitle>
-              <CardDescription className="text-center md:text-start">
+              <CardTitle className="!font-bold text-xl text-center md:text-start">Overall Financial Data Analysis</CardTitle>
+              <CardDescription className="font-nomral text-sm tracking-wide text-center md:text-start">
                 Recommendations based on AI's financial data analysis.
               </CardDescription>
             </div>
@@ -33,8 +35,7 @@ const SectionFour = () => {
                 bg-black text-white
                 px-2 py-0.5
                 rounded-full
-                text-xs sm:text-sm md:text-base
-                font-semibold
+                
                 transition
                 hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
                 hover:shadow-lg hover:shadow-blue-500/60
@@ -44,11 +45,12 @@ const SectionFour = () => {
               "
             >
               <Brain className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 mr-1 sm:mr-2" />
-              <span className="truncate">AI Generated</span>
+              <span className="!text-xs sm:!text-sm md:!text-base
+                !font-medium tracking-wide truncate">AI Generated</span>
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className={`${fontZenKaku.className}`}>
           {overallAnalysisLoading ? (
             <div className="flex flex-col items-center justify-center h-56 w-full relative">
               {/* Animated gradient ring */}
@@ -68,53 +70,49 @@ const SectionFour = () => {
               </div>
             </div>
           ) : overallAnalysis?.success ? (
-           
-<div className="w-full overflow-x-auto lg:overflow-x-visible">
-  <div
-    className="
-      grid gap-4
-      grid-flow-col grid-rows-1 auto-cols-[85vw] sm:auto-cols-[340px]
-      lg:grid-cols-2 lg:grid-rows-2 lg:auto-cols-fr
-    "
-  >
-        {overallAnalysis.insights?.map((insight, index) => (
-          <Card
-            key={insight.id || index}
-            className="
-              border-l-4 border-l-blue-500
-              transition hover:shadow-xl hover:-translate-y-1
-              duration-200 bg-white rounded-xl cursor-pointer
-              h-full
-            "
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-base sm:text-lg lg:text-xl">
-                  {insight.recommendationTitle}
-                </CardTitle>
-                <Badge className={
-                  insight.impactLevel === "HIGH IMPACT"
-                    ? "bg-red-100 text-red-800 text-center"
-                    : insight.impactLevel === "MEDIUM IMPACT"
-                      ? "bg-yellow-100 text-yellow-800 text-center"
-                      : "bg-blue-100 text-blue-800 text-center"
-                }>
-                  {insight.impactLevel}
-                </Badge>
+            <div className="w-full overflow-x-auto lg:overflow-x-visible">
+              <div className="grid gap-4
+                grid-flow-col grid-rows-1 auto-cols-[85vw] sm:auto-cols-[340px]
+                lg:grid-cols-2 lg:grid-rows-2 lg:auto-cols-fr"
+              >
+                {overallAnalysis.insights?.map((insight, index) => (
+                  <Card
+                    key={insight.id || index}
+                    className="
+                      border-l-4 border-l-blue-500
+                      transition hover:shadow-xl hover:-translate-y-1
+                      duration-200 bg-white rounded-xl cursor-pointer
+                      h-full
+                    "
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="font-bold text-base sm:text-lg lg:text-xl">
+                          {insight.recommendationTitle}
+                        </CardTitle>
+                        <Badge className={
+                          insight.impactLevel === "HIGH IMPACT"
+                            ? "font-medium bg-red-100 text-red-800 text-center"
+                            : insight.impactLevel === "MEDIUM IMPACT"
+                              ? "font-medium bg-yellow-100 text-yellow-800 text-center"
+                              : "font-medium bg-blue-100 text-blue-800 text-center"
+                        }>
+                          {insight.impactLevel}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-4">
+                      <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-600">
+                        {insight.detail}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardHeader>
-            <CardContent className="pb-4">
-              <p className="text-xs sm:text-sm lg:text-base text-gray-600">
-                {insight.detail}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-40">
-              <span className="text-gray-400">No analysis generated yet.</span>
+              <span className="font-bold text-base md:text-lg text-gray-400">No analysis generated yet.</span>
             </div>
           )}
         </CardContent>

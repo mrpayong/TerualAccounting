@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LineChart, Line } from 'recharts';
 import { useFinancialData } from '../_context/FinancialDataContext';
 import { PieChart } from '@mui/x-charts';
+import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
 
 
 
@@ -57,6 +58,11 @@ function useMediaQuery(query) {
 
   return matches;
 }
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows, entryCounts}) => {
 const barChartData = React.useMemo(() => {
@@ -267,92 +273,6 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
 
   return (
     <div>
-      {/* <div className="w-full sm:overflow-x-auto lg:overflow-x-auto grid grid-rows-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className='flex items-center flex-row justify-between px-2 py-2'>
-            <div>
-              <CardHeader className="pb-0 px-4">
-                <CardTitle>
-                  Clients
-                </CardTitle>
-                <CardDescription className="text-xs text-gray-500">
-                  All clients of the firm
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 px-4">
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">{accounts.data.length}</h3>
-              </CardContent>
-            </div>
-            <div className="h-14 w-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-              <Users className="h-8 w-8 text-cyan-600"
-              />
-            </div>
-          </div>
-        </Card>
-        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className='flex items-center flex-row justify-between px-2 py-2'>
-            <div>
-              <CardHeader className="pb-0 px-4">
-                <CardTitle>
-                  Tasks
-                </CardTitle>
-                <CardDescription className="text-xs text-gray-500">
-                  Tasks that need to be done
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 px-4">
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">{tasks.length}</h3>
-              </CardContent>
-            </div>
-            <div className="h-14 w-14 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-              <ListCheck 
-                className="h-8 w-8 text-amber-500"
-              />
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className='flex items-center flex-row justify-between px-2 py-2'>
-            <div>
-              <CardHeader className="pb-0 px-4">
-                <CardTitle>
-                  Today's Entries
-                </CardTitle>
-                <CardDescription className="text-xs text-gray-500">
-                  Entries from all accounts
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 px-4">
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">{transactionsToday}</h3>
-              </CardContent>
-            </div>
-            <div className="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-              <CalendarCheck className='h-8 w-8 text-emerald-600'/>
-            </div>
-          </div>
-        </Card>
-        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className='flex items-center flex-row justify-between px-2 py-2'>
-            <div>
-              <CardHeader className="pb-0 px-4">
-                <CardTitle>
-                  Yesterday's Entries
-                </CardTitle>
-                <CardDescription className="text-xs text-gray-500">
-                  Entries from all accounts
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 px-4">
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">{transactionsYesterday}</h3>
-              </CardContent>
-            </div>
-            <div className="h-14 w-14 bg-violet-200 rounded-full flex items-center justify-center text-violet-600">
-              <CalendarClock className='h-8 w-8 text-violet-700'/>
-            </div>
-          </div>
-        </Card>
-      </div> */}
       {/* <div className="w-full"> */}
         {/* Mobile: horizontal scroll, Desktop: grid */}
         <div className="w-full">
@@ -372,16 +292,16 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
               >
               <div className='flex items-center flex-row justify-between px-2'>
                 <div>
-                    <CardHeader className="pb-0 px-4">
-                      <CardTitle className="text-sm md:text-xl">
+                    <CardHeader className={`${fontZenKaku.className} pb-0 px-4`}>
+                      <CardTitle className="text-sm !font-bold md:text-xl">
                         <span>{card.title}</span>
                       </CardTitle>
-                      <CardDescription className="text-xs text-gray-500">
+                      <CardDescription className="text-sm font-normal tracking-wide text-gray-500">
                         {card.description}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0 px-4">
-                      <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mt-1 break-words">
+                    <CardContent className={`${fontZenKaku.className} pt-0 px-4`}>
+                      <h3 className="text-2xl md:text-4xl font-bold text-gray-900 mt-1 break-words">
                         {card.value}
                       </h3>
                     </CardContent>
@@ -408,37 +328,37 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-stretch">
         {/* Top 5 Income Bar Chart Card */}
         <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300 h-full min-h-[320px] flex flex-col">
-          <CardHeader>
-            <CardTitle>
+          <CardHeader className={`${fontZenKaku.className}`}>
+            <CardTitle className="text-xl !font-bold">
               Top 5 {barType === "INCOME" ? "Income" : "Expense"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm font-normal tracking-wide">
               Account titles across all accounts with largest accumulated amounts.
             </CardDescription>
             <div className="mt-2 flex gap-2">
               <button
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                   barType === "INCOME"
                     ? "bg-green-100 text-green-700"
                     : "bg-gray-100 text-gray-500 hover:bg-green-50"
                 }`}
                 onClick={() => setBarType("INCOME")}
               >
-                Income
+                Show Income
               </button>
               <button
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                   barType === "EXPENSE"
                     ? "bg-red-100 text-red-700"
                     : "bg-gray-100 text-gray-500 hover:bg-red-50"
                 }`}
                 onClick={() => setBarType("EXPENSE")}
               >
-                Expense
+                Show Expense
               </button>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-end">
+          <CardContent className={`${fontZenKaku.className} flex-1 flex flex-col justify-end`}>
             <div className="w-full h-[320px] overflow-x-auto sm:overflow-x-visible">
               <div className="min-w-[500px] sm:min-w-0 h-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -449,7 +369,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="category"
-                    tick={{ fontSize: 14, fill: "#4B5563" }}
+                    tick={{ fontSize: 12, fill: "#4B5563", fontWeight:'500' }}
                     interval={0}
                     angle={-30} // Make labels horizontal
                     textAnchor="end"
@@ -457,7 +377,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                   />
                   <YAxis
                     tickFormatter={(value) => formatAmount(value)}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fontWeight:'500' }}
                   />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -465,9 +385,9 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                         const { accountName, amount } = payload[0].payload;
                         return (
                           <div className="bg-white rounded shadow px-3 py-2 text-xs">
-                            <div className="font-semibold">{accountName}</div>
+                            <div className="font-medium text-base">{accountName}</div>
                             <div>
-                              amount: <span className="font-bold">{formatAmount(amount)}</span>
+                              amount: <span className="font-medium text-base">{formatAmount(amount)}</span>
                             </div>
                           </div>
                         );
@@ -490,13 +410,13 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
 
         {/* Task Summary Card */}
         <Card className="border-none shadow-md overflow-hidden h-full min-h-[320px] flex flex-col">
-          <CardHeader className="bg-white border-b border-gray-100">
-            <CardTitle>Task Summary</CardTitle>
-            <CardDescription>
+          <CardHeader className={`${fontZenKaku.className} bg-white border-b border-gray-100`}>
+            <CardTitle className="text-xl !font-bold">Task Summary</CardTitle>
+            <CardDescription className="text-sm font-normal tracking-wide">
               Quantity of tasks per account with the respect to urgency levels.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-end pt-6 pb-4">
+          <CardContent className={`${fontZenKaku.className} flex-1 flex flex-col justify-end pt-6 pb-4`}>
             <div className="w-full h-[320px] overflow-x-auto sm:overflow-x-visible">
               <div className="min-w-[500px] sm:min-w-0 h-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -506,13 +426,32 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" allowDecimals={false} />
+                    <XAxis type="number" 
+                    tick={{ fontSize: 12, fill: '#4B5563', fontWeight:'500' }}
+                    allowDecimals={false} />
                     <YAxis
                       type="category"
                       dataKey="taskCategory"
-                      tick={{ fontSize: 12, fill: '#4B5563' }}
+                      tick={{ fontSize: 12, fill: '#4B5563', fontWeight:'500' }}
                     />
-                    <Tooltip />
+                      <Tooltip
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white rounded shadow px-3 py-2">
+                                <div className="font-bold text-base mb-1">{label}</div>
+                                {payload.map((entry, idx) => (
+                                  <div key={idx} className="flex justify-between text-base font-medium mb-1">
+                                    <span className='font-meidum text-base' style={{ color: entry.color }}>{entry.name}:</span>
+                                    <span className='font-meidum text-base'>{entry.value}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
                     <Legend />
                     <Bar dataKey="Low" stackId="a" fill="#22c55e" name="Low" />
                     <Bar dataKey="Medium" stackId="a" fill="#fde047" name="Medium" />
@@ -527,15 +466,15 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
 
       {/* Client Financial Summary */}
       <Card className="mb-8 border-none shadow-md overflow-hidden">
-        <CardHeader className="bg-white border-b border-gray-100 pb-2">
+        <CardHeader className={`${fontZenKaku.className} bg-white border-b border-gray-100 pb-2`}>
           <div className="
             flex justify-between 
             flex-col-reverse md:flex-row 
             gap-2 md:gap-0
             items-center">
             <div>
-              <CardTitle className="text-center md:text-start">Client Income Summary</CardTitle>
-              <CardDescription>
+              <CardTitle className="!font-bold text-xl text-center md:text-start">Client Income Summary</CardTitle>
+              <CardDescription className="text-sm font-normal tracking-wide">
                 Semiannual total income per month
               </CardDescription>
             </div>
@@ -543,12 +482,12 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
               value={selectedAccountId}
               onValueChange={setSelectedAccountId}
             >
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="font-medium text-base w-[150px]">
                   <SelectValue placeholder="Select Account"/>
               </SelectTrigger>
               <SelectContent>
                   {accounts.data.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
+                      <SelectItem className='!font-normal text-base' key={account.id} value={account.id}>
                           {account.name} 
                       </SelectItem>
                   ))}
@@ -556,7 +495,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
             </Select>
           </div>
         </CardHeader>
-        <CardContent className="pt-5 pb-4">
+        <CardContent className={`${fontZenKaku.className} pt-5 pb-4`}>
           {/* <div
             className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]"
           > */}
@@ -571,13 +510,29 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fontSize: 12 }}/>
+                    tick={{ fontSize: 12, fontWeight:'500' }}/>
                   <YAxis 
                     tickFormatter={(value) => formatAmount(value)}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fontWeight:'500' }}
                   />
-                  <Tooltip 
-                  formatter={(value) => formatAmount(value)} />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white rounded shadow px-3 py-2">
+                            <div className="font-medium text-base mb-1">{label}</div>
+                            {payload.map((entry, idx) => (
+                              <div key={idx} className="flex justify-between text-base font-medium mb-1">
+                                <span style={{ color: entry.color }}>{entry.name}:</span>
+                                <span>{formatAmount(entry.value)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Legend />
                   <Line 
                     type="monotone" 
@@ -587,8 +542,8 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                     />
                 </LineChart>
               </ResponsiveContainer>) 
-              : (<div className="flex items-center justify-center h-full text-gray-400">
-                  No data available for this account.
+              : (<div className="flex items-center font-bold text-base md:text-lg justify-center h-full text-gray-400">
+                  Select an account to see the incomes.
                 </div>
               )}
             </div>

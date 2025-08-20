@@ -44,7 +44,7 @@ function formatManilaDateTime(dateInput) {
 async function activityLog({userId, action, args, timestamp}){
   
   try {
-    console.log("log function: ", userId, action, args, timestamp)
+    
     const dateTime = formatManilaDateTime(timestamp);
     
     await db.activityLog.create({
@@ -219,6 +219,21 @@ export async function getCashInflow(id) {
   }
 }
 
+
+function getLatestSubAccountTransactionDate(subAccounts) {
+  let dates = [];
+  subAccounts.forEach(subAccount => {
+    subAccount.transactions.forEach(tx => {
+      if (tx.transaction?.date) {
+        dates.push(new Date(tx.transaction.date));
+      }
+    });
+  });
+  if (dates.length === 0) return null;
+  return new Date(Math.max(...dates.map(d => d.getTime())));
+}
+
+
 export async function createCashflow(transactionIds, take, subAccountIds, accountId, data) {
   try {
 
@@ -226,24 +241,23 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
-        where: {clerkUserId: userId},
+      where: {clerkUserId: userId},
     });
 
     if (!user) {
-        throw new Error("User not Found");
+      throw new Error("User not Found");
     }
-    console.log("User found:", user);
 
-
-
-
+    if (user.role !== "STAFF") {
+      throw new Error("Action unavailable.");
+    }
 
     // fetching all transactions
     let transactions = []; // Initialize transactions as an empty array
 
     const beginningBalance = take;
     if (isNaN(beginningBalance) || beginningBalance == 0) {
-      throw new Error("Invalid beginning balance.") 
+      return{code: 403, success:false, message:'Invalid beginning balance.'} 
     }
 
     if (transactionIds && transactionIds.length > 0) {
@@ -254,6 +268,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           userId: user.id,
         },
         take, 
+        orderBy: { date: "desc" },
         select: {
           Activity: true,
           type: true,
@@ -279,9 +294,11 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           name: true,
           balance: true,
           transactions: {
+            orderBy: { transaction: { date: "desc" } },
             select: {
               transaction: {
                 select: {
+                  date: true,
                   Activity: true,
                   type: true,
                 },
@@ -299,44 +316,74 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
     }));
    
 
-    const transactionDates = transactions.map((t) => new Date(t.date));
-    const earliestDate = new Date(Math.min(...transactionDates));
-    const latestDate = new Date(Math.max(...transactionDates));
-    const dateRangeInDays = (latestDate - earliestDate) / (1000 * 60 * 60 * 24);
-
-    let periodCashFlow;
-
-    const earliestMonth = earliestDate.getMonth(); // 0 = Jan, 11 = Dec
-    const latestMonth = latestDate.getMonth();
-    const monthsDiff = Math.abs(latestMonth - earliestMonth) + 1;
-    const isFirstHalf = (month) => month >= 0 && month <= 5;
-    const isSecondHalf = (month) => month >= 6 && month <= 11;
+        let transactionDates = [
+          ...transactions.map((t) => new Date(t.date)),
+          ...subAccounts.flatMap(sa =>
+            sa.transactions.map(tx => new Date(tx.transaction.date)).filter(date => !isNaN(date))
+          )
+        ];
 
 
-        switch (true) {
-          case (monthsDiff === 6 &&(
-              (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
-              (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth)))):
-            periodCashFlow = "SEMI_ANNUAL";
-            break;
-          case dateRangeInDays <= 1:
-            periodCashFlow = "DAILY";
-            break;
-          case dateRangeInDays <= 7:
-            periodCashFlow = "WEEKLY";
-            break;
-          case dateRangeInDays <= 31:
-            periodCashFlow = "MONTHLY";
-            break;
-          case dateRangeInDays >= 365:
-            periodCashFlow = "ANNUAL";
-            break;
-          case dateRangeInDays >= 120:
-            periodCashFlow = "QUARTERLY";
-            break;
-          default:
-            periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
-            break;
+        let earliestDate, latestDate, dateRangeInDays, periodCashFlow;
+        if (transactionDates.length > 0) {
+          earliestDate = new Date(Math.min(...transactionDates));
+          latestDate = new Date(Math.max(...transactionDates));
+          dateRangeInDays = (latestDate - earliestDate) / (1000 * 60 * 60 * 24);
+
+
+          const earliestMonth = earliestDate.getMonth(); // 0 = Jan, 11 = Dec
+          const latestMonth = latestDate.getMonth();
+          const monthsDiff = Math.abs(latestMonth - earliestMonth) + 1;
+          const isFirstHalf = (month) => month >= 0 && month <= 5;
+          const isSecondHalf = (month) => month >= 6 && month <= 11;
+
+
+          switch (true) {
+            case (monthsDiff === 6 &&(
+                (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
+                (isSecondHalf(earliestMonth) && isSecondHalf(latestMonth)))):
+              periodCashFlow = "SEMI_ANNUAL";
+              break;
+            case dateRangeInDays <= 1:
+              periodCashFlow = "DAILY";
+              break;
+            case dateRangeInDays <= 7:
+              periodCashFlow = "WEEKLY";
+              break;
+            case dateRangeInDays <= 31:
+              periodCashFlow = "MONTHLY";
+              break;
+            case dateRangeInDays >= 365:
+              periodCashFlow = "ANNUAL";
+              break;
+            case dateRangeInDays >= 120:
+              periodCashFlow = "QUARTERLY";
+              break;
+            default:
+              periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
+              break;
+          }
+        } else {
+          periodCashFlow = undefined; // Or set a default if needed
+        }
+
+        let cashflowDate = new Date(); // Default to now
+
+        if (periodCashFlow === "MONTHLY") {
+          const latestTransactionDate = transactions.length > 0 ? new Date(transactions[0].date) : null;
+          const latestSubAccountDate = subAccounts.length > 0 ? getLatestSubAccountTransactionDate(subAccounts) : null;
+
+          if (latestTransactionDate && latestSubAccountDate) {
+            // Both exist, pick the closest to now
+            cashflowDate =
+              Math.abs(latestTransactionDate - new Date()) < Math.abs(latestSubAccountDate - new Date())
+                ? latestTransactionDate
+                : latestSubAccountDate;
+          } else if (latestTransactionDate && !latestSubAccountDate) {
+            cashflowDate = latestTransactionDate;
+          } else if (latestSubAccountDate && !latestTransactionDate) {
+            cashflowDate = latestSubAccountDate;
+          }
         }
 
         
@@ -464,59 +511,59 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
                 
                 : 0);
 
-    const totalOperating = OperatingIncomes - OperatingExpenses;
-    const totalInvesting = InvestingIncomes - InvestingExpenses;
-    const totalFinancing = FinancingIncomes - FinancingExpenses;
+      const totalOperating = OperatingIncomes - OperatingExpenses;
+      const totalInvesting = InvestingIncomes - InvestingExpenses;
+      const totalFinancing = FinancingIncomes - FinancingExpenses;
 
 
-    // --- Calculate netChange ---
-    const netChange = totalOperating + totalInvesting + totalFinancing;
-    const endingBalance = beginningBalance + netChange
+      // --- Calculate netChange ---
+      const netChange = totalOperating + totalInvesting + totalFinancing;
+      const endingBalance = beginningBalance + netChange
 
-    const NeededData = transactions.map(transaction => ({
-      ...transaction,
-      amount: parseFloat(transaction.amount), // Convert to string
-      date: format(new Date(transaction.date), 'yyyy-MM-dd HH:mm:ss.SSSS')
-    }));
- 
+      const NeededData = transactions.map(transaction => ({
+        ...transaction,
+        amount: parseFloat(transaction.amount), // Convert to string
+        date: format(new Date(transaction.date), 'yyyy-MM-dd HH:mm:ss.SSSS')
+      }));
+  
 
-    // required outputs:
-    // 1. Total of each Activity type
-    // 2. Net change
-    // 3. beginning balance
-    // 4. ending balance
+      // required outputs:
+      // 1. Total of each Activity type
+      // 2. Net change
+      // 3. beginning balance
+      // 4. ending balance
 
-    // const one = parseFloat(totalOperating.toFixed(3));
-    // const two = parseFloat(totalInvesting.toFixed(3));
-    // const three = parseFloat(totalFinancing.toFixed(3));
+      // const one = parseFloat(totalOperating.toFixed(3));
+      // const two = parseFloat(totalInvesting.toFixed(3));
+      // const three = parseFloat(totalFinancing.toFixed(3));
 
       const newCashflow = await db.cashFlow.create({
-            data: {
-              ...data,
-              activityTotal: [totalOperating, totalInvesting, totalFinancing],
-              netChange: Number(netChange.toFixed(3)),
-              startBalance: Number(beginningBalance.toFixed(3)),
-              endBalance: Number(endingBalance.toFixed(3)),
-              createdAt: new Date(),
-              periodCashFlow,
+        data: {
+          ...data,
+          activityTotal: [totalOperating, totalInvesting, totalFinancing],
+          netChange: Number(netChange.toFixed(3)),
+          startBalance: Number(beginningBalance.toFixed(3)),
+          endBalance: Number(endingBalance.toFixed(3)),
+          createdAt: new Date(),
+          periodCashFlow,
 
-              description: NeededData?.description,
-              date: new Date(),
-              userId: user.id,
-              accountId: accountId,
-              transactions: transactionIds && transactionIds.length > 0 ? {
-                connect: transactionIds.map((id) => ({ id })),
-              } : undefined,
-              subAccounts: subAccountIds && subAccountIds.length > 0 ? {
-                create: subAccountIds.map((id) => ({
-                  subAccount: {
-                    connect: { id },
-                  },
-                })),
-              } : undefined,
-              userId: user?.id,
-            },
-          });
+          description: NeededData?.description,
+          date: cashflowDate,
+          userId: user.id,
+          accountId: accountId,
+          transactions: transactionIds && transactionIds.length > 0 ? {
+            connect: transactionIds.map((id) => ({ id })),
+          } : undefined,
+          subAccounts: subAccountIds && subAccountIds.length > 0 ? {
+            create: subAccountIds.map((id) => ({
+              subAccount: {
+                connect: { id },
+              },
+            })),
+          } : undefined,
+          userId: user?.id,
+        },
+      });
 
 
     
@@ -547,6 +594,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
                     select: {
                       transaction: {
                         select: {
+                          date: true,
                           Activity: true,
                           type: true,
                         }
@@ -614,8 +662,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
     };
   } catch (error) {
     console.error(error.message)
-    throw new Error(error);
-    
+    return {code:500, success:false, message: "Something went wrong. Failed to create cashflow."};
   }
 }
 
@@ -922,10 +969,11 @@ export async function deleteCashflow(cashflowId) {
     if (!user) {
       throw new Error('User not found');
     }
-    console.log('User found:', user);
+    if (user.role !== "STAFF") {
+      throw new Error('Unavailable action.');
+    }
 
     const cfsId = cashflowId
-    console.log('Cashflow IDs:', cfsId);
 
     const cashflow = await db.cashFlow.findUnique({
       where: {
@@ -945,7 +993,7 @@ export async function deleteCashflow(cashflowId) {
     });
 
     if (!cashflow) {
-      throw new Error('Cashflow not found or unauthorized');
+     return {code:404, success:false, message:'Cashflow not found.'}
     }
     const archive = await archiveEntity({
       userId: user.id,
@@ -974,10 +1022,10 @@ export async function deleteCashflow(cashflowId) {
     console.log('Cashflow deleted');
     revalidatePath('/CashflowStatement')
 
-    return { success: true, message: "Cancelled creating Cashflow Statement"};
+    return { code:200, success: true, message: "Cancelled creating Cashflow Statement"};
   } catch (error) {
     console.error('Error cancelling Cashflow creation:', error);
-    return { success: false, error: error.message };
+    return { code:500, success: false, message:'Something went wrong.' };
   }
 }
 

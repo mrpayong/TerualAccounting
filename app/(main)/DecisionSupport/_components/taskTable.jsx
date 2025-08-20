@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { Fab, Tooltip } from "@mui/material";
 import { BarLoader } from "react-spinners";
 import { Input } from "@/components/ui/input";
+import { Zen_Kaku_Gothic_Antique } from "next/font/google";
 
 function getUrgencyBadgeClass(urgency) {
   switch (urgency) {
@@ -62,6 +63,11 @@ function formatManilaDate(dateString) {
   };
   return date.toLocaleDateString("en-PH", options);
 }
+
+const fontZenKaku = Zen_Kaku_Gothic_Antique({
+  subsets:["latin"],
+  weight: ["400", "500", "700", "900"],
+})
 
 const ROWS_PER_PAGE = 5; 
 
@@ -151,6 +157,12 @@ const TaskTable = ({ tasks, accounts }) => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Confirm",
       cancelButtonText: "Cancel",
+      customClass: {
+        title: "font-bold text-xl",   
+        text:'font-normal text-sm',      
+        confirmButton: "font-medium text-base", 
+        cancelButton: "font-medium text-base"
+      },
     });
 
     if (result.isConfirmed) {
@@ -170,6 +182,12 @@ const result = await Swal.fire({
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Delete",
       cancelButtonText: "Cancel",
+      customClass: {
+        title: "font-bold text-xl",   
+        text:'font-normal text-sm',      
+        confirmButton: "font-medium text-base", 
+        cancelButton: "font-medium text-base"
+      },
     });
 
     if (result.isConfirmed) {
@@ -257,15 +275,15 @@ const result = await Swal.fire({
 
 
   return (
-    <div className="w-full">
+    <div className={`${fontZenKaku.className} w-full`}>
       {bulkDeleteLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
       <div className="mt-8">
         <Card className="border-none shadow-md overflow-hidden">
           <CardHeader className="bg-white border-b border-gray-100">
             <div className="flex flex-col lg:flex-row sm:justify-between sm:items-center gap-4">
               <div className="flex flex-col lg:justify-start lg:items-start items-center justify-center">
-                <CardTitle>Task Table</CardTitle>
-                <CardDescription> 
+                <CardTitle className='!font-bold text-xl'>Task Table</CardTitle>
+                <CardDescription className='text-sm font-normal tracking-wide'> 
                   List of current tasks and their status.
                 </CardDescription>
               </div>
@@ -280,26 +298,26 @@ const result = await Swal.fire({
               ">
                 <div>
                   <Select value={filterUrgency} onValueChange={setFilterUrgency}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Urgenct" />
+                    <SelectTrigger className='!font-medium text-base'>
+                      <SelectValue placeholder="Select Urgency" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="HIGH">High</SelectItem>
-                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                        <SelectItem value="LOW">Low</SelectItem>
+                        <SelectItem className='!font-normal text-base' value="HIGH">High</SelectItem>
+                        <SelectItem className='!font-normal text-base' value="MEDIUM">Medium</SelectItem>
+                        <SelectItem className='!font-normal text-base' value="LOW">Low</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Select value={filterAccount} onValueChange={setFilterAccount}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="!font-medium text-base w-[180px]">
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from(new Set(tasks.map(t => t.taskCategory))).map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        <SelectItem className='!font-normal text-base' key={cat} value={cat}>{cat}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -312,27 +330,27 @@ const result = await Swal.fire({
                       placeholder="Search task name"
                       value={searchTask}
                       onChange={e => setSearchTask(e.target.value)}
-                      className="w-[200px] pl-8 text-xs md:w-64 lg:w-50"
+                      className="font-normal !text-base w-[200px] pl-8 md:w-64 lg:w-50"
                     />
                   </div>
                 </div>
                 
-                <div className="flex flex-row gap-2">
-                  <label className="my-1">From:</label>
+                <div className="flex flex-row gap-2 items-center">
+                  <label className="my-1 !font-medium !text-sm">From:</label>
                   <Input
                     htmlFor="dateFilterFrom"
                     type="date"
                     value={filterDateFrom}
                     onChange={e => setFilterDateFrom(e.target.value)}
-                    className="w-[150px]"
+                    className="w-[150px] !font-medium !text-base"
                     placeholder="From"
                     />
-                  <label className="my-1">To:</label>
+                  <label className="my-1 !font-medium !text-sm">To:</label>
                   <Input
                     type="date"
                     value={filterDateTo}
                     onChange={e => setFilterDateTo(e.target.value)}
-                    className="w-[150px]"
+                    className="w-[150px] !font-medium !text-base"
                     placeholder="To"
                   />
                 </div>
@@ -341,6 +359,7 @@ const result = await Swal.fire({
                     type="button"
                     variant="outline"
                     className="border border-rose-600 text-black 
+                    font-medium text-sm md:!text-base
                     hover:bg-rose-600 hover:border-none hover:text-white 
                     ml-2"
                     onClick={handleClearFilters}
@@ -366,17 +385,17 @@ const result = await Swal.fire({
                         aria-label="Select all tasks"
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    <TableHead className="px-4 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       Name
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <TableHead className="px-4 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
                       Task to Account
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <TableHead className="px-4 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
                       Description
                     </TableHead>
                     <TableHead 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer select-none"
+                      className="px-4 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer select-none"
                       onClick={handleDLsetSort}
                     >
                       <span className="flex items-center gap-1">
@@ -396,7 +415,13 @@ const result = await Swal.fire({
                           </Tooltip>
                         )}
                         {deadlineSort === null && (
-                          <Tooltip title="Sort deadlines" arrow>
+                          <Tooltip title="Sort deadlines" 
+                            slotProps={{
+                              tooltip: {
+                                className: "!font-medium !text-sm !tracking-wider", // Tailwind: bold, base size
+                              }
+                            }}
+                          arrow>
                             <span className="w-4 h-4 inline-block opacity-30">
                               <ArrowUpWideNarrow className="w-4 h-4" />
                             </span>
@@ -404,10 +429,10 @@ const result = await Swal.fire({
                         )}
                       </span>
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <TableHead className="px-4 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
                       Urgency
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</TableHead>
+                    <TableHead className="px-4 py-3 text-center text-sm font-bold text-gray-500 uppercase tracking-wider">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="bg-white divide-y divide-gray-200">
@@ -428,27 +453,33 @@ const result = await Swal.fire({
                             aria-label="Select task"
                           />
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                        <TableCell className="px-4 py-4 text-base font-medium text-gray-900 whitespace-nowrap">
                           {task.taskName}
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-sm text-gray-600">
+                        <TableCell className="px-4 py-4 text-base font-medium text-gray-600">
                           {task.taskCategory}
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-sm text-gray-600">
+                        <TableCell className="px-4 py-4 text-base font-medium text-gray-600">
                           {task.taskDescription}
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                        <TableCell className="px-4 py-4 text-base font-medium text-gray-600 whitespace-nowrap">
                           {task.dueDate
                             ? new Date(task.dueDate).toLocaleDateString()
                             : "-"}
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-sm">
-                          <Badge className={getUrgencyBadgeClass(task.urgency)}>
+                        <TableCell className="px-4 py-4 ">
+                          <Badge className={getUrgencyBadgeClass(task.urgency) + ` text-sm font-medium`}>
                             {task.urgency}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-4 py-4 text-center">
-                          <Tooltip title="Delete this task" arrow>
+                          <Tooltip title="Delete this task" 
+                          slotProps={{
+                            tooltip: {
+                              className: "!font-medium !text-sm !tracking-wider", // Tailwind: bold, base size
+                            }
+                          }}
+                          arrow>
                             <button
                               aria-label="Delete task"
                               onClick={() => handleSingleDelete(task.id)}
@@ -465,7 +496,7 @@ const result = await Swal.fire({
                     <TableRow>
                       <TableCell
                         colSpan={7}
-                        className="text-center py-8 text-gray-400"
+                        className="text-center py-8 text-base font-medium text-gray-400"
                       >
                         No tasks found.
                       </TableCell>
@@ -477,7 +508,7 @@ const result = await Swal.fire({
 
             {tasks.length > 5 && (
               <div className="flex justify-between items-center px-4 py-2">
-                <span className="text-sm text-gray-500">
+                <span className="font-medium text-base text-gray-500">
                   Page {currentPage} of {totalPages}
                 </span>
                 <div className="flex gap-2">
@@ -511,6 +542,7 @@ const result = await Swal.fire({
                 hover:text-white text-black
                 border border-black hover:border-0
                 hover:shadow-lg hover:shadow-black/20
+                font-medium text-base tracking-wide
                 !rounded-button whitespace-nowrap cursor-pointer">
                   <Plus/> Add New Task
                 </Button>
@@ -529,7 +561,7 @@ const result = await Swal.fire({
                     <DialogTitle className="text-3xl font-bold text-center">
                       Add Task
                     </DialogTitle>
-                    <DialogDescription className="text-center text-gray-500 mb-4">
+                    <DialogDescription className="font-normal text-sm tracking-wide text-center text-gray-500 mb-4">
                       Fill out the form below to add a new task.
                     </DialogDescription>
                   </DialogHeader>
@@ -543,7 +575,13 @@ const result = await Swal.fire({
         </Card>
         {selectedIds.length > 0 && (
           <div className="fixed bottom-8 right-8 z-50 flex items-center">
-            <Tooltip title={`Delete ${selectedIds.length} selected task${selectedIds.length > 1 ? "s" : ""}`} arrow>
+            <Tooltip 
+              slotProps={{
+                tooltip: {
+                  className: "!font-medium !text-sm !tracking-widest", // Tailwind: bold, base size
+                  }
+              }}
+              title={`Delete ${selectedIds.length} selected task${selectedIds.length > 1 ? "s" : ""}`} arrow>
               <span>
                   <Fab
                     color="error"
