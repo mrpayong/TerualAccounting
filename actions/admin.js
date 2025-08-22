@@ -782,7 +782,9 @@ export async function getArchives(accountId){
         if(!user){
             return { success: false, error: "Data Unavailable." };
         }
-
+        if(user.role !== "STAFF"){
+            return { success: false, error: "Data Unavailable." };
+        }
         const archives = await db.archive.findMany({
             where:{ 
                 userId: user.id,

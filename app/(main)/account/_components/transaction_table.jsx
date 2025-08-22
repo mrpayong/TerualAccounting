@@ -360,7 +360,7 @@ const rowsPerPage = 10; // Default rows per page
 
 
     const handleSample = (event) => {
-            setResponse(event.target.value)
+      setResponse(event.target.value)
     }
 
 
@@ -408,7 +408,11 @@ const rowsPerPage = 10; // Default rows per page
           toast.error("Invalid beginning balance.");
         }
         if(forCfs?.code === 500 && forCfs.success === false){
-          toast.error("Something went wrong. Failed to create cashflow..");
+          toast.error("Something went wrong. Failed to create cashflow.");
+        }
+        if(forCfs?.code === 422 && forCfs.success === false){
+          console.log('message: ', forCfs.message)
+          toast.error("Ensure groups have transactions. An empty group was selected.");
         }
       }, [forCfs]);
      
@@ -1871,7 +1875,7 @@ const handleEditTransaction = (transactionId) => {
                                   <label className='!font-bold !text-medium md:!text-lg'>Name:</label> {subAccount.name}
                                 </p>
                                 <p className="font-medium text-base text-gray-700">
-                                  <label className='!font-bold !text-medium md:!text-lg'>Balance:</label> {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
+                                  <label className='!font-bold !text-medium md:!text-lg'>Amount:</label> {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
                                 </p>
                                 <p className="font-medium text-base text-gray-700">
                                   <label className='!font-bold !text-medium md:!text-lg'>Parent of:</label> {`${subAccount.children.length} groups` || "No child group"}

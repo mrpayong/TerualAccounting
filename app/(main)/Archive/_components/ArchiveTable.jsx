@@ -69,8 +69,6 @@ function formatManilaDate(dateInput) {
 
 
 const ArchiveTable = ({archives}) => {
-    console.log("archives", archives);
-
     const formatTableAmount = (amount) => {
     return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -78,7 +76,11 @@ const ArchiveTable = ({archives}) => {
     }).format(amount);
     };
 
-     const archiveList = Array.isArray(archives?.data) ? archives.data : [];
+    const archiveList = Array.isArray(archives?.data) ? archives.data : [];
+    
+    const filteredArchiveList = archiveList.filter(item =>
+        !(item.entityType === "Group Transaction" && item.action !== "deleteSubAccount")
+    );
 
   // State for pagination and filtering
   const [page, setPage] = useState(1);
@@ -108,7 +110,7 @@ const handleSort = (field) => {
 
   // Filtering logic
   const filteredArchives = useMemo(() => {
-    let result = archiveList.filter((item) => {
+    let result = filteredArchiveList.filter((item) => {
       if (!item.createdAt) return false;
       const created = new Date(item.createdAt);
       const from = fromDate ? new Date(fromDate) : null;
@@ -138,6 +140,7 @@ const handleSort = (field) => {
     page * ITEMS_PER_PAGE
   );
 
+  console.log("archives", archives)
   // Handlers
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
@@ -155,8 +158,6 @@ const handleSort = (field) => {
   setToDate("");
   setPage(1);
 };
-
-
 
 
 
@@ -252,17 +253,19 @@ const handleSort = (field) => {
                         : "-"}
                   </TableCell>
                   <TableCell className='font-normal !text-base'>
-                    {item.data?.name || item.data?.particular
-                        ? item.data?.particular 
-                        : item.data?.name
-                            ? "no data"
-                            : item.data?.description
+                    {item.entityType === "Group Transaction"
+                      ? item.data.name || "no data"
+                      : item.entityType === "Transaction"
+                        ? item.data.particular || item.data.description || "no data"
+                        : "no data"
                     }
                   </TableCell>
                   <TableCell className='font-normal !text-base'>
                     {(() => {
                         switch (item.action) {
                           case "deleteTransaction":
+                            return "Deleted Transaction";
+                          case "bulkDeleteTransaction":
                             return "Deleted Transaction";
                           case "deleteSubAccount":
                             return "Deleted Group Transactions";

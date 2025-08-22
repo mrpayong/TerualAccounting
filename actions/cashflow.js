@@ -308,6 +308,19 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
         },
       });
     }
+
+    if (subAccounts && subAccounts.length > 0) {
+      const subAccountWithoutTransactions = subAccounts.find(sa =>
+        !sa.transactions || sa.transactions.length === 0
+      );
+      if (subAccountWithoutTransactions) {
+        return {
+          code: 422,
+          success: false,
+          message:`An empty group is selected for creating cashflow, ensure groups have transaction.`,
+        };
+      }
+    }
     
 
     const TransactionformattedAmount = transactions.map((transaction) => ({

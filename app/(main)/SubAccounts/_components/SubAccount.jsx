@@ -280,7 +280,7 @@ const totalAmount = getTotalAmount(subAccount);
                 <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
                   {subAccount.transactions.map((transaction) => (
                     <li className="list-none grid grid-cols-3 justify-center py-2" key={transaction.id}>
-                      <p className="font-medium text-base text-start ml-2">{transaction.description}</p>
+                      <p className="font-medium text-base text-start ml-2">{transaction.particular || transaction.description}</p>
                       <p className="font-medium text-base text-center">{formatAmount(transaction.amount)}</p>
                       <p className="text-center mr-2">
                       <button 

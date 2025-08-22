@@ -221,7 +221,7 @@ export async function bulkDeleteTransactions(transactionIds, accountId) {
       for (const transaction of transactions) {
         const log = await archiveEntity({
           userId: user.id,
-          accountId: transaction.accountId,
+          accountId: accountId,
           action: "bulkDeleteTransaction",
           entityType: "Transaction",
           entityId: transaction.id,
@@ -408,6 +408,7 @@ async function updateParentBalancesInTransaction(subAccountId, balanceChange, vi
   }
 }
 
+
 export async function createSubAccount(transactionIds, data, id) {
   try {
     // Authenticate the user (maintaining authorization)
@@ -451,6 +452,7 @@ export async function createSubAccount(transactionIds, data, id) {
         userId: user.id,
       },
       select: {
+        id: true,
         refNumber: true,
         amount: true,
         type: true,
@@ -458,7 +460,6 @@ export async function createSubAccount(transactionIds, data, id) {
         accountId: true,
       },
     });
-    console.log("transactions: ", transactions)
     // Transaction type and Activity type consistency validations
         // validate transcations to have same transaction type
     const validationResult = validateTransactionTypes(transactions);
@@ -653,6 +654,7 @@ export async function createSubAccount(transactionIds, data, id) {
     }
     console.log("subAccountCreated: ",subAccountCreated)
     if (subAccountCreated.code === 500){
+      //transaction already related to group
       console.log("error message: ", subAccountCreated.message)
       return{success: false, code:500, message:subAccountCreated.message}
     }
