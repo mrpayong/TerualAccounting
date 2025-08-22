@@ -347,8 +347,6 @@ async function validateParentSubAccount(data) {
 }
 
 async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAccount){
-  console.log("[5.4] Creating Sub Account")
-  console.log("[5.4]", data, balanceFloat, isValidateParentSubAccount)
   // Instances to create: 
   //    A. Parent account creation
   //    B. Child inserting to Parent Account
@@ -357,7 +355,6 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
   // skip [5.1] parent matching and [5.2] Parent and Passed Data, Activity matching
   try {
      if (isValidateParentSubAccount === false || data.name){
-        console.log("[5.4] Passed In data attaching")
         const subAccount = await db.subAccount.create({
           data: {
             name: data.name,
@@ -366,12 +363,9 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
             accountId: data.accountId,
           },
         });
-        console.log("Sub-account created:", subAccount);
         return {success: true, subAccount: subAccount, code:200, message: "New Group Created."};
       } else {
-        console.log("[5.4] No New Sub Account created")
-        console.log("[5.4] Inserting transactions to existing Parent Sub Account only.")
-        console.log("Exit [5.4]", data)
+        console.log("[5.4] No New Sub Account created. Inserting only")
         return {success:true, subAccount:data, code:201, message:"Inserting transactions to existing Parent Group only."};
       } 
     
@@ -409,7 +403,9 @@ async function updateParentBalancesInTransaction( subAccountId, balanceChange, v
 
   if (parentRelation && parentRelation.parentId && parentRelation.parentId !== null) {
     await updateParentBalancesInTransaction(parentRelation.parentId, balanceChange, visited);
-  } 
+  } else {
+    return {code:205, message:'all parents updated'}
+  }
 }
 
 export async function createSubAccount(transactionIds, data, id) {
@@ -490,7 +486,6 @@ export async function createSubAccount(transactionIds, data, id) {
 
     // Use a transaction to ensure all operations succeed or fail together
     const subAccountCreated = await db.$transaction(async (tx) => {
-      console.log("[5]parent checking")
       const parentSubAccountValidated = await validateParentSubAccount(data) // ------> db.subAccount.findFirst
       // return error message if inputted parentName is non-existent
       if(parentSubAccountValidated.success === true && parentSubAccountValidated.code === 200){
@@ -507,7 +502,6 @@ export async function createSubAccount(transactionIds, data, id) {
 
 
 
-      console.log("[5.2]Parent and transac, Activity matching") 
       //if parent sub account exist 
       // check if the Activity type of transactions in the parent sub account matches with the passed in transactions
       if (parentSubAccountValidated.success === true && transactionIds && transactionIds.length > 0) {
@@ -549,7 +543,6 @@ export async function createSubAccount(transactionIds, data, id) {
         // return { success: true, parentSubAccount: parentSubAccount }; 
       }
 
-      console.log("[5.3]Parent and transac, type matching") 
       if (parentSubAccountValidated.success === true && transactionIds && transactionIds.length > 0) {
           const parentTransactions = await tx.subAccountTransaction.findMany({
           where: { subAccountId: parentSubAccount.id },
@@ -641,8 +634,12 @@ export async function createSubAccount(transactionIds, data, id) {
       }
 
       if(parentSubAccountValidated.success === true){
-        console.log("[5.7]Update Parent Sub Account Balance")
-        await updateParentBalancesInTransaction(parentSubAccount.id, balanceFloat);
+        console.log("[5.7]Update Parent group Balance")
+        const updatedBal = await updateParentBalancesInTransaction(parentSubAccount.id, balanceFloat);
+        if(updatedBal?.code === 205){
+          console.log('update msg:', updatedBal.message)
+          return{success:true, code:200, message:"Proccessing Group Success"}
+        }
       } else {
         console.log("[5.7] No Parent group to update")
       }
