@@ -365,7 +365,6 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
         });
         return {success: true, subAccount: subAccount, code:200, message: "New Group Created."};
       } else {
-        console.log("[5.4] No New Sub Account created. Inserting only")
         return {success:true, subAccount:data, code:201, message:"Inserting transactions to existing Parent Group only."};
       } 
     
@@ -379,6 +378,7 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
 // Helper function to recursively update parent balances within a transaction
 async function updateParentBalancesInTransaction( subAccountId, balanceChange, visited = new Set()) {
   // Prevent infinite recursion with circular references
+  console.log('update balance on going')
   if (visited.has(subAccountId)) {
     return;
   }
@@ -632,21 +632,10 @@ export async function createSubAccount(transactionIds, data, id) {
         console.log("This is mother account. No Sub Account Relations created")
         // return {success: true, parentSubAccount: parentSubAccount}
       }
-
-      if(parentSubAccountValidated.success === true){
-        console.log("[5.7]Update Parent group Balance")
-        const updatedBal = await updateParentBalancesInTransaction(parentSubAccount.id, balanceFloat);
-        if(updatedBal?.code === 205){
-          console.log('update msg:', updatedBal.message)
-          return{success:true, code:200, message:"Proccessing Group Success"}
-        }
-      } else {
-        console.log("[5.7] No Parent group to update")
-      }
-     return{success:true, code:200, message:"Proccessing Group Success"}
+     return{success:true, code:200, message:"Proccessing Group Success", id:parentSubAccount.id, balanceFloat:balanceFloat}
     });
 
-      const createdSubAccount = [data, transactions]
+    const createdSubAccount = [data, transactions]
     const updateLog = await activityLog({
       userId: user.id,
       action: "createSubAccount",
@@ -689,8 +678,17 @@ export async function createSubAccount(transactionIds, data, id) {
       
       console.log("[5.8] Success Creating")
 
-      return {success: true, code:subAccountCreated.code, message:subAccountCreated.message}
-  } catch (error) {
+    if (subAccountCreated?.code === 200) {
+      const updateParents = await updateParentBalancesInTransaction(
+        subAccountCreated.id,
+        subAccountCreated.balanceFloat
+      );
+      if (updateParents?.code === 205) {
+        console.log("[5.9]: ", updateParents.message);
+        return {success: true, code:subAccountCreated.code, message:subAccountCreated.message}
+      }
+    }
+   } catch (error) {
     console.error("Error creating sub-account:", error.message);
     return {success: false, code:505, message:"Error Creating Group."}
   }
