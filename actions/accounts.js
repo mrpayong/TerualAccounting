@@ -376,7 +376,7 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
 
 
 // Helper function to recursively update parent balances within a transaction
-async function updateParentBalancesInTransaction( subAccountId, balanceChange, visited = new Set()) {
+async function updateParentBalancesInTransaction(subAccountId, balanceChange, visited = new Set()) {
   // Prevent infinite recursion with circular references
   console.log('update balance on going')
   if (visited.has(subAccountId)) {
@@ -678,7 +678,7 @@ export async function createSubAccount(transactionIds, data, id) {
       
       console.log("[5.8] Success Creating")
 
-    if (subAccountCreated?.code === 200) {
+    if (subAccountCreated?.code === 200 && subAccountCreated.id) {
       const updateParents = await updateParentBalancesInTransaction(
         subAccountCreated.id,
         subAccountCreated.balanceFloat
@@ -687,6 +687,8 @@ export async function createSubAccount(transactionIds, data, id) {
         console.log("[5.9]: ", updateParents.message);
         return {success: true, code:subAccountCreated.code, message:subAccountCreated.message}
       }
+    } else {
+      return {success: true, code:subAccountCreated.code, message:subAccountCreated.message}
     }
    } catch (error) {
     console.error("Error creating sub-account:", error.message);
