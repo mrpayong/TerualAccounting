@@ -310,14 +310,14 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
     }
 
     if (subAccounts && subAccounts.length > 0) {
-      const subAccountWithoutTransactions = subAccounts.find(sa =>
+      const emptySubAccount = subAccounts.find(sa =>
         !sa.transactions || sa.transactions.length === 0
       );
-      if (subAccountWithoutTransactions) {
+      if (emptySubAccount) {
         return {
           code: 422,
           success: false,
-          message:`An empty group is selected for creating cashflow, ensure groups have transaction.`,
+          message: `A selected group was empty. Please select only sub accounts with transactions.`,
         };
       }
     }
