@@ -209,7 +209,7 @@ export async function getActivityLogs() {
                 }
             },
             orderBy: {createdAt: "desc"},
-            take: 100,
+            take: 200,
         })
 
         
@@ -334,7 +334,6 @@ function formatToPhilippinesTime(isoString) {
 
 export async function UserSessionLogging({action, args, result, timestamp}) {
     try {
-        console.log("Checking log enties: ", action, args)
         if (!action || !args) {
             throw new UnauthorizedError("No actual session ongoing, secure database now.");
         }
@@ -526,10 +525,10 @@ export async function getCountCFS() {
             data: activityCount
         }
     } catch (error) {
-        console.error("Error retrieving activity logs:", error);
+        console.error("Error retrieving CFS count:", error);
         return {
             success: false,
-            error: "An unexpected error occurred while retrieving activity logs.",
+            error: "An unexpected error occurred while retrieving CFS count.",
         };
     }
 }
@@ -605,44 +604,44 @@ export async function getCountTransactions() {
 
 export async function getUserAccount() {
     try {
-            const {userId} = await auth();
-            if (!userId) throw new Error("Unauthorized");
+        const {userId} = await auth();
+        if (!userId) throw new Error("Unauthorized");
 
-            const user = await db.user.findUnique({
-                where: {clerkUserId: userId},
-            });
+        const user = await db.user.findUnique({
+            where: {clerkUserId: userId},
+        });
 
-            if (!user) {
-                throw new Error("User not Found");
-            }
-            if (user.role !== "ADMIN") {
-                throw new Error("Unavailable data.");
-            }
+        if (!user) {
+            throw new Error("User not Found");
+        }
+        if (user.role !== "ADMIN") {
+            throw new Error("Unavailable data.");
+        }
 
-            //to find acc
-            const accounts = await db.account.findMany({
-                orderBy: { createdAt: "desc" }, //order by descending to when the acc is created
-                include: { //include the count of all transacs
-                    _count: {   
-                        select: {
-                            transactions: true,
-                        },
-                    },
-                    user: {
-                        select: {
-                            id: true,
-                            Fname: true,
-                            Lname: true,
-                            role: true,
-                        }
+        //to find acc
+        const accounts = await db.account.findMany({
+            orderBy: { createdAt: "desc" }, //order by descending to when the acc is created
+            include: { //include the count of all transacs
+                _count: {   
+                    select: {
+                        transactions: true,
                     },
                 },
-            });
+                user: {
+                    select: {
+                        id: true,
+                        Fname: true,
+                        Lname: true,
+                        role: true,
+                    }
+                },
+            },
+        });
 
-            const serializedAccount = accounts.map(serializeTransaction); //for every transac, serializeTransaction function will run
+        const serializedAccount = accounts.map(serializeTransaction); //for every transac, serializeTransaction function will run
 
-            return {success: true, data: serializedAccount}; 
-            // return serializedAccount;
+        return {success: true, data: serializedAccount}; 
+        // return serializedAccount;
     } catch (error) {
         console.error("Data is unavailable. Query failed.")
         return new Response("Data is unavailable. Query failed.", { status: 500 });

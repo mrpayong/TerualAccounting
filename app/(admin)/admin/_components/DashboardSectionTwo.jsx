@@ -37,6 +37,35 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 
 const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
+
+  const numberFormatter = new Intl.NumberFormat('en-US');
+
+  function formatAccountType(type) {
+    switch (type) {
+      case "INCORPORATION":
+        return "Incorporation";
+      case "PARTNERSHIP":
+        return "Partnership";
+      case "COOPERATIVE":
+        return "Cooperative";
+      case "ASSOCIATION":
+        return "Association";
+      case "CORPORATION":
+        return "Corporation";
+      case "FREELANCE":
+        return "Freelance";
+      case "PROFESSIONAL":
+        return "Professional";
+      case "SOLEPROPRIETORSHIP":
+        return "Sole Proprietorship";
+      case "OTHERS":
+        return "Others";
+      default:
+        return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    }
+  }
+
+
   return (
     <div className={`${fontZenKaku.className} grid grid-cols-1 md:grid-cols-2 gap-6 w-full`}>
       {/* Area Chart Card */}
@@ -62,10 +91,22 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
                   <YAxis
                     allowDecimals={false}
                     tick={{ fontSize: 12 }}
+                    tickFormatter={value => numberFormatter.format(value)}
                   />
                   <RechartsTooltip
-                    contentStyle={{ fontSize: 14, fontWeight: 500  }}
-                    formatter={(value) => [`${value}`, 'Transactions']}
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-3 rounded shadow text-base font-medium">
+                            <div>{label}</div>
+                            <div className="text-blue-600">
+                              Transactions : {numberFormatter.format(payload[0].value)}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <CartesianGrid strokeDasharray="3 3" />
                   <Area
@@ -109,18 +150,15 @@ const DashboardSectionTwo = ({ lineChartData, pieChartData }) => {
                 align="center"
                 iconType="circle"
                 wrapperStyle={{ fontSize: 13, fontWeight: 500  }}
-                formatter={(value) =>
-                  value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
-                }
+                formatter={formatAccountType}
               />
               <RechartsTooltip
                 content={({ payload }) => {
                   if (!payload || !payload.length) return null;
                   const { type, count } = payload[0].payload;
-                  const typeLabel = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
                   return (
                     <div className="bg-white p-2 rounded shadow text-sm font-medium">
-                      {`${typeLabel}: ${count} account${count > 1 ? 's' : ''}`}
+                      {`${formatAccountType(type)}: ${count} account${count > 1 ? 's' : ''}`}
                     </div>
                   );
                 }}

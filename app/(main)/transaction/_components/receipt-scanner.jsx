@@ -43,7 +43,7 @@ const ReceiptScanner = ({onScanComplete, scannedReceipt, ScannerUserId}) => {
         }
         if(scannedData?.code === 500) {
             fileInputRef.current.value = "";
-            toast.error("Scanning rate limit might be reached.");
+            toast.error("Scanning rate limit might be reached. Try again later.");
             return;
         }
     }, [scannedData]);

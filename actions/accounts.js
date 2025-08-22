@@ -385,7 +385,6 @@ async function createSubAccountHelper(data, balanceFloat, isValidateParentSubAcc
 // Helper function to recursively update parent balances within a transaction
 async function updateParentBalancesInTransaction( subAccountId, balanceChange, visited = new Set()) {
   // Prevent infinite recursion with circular references
-  console.log("updateParentBalancesInTransaction[5.7]", subAccountId,"[5.7]", balanceChange, visited)
   if (visited.has(subAccountId)) {
     return;
   }
@@ -406,12 +405,10 @@ async function updateParentBalancesInTransaction( subAccountId, balanceChange, v
   const parentRelation = await db.subAccountRelation.findFirst({
     where: { childId: subAccountId },
     select: { parentId: true }
-  });
-  console.log("[5.7] parent relation found")
-  // If there's a parent, update it recursively
+  });// If there's a parent, update it recursively
 
   if (parentRelation && parentRelation.parentId && parentRelation.parentId !== null) {
-    await updateParentBalancesInTransaction( parentRelation.parentId, balanceChange, visited);
+    await updateParentBalancesInTransaction(parentRelation.parentId, balanceChange, visited);
   } 
 }
 
@@ -1040,7 +1037,7 @@ export async function deleteSubAccount(subAccountId, accountId) {
       throw new Error("Unavailable action");
     }
 
-    console.log("[2] Fetching group");
+    console.log("[2] Fetching group", subAccountId);
     const subAccount = await db.subAccount.findUnique({
       where: { id: subAccountId },
       select: {

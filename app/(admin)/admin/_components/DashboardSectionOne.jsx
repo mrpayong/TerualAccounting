@@ -76,6 +76,9 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
     Icon: BookUser,
   },
 ]
+
+const numberFormatter = new Intl.NumberFormat('en-US');
+
   return (
     <div className={`${fontZenKaku.className} mb-6`}>
       {/* Mobile: Carousel */}
@@ -94,7 +97,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="text-3xl font-bold text-slate-900">
-                          {card.value}
+                          {numberFormatter.format(card.value)}
                         </h3>
                       </div>
                       <div className={`h-14 w-14 ${card.iconBg} rounded-full flex items-center justify-center`}>
@@ -131,7 +134,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="text-4xl font-bold text-slate-900">
-                          {card.value}
+                          {numberFormatter.format(card.value)}
                         </h3>
                       </div>
                       <div className={`h-12 w-12 ${card.iconBg} rounded-full flex items-center justify-center`}>
@@ -163,7 +166,7 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900">
-                    {card.value}
+                    {numberFormatter.format(card.value)}
                   </h3>
                   <p className={`font-normal text-sm flex items-center mt-1 ${card.changeColor}`}>
                     {card.change}

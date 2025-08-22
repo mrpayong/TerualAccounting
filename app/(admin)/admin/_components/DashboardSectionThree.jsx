@@ -86,7 +86,7 @@ function getActionLabel(action) {
     case "updateClientInfo":
       return "Edited Client Information";
     case "deleteSubAccount":
-      return "Deleted a Group transaction";
+      return "Deleted a Group Transaction";
     case "deleteCashflowStatement":
       return 'Deleted Cashflow Statement';
     case 'udpateNetChange':

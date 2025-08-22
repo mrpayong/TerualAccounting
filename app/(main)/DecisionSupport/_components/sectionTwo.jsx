@@ -99,11 +99,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 })
 
 const SectionTwo = ({ accounts, transactions }) => {
-    const financialChartRef = useRef(null);
-    const cashFlowChartRef = useRef(null);
-    const [selectedClient, setSelectedClient] = useState("all");
-    const [addNew, setAddNew] = useState(false);
-    const [users, setUsers] = useState([]);
+
 
     const formatAmount = (amount) => {
       return new Intl.NumberFormat("en-US", {
@@ -120,16 +116,7 @@ const SectionTwo = ({ accounts, transactions }) => {
     };
 
 
-  const [cashFlowData, setCashFlowData] = useState([
-    { week: "Week 1", cashIn: 120, cashOut: 220, balance: 150 },
-    { week: "Week 2", cashIn: 132, cashOut: 182, balance: 232 },
-    { week: "Week 3", cashIn: 101, cashOut: 191, balance: 201 },
-    { week: "Week 4", cashIn: 134, cashOut: 234, balance: 154 },
-    { week: "Week 5", cashIn: 90, cashOut: 290, balance: 190 },
-    { week: "Week 6", cashIn: 230, cashOut: 330, balance: 330 },
-    { week: "Week 7", cashIn: 210, cashOut: 310, balance: 410 },
-    { week: "Week 8", cashIn: 240, cashOut: 320, balance: 340 },
-  ]);
+
 
 
 
@@ -213,59 +200,71 @@ const getPhilippinesDate = () => {
   const AIgenerateSchedHandler = async () => {
     try {
      await AIschedulingFn();
-    
-    // You can add toast or UI feedback here if needed
-  } catch (error) {
-    console.error("Error generating schedule:", error);
-    toast.error("Failed to generate AI schedule.");
-  }
+      
+      // You can add toast or UI feedback here if needed
+    } catch (error) {
+      console.error("Error generating schedule:", error);
+      toast.error("Failed to generate AI schedule.");
+    }
   }
 
   useEffect(() => {
-    if (AIschedData) {
+    if (AIschedData?.code === 200) {
       console.log("AI Schedule Data:", AIschedData);
       toast.success("AI schedule generated successfully.");
     }
   }, [schedLoading, AIschedData])
 
+  useEffect(() => {
+    if (AIschedData?.code === 500) {
+      console.log("Error:", AIschedData.message);
+      toast.error("AI request quota limit might have been reached. Try again later.");
+    }
+    if (AIschedData?.code === 501) {
+      console.log("Error:", AIschedData.message);
+      toast.error("Failed to generate suggested schedule. Try again.");
+    }
+  }, [AIschedData])
+
 
   
-function mapAIScheduleToWeekDays(AIschedData) {
-    const today = new Date();
-    const startDay = getStartOfWeekPH(today);
-    return daysOfWeek.map((day, i) => {
-      const date = addDaysPH(startDay, i);
-      const aiTasks = (AIschedData?.[day] || []).map((task, idx) => ({
-        id: task.taskId || `ai-task-${day}-${idx}`,
-        description: task.taskDescription || "no description",
-        taskName: task.taskName || "No task Name",
-        time: task.dueDate ? formatTimePH(new Date(task.dueDate)) : "no due date",
-        color:
-          task.urgency === "HIGH"
-            ? "bg-red-100 text-red-800"
-            : task.urgency === "MEDIUM"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-blue-100 text-blue-800",
-          urgencyLabel:
+  function mapAIScheduleToWeekDays(AIschedData) {
+      const today = new Date();
+      const startDay = getStartOfWeekPH(today);
+      const scheduleData = AIschedData?.schedule || {};
+      return daysOfWeek.map((day, i) => {
+        const date = addDaysPH(startDay, i);
+        const aiTasks = (scheduleData?.[day] || []).map((task, idx) => ({
+          id: task.taskId || `ai-task-${day}-${idx}`,
+          description: task.taskDescription || "no description",
+          taskName: task.taskName || "No task Name",
+          time: task.dueDate ? formatTimePH(new Date(task.dueDate)) : "no due date",
+          color:
             task.urgency === "HIGH"
-              ? "High Priority"
+              ? "bg-red-100 text-red-800"
               : task.urgency === "MEDIUM"
-                ? "Medium Priority"
-                : "Low Priority",
-      }));
-      return {
-        date,
-        dayName: day.slice(0, 3),
-        dayNumber: date.getDate().toString(),
-        isToday: date.toLocaleDateString("en-US", { timeZone: "Asia/Manila" }) === today.toLocaleDateString("en-US", { timeZone: "Asia/Manila" }),
-        tasks: aiTasks,
-      };
-    });
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-blue-100 text-blue-800",
+            urgencyLabel:
+              task.urgency === "HIGH"
+                ? "High Priority"
+                : task.urgency === "MEDIUM"
+                  ? "Medium Priority"
+                  : "Low Priority",
+        }));
+        return {
+          date,
+          dayName: day.slice(0, 3),
+          dayNumber: date.getDate().toString(),
+          isToday: date.toLocaleDateString("en-US", { timeZone: "Asia/Manila" }) === today.toLocaleDateString("en-US", { timeZone: "Asia/Manila" }),
+          tasks: aiTasks,
+        };
+      });
   }
 
   // --- WHICH WEEKDAYS TO DISPLAY ---
   const displayedWeekDays = useMemo(() => {
-    if (AIschedData && typeof AIschedData === "object") {
+    if (AIschedData && typeof AIschedData === "object" && AIschedData?.code === 200) {
       return mapAIScheduleToWeekDays(AIschedData);
     }
     // fallback to static demo data if no AI data yet
@@ -286,7 +285,7 @@ function mapAIScheduleToWeekDays(AIschedData) {
     const aiInsight = AIschedData?.insight || "Click generate for an insight.";
 
 
-const [isResponsive, setIsResponsive] = useState(true);
+  const [isResponsive, setIsResponsive] = useState(true);
  const sizingProps = isResponsive ? {} : { width: 500, height: 300 };
 
 
@@ -312,66 +311,93 @@ const [isResponsive, setIsResponsive] = useState(true);
 
   const [forecastLoading, setForecastLoading] = useState(false)
   const cfsForecastHandler = async () => {
-     if (!selectedAccountId) {
-      toast.error("Please select an account first.");
-      return;
+      if (!selectedAccountId) {
+        toast.error("Please select an account first.");
+        return;
+      }
+      setForecastLoading(true);
+      setOverallAnalysisLoading(true);
+      try {
+      
+      await cfsForecastFn(selectedAccountId);
+      await inflowOutflowfn(selectedAccountId);
+
+    } catch (error) {
+      setOverallAnalysisLoading(false);
+      setForecastLoading(false);      
+      console.error("Error generating schedule:", error);
+      toast.error("Failed to generate Forecast.");
     }
-    setForecastLoading(true);
-    setOverallAnalysisLoading(true);
-    try {
-     
-     await cfsForecastFn(selectedAccountId);
-     await inflowOutflowfn(selectedAccountId);
-      await overallFinancialDataFn(
-        cfsForecastData || [],
-        cfsForecastData || [],);
-  } catch (error) {
-    console.error("Error generating schedule:", error);
-    toast.error("Failed to generate AI schedule.");
-    setOverallAnalysisLoading(false);
-      setForecastLoading(false);
   }
-  }
+
   useEffect(() => {
-    if (cfsForecastData?.success === false) {
-      toast.error("AI rate limit might have been reached.");
-      console.log("Overall Financial Data Analysis:", cfsForecastData);
+    if (cfsForecastData?.code === 500) {
+      setOverallAnalysisLoading(false);
+      setForecastLoading(false);
+      toast.error("AI request quota limit might have been reached. Try again later.");
     }
   }, [cfsForecastData]);
 
   useEffect(() => {
-    if (inflowOutflowdata?.success === false) {
-      toast.error("AI rate limit might have been reached.");
-      console.log("Overall Financial Data Analysis:", inflowOutflowdata);
+    if (inflowOutflowdata?.code === 500) {
+      setOverallAnalysisLoading(false);
+      setForecastLoading(false);
+      toast.error("AI request quota limit might have been reached. Try again later.");
     }
   }, [inflowOutflowdata]);
 
+  useEffect(() => {
+    async function fetchOverallFinancialData() {
+      try {
+        if (inflowOutflowdata?.code === 200 && cfsForecastData?.code === 200) {
+          console.log("Overall Financial Data Analysis:", cfsForecastData);
+          console.log("Overall Financial Data Analysis:", inflowOutflowdata);
+          await overallFinancialDataFn(
+            cfsForecastData,
+            inflowOutflowdata,
+          );
+        }
+      } catch (error) {
+        setOverallAnalysisLoading(false);
+        toast.error("Failed to pass forecasts for overall analysis.")
+        console.error("Error fetching overall financial data:", error);
+      }
+    }
+    fetchOverallFinancialData();
+  }, [inflowOutflowdata, cfsForecastData]);
+
 
   useEffect(() => {
-    if (cfsForecastData) {
+    if (cfsForecastData?.code === 200) {
       // Combine historical and forecast data
-      setForecastLoading(false)
-      const historical = (cfsForecastData.historical || []).map(d => ({
-        month: d.month,
-        netChange: d.netChange,
-        isForecast: false,
-      }));
-      console.log("Historical Data:", historical);
-      const forecast = (cfsForecastData.forecast || []).map(d => ({
-        month: d.month,
-        netChange: d.amount,
-        isForecast: true,
-      }));
-      console.log("Forecast Data:", forecast);
-      setAreaChartData([...historical, ...forecast]);
-      setCashflowData(cfsForecastData);
-      toast.success("Cashflow forecast generated.")
+
+    const sortedHistorical = (cfsForecastData.historical || [])
+      .slice() // clone array
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    const limitedHistorical = sortedHistorical.slice(-6).map(d => ({
+      month: d.month,
+      netChange: d.netChange,
+      isForecast: false,
+    }));
+
+    const forecast = (cfsForecastData.forecast || []).map(d => ({
+      month: d.month,
+      netChange: d.amount,
+      isForecast: true,
+    }));
+
+    // Combine for chart
+    setAreaChartData([...limitedHistorical, ...forecast]);
+    setCashflowData(cfsForecastData);
     }
   }, [cfsForecastData]);
 
+
+
   const [barChartData, setBarChartData] = useState([]);
   useEffect(() => {
-    if (inflowOutflowdata) {
+    if (inflowOutflowdata?.code === 200) {
       setForecastLoading(false)
        const monthsSet = new Set([
       ...(inflowOutflowdata.historical.inflows || []).map(d => d.month),
@@ -398,33 +424,31 @@ const [isResponsive, setIsResponsive] = useState(true);
 
     setBarChartData(merged);
     setInflowOutflowData(inflowOutflowdata);
-      console.log("Inflow/Outflow Data:", inflowOutflowdata);
-      
+    toast.success("Cashflow forecast generated.")
     }
   }, [inflowOutflowdata])
 
   const firstForecast = barChartData.find(d => d.isForecast);
-const forecastStartMonth = firstForecast ? firstForecast.month : null;
+  const forecastStartMonth = firstForecast ? firstForecast.month : null;
 
 
   useEffect(() => {
-    if (overallFinancialDataAnalysis) {
+    if (overallFinancialDataAnalysis?.code === 200 && !overallFinancialDataLoading) {
       setForecastLoading(false)
       setOverallAnalysisLoading(false);
       setOverallAnalysis(overallFinancialDataAnalysis);
-      console.log("Overall Financial Data Analysis:", overallFinancialDataAnalysis);
+      toast.success("Forecast recommendations generated.")
     }
   }, [overallFinancialDataLoading, overallFinancialDataAnalysis]);
 
     useEffect(() => {
-    if (overallFinancialDataAnalysis?.success === false) {
+    if (overallFinancialDataAnalysis?.code === 500) {
       setForecastLoading(false)
       setOverallAnalysisLoading(false);
       setOverallAnalysis(overallFinancialDataAnalysis);
       toast.error("AI rate limit might have been reached.");
-      console.log("Overall Financial Data Analysis:", overallFinancialDataAnalysis);
     }
-  }, [ overallFinancialDataAnalysis]);
+  }, [overallFinancialDataAnalysis]);
 
 
 
@@ -663,7 +687,8 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
           </div>
         </CardContent>
         <CardFooter>
-          <span className={`${fontZenKaku.className} font-normal tracking-wide text-sm text-neutral-500 p-1`}>Forecast starts at blue broken line</span>
+          <span className={`${fontZenKaku.className} font-normal tracking-wide text-sm text-neutral-500 p-1`}>AI will read all the historical data but 
+          the chart will only show 6 months worth of historical data</span>
         </CardFooter>
       </Card>
     </div>
