@@ -3,7 +3,6 @@ import { verifyWebhook } from '@clerk/nextjs/webhooks'
 
 export async function POST(data) {
     const event = await verifyWebhook(data);
-    console.log('Webhook payload retrieved', event)
 
     const ClerkUserId =  event.data.user_id;
     

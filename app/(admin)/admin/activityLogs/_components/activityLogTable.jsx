@@ -55,8 +55,8 @@ function getActionLabel(action) {
       return "User deleted";
     case "deleteCashflow":
       return "Cashflow deleted";
-    case "bulkDeleteTransactions":
-      return "Transactions deleted";
+    case "bulkDeleteTransaction":
+      return "Transaction deleted";
     case "bulkDeleteTask":
       return "Task deleted";
     case "scanReceipt":
