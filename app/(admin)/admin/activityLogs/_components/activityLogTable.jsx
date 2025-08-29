@@ -70,8 +70,6 @@ function getActionLabel(action) {
       return "Visited User List";
     case "getUser":
       return "Visited User List";
-    case "n":
-      return "Visited User List";
     case "getOverallFinancialDataAnalysis":
       return "Overall Financial Analysis(AI)";
     case "getInflowOutflowForecast":

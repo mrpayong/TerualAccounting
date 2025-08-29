@@ -146,19 +146,16 @@ const DashboardOverview = ({accounts, transactions}) => {
 
     const currentDateForArea = new Date();
 
+const currtDate = new Date();
+const startMonth = new Date(currtDate.getFullYear(), currtDate.getMonth() - 2, 1); // Start of 2 months ago
+const endMonth = new Date(currtDate.getFullYear(), currtDate.getMonth() + 1, 1);   // Start of next month
 
   
 // Get transactions for the past 3 months, excluding the current month
 const pastThreeMonthsTransactions = accountTransactions.filter((t) => {
     const transactionDate = new Date(t.date);
-    const currentDate = new Date();
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(currentDate.getMonth() - 3); // Start from 3 months ago
-    const startOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // Start of the current month
-  
-    return transactionDate >= threeMonthsAgo && transactionDate < startOfCurrentMonth; // Exclude the current month
-  });
-
+    return transactionDate >= startMonth && transactionDate < endMonth;
+});
 // Group transactions by month and type (Income or Expense)
 const groupedTransactions = pastThreeMonthsTransactions.reduce((acc, transaction) => {
   const transactionDate = new Date(transaction.date);
@@ -495,7 +492,7 @@ const areaChartData = Object.entries(groupedTransactions)
                                 domain={[0, 150000]} // Cap Y-axis values at 150,000
                                 tick={{
                                     fontFamily: "Verdana, sans-serif", // Use Verdana font
-                                    fontSize: "12px", // Slightly larger font size for Y-axis
+                                    fontSize: "10px", // Slightly larger font size for Y-axis
                                     fontWeight: "500", // Medium weight
                                     className: "text-sm sm:text-base md:text-lg",
                                 }}
