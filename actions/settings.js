@@ -423,7 +423,10 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
         };
     } catch (error) {
         console.log("Error user update: ", error.errors[0])
-        throw new Error("!")
+        if(error.errors[0].code === 'form_username_invalid_character'){
+            return {success:false, status:501}
+        }
+        return {success:false, status:500}
     }
 }
 

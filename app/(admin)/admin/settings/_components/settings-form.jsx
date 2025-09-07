@@ -426,11 +426,17 @@ useEffect(() => {
 
     useEffect(() => {
       if(updateUserData && !updateUserLoading){
-        if(updateUserData === 200){
+        if(updateUserData.status === 200){
           setUpdateDialogOpen(false);
           fetchUsers();
           toast.success("User updated.")
-       }
+        }
+        if(updateUserData.status === 501){
+          toast.error("Invalid character. No spaces.")
+        }
+        if(updateUserData.status === 500){
+          toast.error("Error editing user.")
+        }
       }
     }, [updateUserData, updateUserLoading])
 
@@ -441,6 +447,9 @@ useEffect(() => {
         toast.error("Invalid Username or already taken.")
       }
     }, [updateUserError, updateUserLoading])
+
+
+  
 
 
     const [RoleButtonClick, setRoleButtonClick] = useState(false);
@@ -570,7 +579,7 @@ useEffect(() => {
                 <label htmlFor="username" className="text-base font-medium text-gray-700">Username</label>
                 <Input
                   id="username"
-                  placeholder="Letters, Numbers and - or _."
+                  placeholder="Letters, Numbers, and - or _."
                   className="w-full font-medium !text-base"
                   {...register("username")}
                   required
