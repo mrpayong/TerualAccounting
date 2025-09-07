@@ -198,8 +198,13 @@ const result = await Swal.fire({
 
   useEffect(() => {
     if (bulkDeleteData && !bulkDeleteLoading) {
-      toast.error(`Deleted successfully`);
-      setSelectedIds([]);
+      if(bulkDeleteData.code === 200){
+        toast.error(`Deleted successfully`);
+        setSelectedIds([]);
+      }
+      if(bulkDeleteData.code === 500){
+        toast.error(`Deleted successfully`);
+      }
     }
   }, [bulkDeleteData, bulkDeleteLoading]);
 
@@ -548,6 +553,7 @@ const result = await Swal.fire({
                 </Button>
               </DialogTrigger>
               <DialogContent
+                onInteractOutside={e => e.preventDefault()}
                 id="add-task-dialog-content"
                 className="[&>button]:hidden max-w-4xl w-full bg-gray-100 rounded-2xl shadow-2xl border border-gray-200 p-0 flex flex-col items-center"
                 style={{

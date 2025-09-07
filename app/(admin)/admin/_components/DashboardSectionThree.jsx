@@ -98,6 +98,19 @@ function getActionLabel(action) {
   }
 }
 
+function formatManilaDateTime(dateInput) {
+  const date = new Date(dateInput);
+  return date.toLocaleString("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
 
 const DashboardSectionThree = ({ recentActivityLogs, roleCountList }) => {
   return (
@@ -137,7 +150,7 @@ const DashboardSectionThree = ({ recentActivityLogs, roleCountList }) => {
                 <div className="flex flex-col sm:flex-row sm:justify-between">
                   <span className="font-medium text-base">{getActionLabel(log.action)}</span>
                   <span className="font-medium text-gray-500 text-sm mt-1 sm:mt-0">
-                    {new Date(log.timestamp || log.createdAt).toLocaleString()}
+                    {formatManilaDateTime(log.timestamp || log.createdAt)}
                   </span>
                 </div>
                 {log.user && (

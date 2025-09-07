@@ -31,7 +31,6 @@ async function DashboardPage () {
     ? accounts.map(acc => acc?.name).filter(Boolean)
     : [];
 
-console.log('accounts dashboard', accountNames);
   return ( 
     <div className='space-y-8'>
 

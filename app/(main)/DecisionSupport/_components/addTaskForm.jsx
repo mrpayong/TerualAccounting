@@ -73,7 +73,7 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
 
   const handleCreateTask = async (data) => {
     
-      console.log("creating...")
+      console.log("creating...", data)
       await createTaskFn(data);
    
   };
@@ -86,12 +86,18 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
   }, [taskLoading, taskError]);
 
   useEffect(() => {
-    if (taskData) {
+    if (taskData && !taskLoading) {
+      if(taskData.code === 200){
+      console.log("Task created:", taskData);
       toast.success("Task created successfully.");
       reset();
       if (typeof onSuccess === "function") {
-      onSuccess(); // <-- Close the dialog
-    }
+        onSuccess(); // <-- Close the dialog
+      }      
+      }
+      if(taskData.code === 500){
+        toast.error("Failed to create task. Please try again.");
+      }
     }
   }, [taskLoading, taskData, reset, onSuccess]);
 

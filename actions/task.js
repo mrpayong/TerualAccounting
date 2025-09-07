@@ -78,10 +78,10 @@ export async function createTasking(data) {
     }
 
       revalidatePath("/DecisionSupport");
-    return { success: true, data: newTask };
+    return { code:200, success: true, data: newTask };
   } catch (error) {
     console.error(error.message)
-    throw new Error("!");
+    return { code:500, success: false};
   }
 }
 
@@ -127,17 +127,20 @@ export async function bulkDeleteTask(TaskIds) {
                 id: { in: TaskIds},
                 userId: user.id,
             },
+            select:{
+              id:true,
+            }
         });
         await db.Task.deleteMany({
             where: {
-                id: {in: TaskIds},
+                id: {in: Task.id},
                 userId: user.id,
             },
         });
         revalidatePath("/DecisionSupport");
-        return {success: true};
+        return {code:200, success: true};
     } catch (error) {
-     console.error("Error in bulkDeleteTransactions:", error);
-     throw new Error("!")
+     console.log("Error in bulkDeleteTask:", error);
+     return{code:500, success:false}
     }
 }

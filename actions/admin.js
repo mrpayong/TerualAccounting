@@ -357,7 +357,6 @@ export async function UserSessionLogging({action, args, result, timestamp}) {
         if (!activity) {
             throw new Error("Failed to log user session.");
         }
-        console.log("User session logging success.",  activity)
         return { success: true, message: "User session logging success." };
     } catch (error) {
         console.error("User session logging error:", error);

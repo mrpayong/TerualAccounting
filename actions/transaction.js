@@ -382,7 +382,7 @@ export async function updateTransaction(id, data) {
     revalidatePath("/dashboard");
     revalidatePath(`/account/${data.accountId}`);
 
-    return {success: true, data: serializeAmount(transaction)};
+    return {success: true, data: serializeAmount(transaction), code:200};
   } catch (error) {
     console.log("Error update transaction: ", error)
     console.log("Error update transaction: ", error.message)

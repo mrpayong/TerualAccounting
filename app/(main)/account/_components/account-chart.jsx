@@ -18,7 +18,7 @@ import { Zen_Kaku_Gothic_Antique } from "next/font/google";
 
 // Custom date formatter
 const formatDate = (date) => {
-  const options = { month: "short", day: "2-digit" };
+  const options = { month: "short", day: "2-digit", year: "2-digit" };
   return new Intl.DateTimeFormat("en-US", options).format(date);
 };
 
@@ -85,7 +85,6 @@ const AccountChart = ({ transactions}) => {
   // Filter and group transactions by date range
   const filteredData = useMemo(() => {
     const { from, to } = dateRange;
-
     // Generate all dates in the range
     const allDates = generateDateRange(from, to).map((date) => ({
       date: formatDate(date),
@@ -93,13 +92,16 @@ const AccountChart = ({ transactions}) => {
       expense: 0,
     }));
 
+
     // Map transactions to the corresponding dates
+    const filteredTransactionIds = [];
     transactions.forEach((transaction) => {
       const transactionDate = formatDate(new Date(transaction.date));
       const dateEntry = allDates.find(
         (entry) => entry.date === transactionDate
       );
       if (dateEntry) {
+        filteredTransactionIds.push(transaction.id);
         if (transaction.type === "INCOME") {
           dateEntry.income += transaction.amount;
         } else if (transaction.type === "EXPENSE") {
@@ -107,9 +109,10 @@ const AccountChart = ({ transactions}) => {
         }
       }
     });
-
+    console.log("Filtered transaction IDs for chart:", filteredTransactionIds);
     return allDates;
   }, [transactions, dateRange]);
+
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -237,6 +240,10 @@ const AccountChart = ({ transactions}) => {
                 interval={0} // Show all dates
                 angle={-45} // Rotate labels for better readability
                 textAnchor="end"
+                tickFormatter={(dateStr) => {
+                  const date = new Date(dateStr);
+                  return date.toLocaleString("en-US", { month: "short", day: "2-digit" });
+                }}
               />
               <YAxis
                 tickFormatter={(value) => formatAmount(value)}
@@ -248,7 +255,10 @@ const AccountChart = ({ transactions}) => {
               />
               <Tooltip
                 formatter={(value) => formatAmount(value)}
-                labelFormatter={(label) => `Date: ${label}`}
+                labelFormatter={(label) => {
+                  const [month, day] = label.split(" ");
+                  return `Date: ${month} ${day.replace(",", "")}`;
+                }}
                 contentStyle={{
                   fontFamily: fontZenKaku.style.fontFamily,
                   fontSize: "18px",
