@@ -9,7 +9,7 @@ import {
     TableRow,
   } from "@/components/ui/table"
 import { Checkbox } from '@/components/ui/checkbox'
-import { format } from 'date-fns';
+import { format, parseJSON } from 'date-fns';
 import { categoryColors } from '@/data/category';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -18,7 +18,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from "@/components/ui/tooltip"
-import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Folders, Info, Loader, Loader2, MoreHorizontal, PlusCircleIcon, RefreshCw, Search, SquareArrowOutUpRight, Trash, X } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Folders, Info, Loader, Loader2, MoreHorizontal, Pen, PlusCircleIcon, RefreshCw, Search, SquareArrowOutUpRight, Trash, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -61,6 +61,7 @@ import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Box } from '@mui/material';
+import { Textarea } from '@/components/ui/textarea';
 
 
 
@@ -167,29 +168,78 @@ const rowsPerPage = 10; // Default rows per page
         data: deleted,
       } = useFetch(bulkDeleteTransactions);
 
-    const acount_id = id;
-    const handleSingleDelete = async (id) => {
-        const result = await Swal.fire({
-            title: `<span class="${fontZenKaku.className} font-bold">Are you sure?</span>`,
-            html: `<span class="${fontZenKaku.className} font-medium">You are about to delete this transaction.</span>`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Confirm",
-            cancelButtonText: "Cancel",
-            customClass: {
-              confirmButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
-              cancelButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
-              popup: "max-w-lg w-full p-6 rounded-lg shadow-lg",
-            },
-          });
-        
-          if (result.isConfirmed) {
-            deleteFn([id], acount_id);
-            setDropdownDisabledId(true)
-          }
+    const [reason, setReason] = useState("");
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [TransactionIdToDelete, setTransactionIdToDelete] = useState("");
+    
+    const handleDeletingModal = (T_id) =>{ // delete button(menu dropdwn)
+      setDeleteModalOpen(true);
+      setTransactionIdToDelete(T_id)
+      console.log("id: ", T_id)
+      if(TransactionIdToDelete !== ""){
+        setDeleteModalOpen(true)
+      }
     }
+    const handleCancelDeletingModal = () =>{ //cancle button
+      setReason("")
+      if(TransactionIdToDelete !== ""){
+        setTransactionIdToDelete("")
+        setDeleteModalOpen(false)
+        console.log("id:", TransactionIdToDelete)
+      }
+    }
+
+    const acount_id = id;
+    const handleSingleDelete = async () => { //Confirm Delete button
+      if(reason === "" || !reason || reason === null){
+        toast.error("Reason of deletion is required.");
+      }
+      setDeleteModalOpen(false);
+      if (TransactionIdToDelete && reason && acount_id){
+        deleteFn([TransactionIdToDelete], acount_id, JSON.stringify(reason));
+      }
+    }
+
+    const [openBulkDltModal, setOpenBulkDltModal] = useState(false);
+    const handleBulkDeleteModal = () => {
+      setOpenBulkDltModal(true);
+    }
+
+    const handleCancelBulkDeleteModal = () => {
+      setOpenBulkDltModal(false);
+      setReason("")
+    }
+
+    const handleBulkDelete = async () => {
+      if(reason === "" || !reason || reason === null){
+        toast.error("Reason of deletion is required.");
+      }
+      setDeleteModalOpen(false);
+      if (selectedIds && reason && acount_id) {
+        deleteFn(selectedIds, acount_id, JSON.stringify(reason));
+          // Call the delete function with selected IDs
+      }
+    };
+
+    useEffect(() =>{
+      if(deleted && !deleteLoading){
+        if(deleted?.code === 200 && deleted?.success === true){
+          setTransactionIdToDelete("")
+          setReason("")
+          setDeleteModalOpen(false);
+          setOpenBulkDltModal(false);
+          toast.success("Deleted Successfully!");
+        }
+        if(deleted?.code === 500 && deleted?.success === false){
+          setReason("");
+          setDeleteModalOpen(false);
+          setTransactionIdToDelete("");
+          toast.error("Error Deleting Transaction.");
+        }
+      }
+    }, [deleted, deleteLoading])
+
+  
     const filteredAndSortedTransactions = useMemo(() => {
         let result = [...transactions];
 
@@ -304,40 +354,9 @@ const rowsPerPage = 10; // Default rows per page
             : [...current, ...currentPageIds.filter((id) => !current.includes(id))] // Select all on the current page
         );
       };
+    
+    
 
-
-    useEffect(() => {
-        if (deleted && !deleteLoading) {
-            setDropdownDisabledId(false);
-             toast.success(`Deleted successfully`);
-             setSelectedIds([]);
-        }
-    }, [deleted, deleteLoading]);
-
-    const handleBulkDelete = async () => {
-      setDropdownDisabledId(true);
-        const result = await Swal.fire({
-          title: `<span class="${fontZenKaku.className} font-bold">Are you sure?</span>`,
-          html: `<span class="${fontZenKaku.className} font-medium">You are about to delete ${selectedIds.length} transactions.</span>`,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Confirm",
-          cancelButtonText: "Cancel",
-          customClass: {
-            confirmButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
-            cancelButton: fontZenKaku.className + " tracking-wider !text-lg font-medium",
-          },
-        });
-      
-        if (result.isConfirmed) {
-          deleteFn(selectedIds, acount_id); // Call the delete function with selected IDs
-        }
-        if(!result.isConfirmed){
-          setDropdownDisabledId(false)
-        }
-      };
 
     const handleClearFilters = () => {
         setSearchTerm("");
@@ -587,8 +606,6 @@ const rowsPerPage = 10; // Default rows per page
             toast.error("Error creating group. Consult System Admin.")
           }
         }, [subAccountData])
-
-   
 
     const filteredAndSortedSubAccounts = useMemo(() => {
         if (!Array.isArray(subAccounts?.data)) return [];
@@ -1563,7 +1580,7 @@ const handleEditTransaction = (transactionId) => {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={handleBulkDelete}
+                  onClick={handleBulkDeleteModal}
                   className={`bg-red-500/90 hover:bg-red-500 text-white
                     border border-red-500/30 hover:border-red-500/50
                     shadow-lg shadow-red-500/20
@@ -1578,6 +1595,50 @@ const handleEditTransaction = (transactionId) => {
                 </Button>
               </div>
             )}
+            <Dialog open={openBulkDltModal} onOpenChange={setOpenBulkDltModal}>
+              <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
+              <DialogHeader>
+                  <DialogTitle className="tracking-wide font-bold text-2xl text-center">Delete {selectedIds.length} transaction?</DialogTitle>
+                  <DialogDescription className="text-[14.5px]/[22px] text-center">
+                    Provide a reason for deleting these transactions. 
+                  </DialogDescription>
+              </DialogHeader>
+              <Textarea 
+                required
+                value={reason}
+                onChange={(e)=> setReason(e.target.value)}
+                placeholder="Type your reason here."
+              />
+              <div className="flex flex-col md:flex-row gap-2 justify-center">  
+              <DialogFooter>
+                    <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={handleBulkDelete}
+                    className="border-2 border-green-400 
+                    hover:border-0 hover:bg-green-400 
+                    font-medium !text-base 
+                    text-green-400 hover:text-white">
+                      Yes
+                    </Button>
+                  
+                    <DialogClose asChild>
+                      <Button
+                        onClick={handleCancelBulkDeleteModal}
+                        type="button"
+                        variant="outline"
+                        className="w-auto
+                        font-medium !text-base
+                        border-rose-600 hover:border-0 hover:bg-rose-600 
+                        text-rose-600 hover:text-white"
+                        >Cancel
+                      </Button>
+                    </DialogClose>
+                
+              </DialogFooter></div>
+                
+              </DialogContent>
+            </Dialog>
           </div>
 
         </div> 
@@ -1724,48 +1785,106 @@ const handleEditTransaction = (transactionId) => {
                         {transaction.refNumber}
                       </TableCell>
                       <TableCell className='flex justify-around'>
-                        <DropdownMenu 
-                          onOpenChange={(open) => setTableBg(open ? transaction.id : null)}>
-                          <DropdownMenuTrigger asChild 
-                            className={dropdownDisabledId
-                              ? ``
-                              : `hover:[box-shadow:inset_0_2px_8px_0_rgba(0,0,0,0.3)]`
-                            }>
-                            <Button 
-                              disabled={subAccountLoading || deleteGroupLoading || dropdownDisabledId || deleteLoading} 
-                              variant="ghost" className="h-8 w-8 p-0"
-                              onClick={() =>tableBgHandler(transaction.id)} 
-                              >
-                              <MoreHorizontal className={
-                                dropdownDisabledId
-                                ? `h-4 w-4 text-gray-400`
-                                : `h-4 w-4 text-black`
-                              } />
+                        <Popover>
+                          <PopoverTrigger asChild className="text-black hover:[box-shadow:inset_0_2px_8px_0_rgba(0,0,0,0.3)]">
+                            <Button variant="outline"
+                            disabled={subAccountLoading || deleteGroupLoading}
+                              className="px-2 py-1 h-8 w-8 flex border-none shadow-none items-center justify-center bg-transparent"
+                              aria-label="Open user actions">
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className={`${fontZenKaku.className} border border-gray-400 [box-shadow:inset_0_2px_8px_0_rgba(0,0,0,0.3)] bg-transparent backdrop-blur-sm`}>
-                            <DropdownMenuItem 
-                                  onClick={() => handleEditTransaction(transaction.id)}
-                                  className='text-yellow-500 hover:text-black 
-                                  font-medium text-base hover:border-solid hover:border-2 hover:border-yellow-500
-                                  bg-transaparent hover:!bg-yellow-400/45 hover:!backdrop-blur-0
-                                  hover:shadow-md hover:shadow-gray-500 '>
-                                    Edit
-                              </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-rose-600 hover:text-black font-medium text-base
-                              bg-transaparent hover:!bg-rose-600/45 hover:!backdrop-blur-0
-                              hover:border hover:border-rose-600
-                              hover:shadow-md hover:shadow-gray-500" 
-                              onClick={() => handleSingleDelete(transaction.id)}
-                              disabled={dropdownDisabledId}>Delete</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => TransactionDetailshandler(transaction)} 
-                            className="text-blue-700 hover:text-black font-medium text-base
-                              bg-transaparent hover:!bg-[#2563eb73] hover:!backdrop-blur-0
-                              hover:border hover:border-blue-600
-                              hover:shadow-md hover:shadow-gray-500">Details</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            align="end"
+                            className={`${fontZenKaku.className} w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white`}
+                            sideOffset={8}>
+
+                            <div className="flex flex-col gap-2">
+                            <Button
+                              onClick={() => handleEditTransaction(transaction.id)}
+                              variant="outline"
+                              className="flex items-center gap-2 
+                              text-yellow-500 border-yellow-500 
+                              hover:text-black 
+                                hover:border-0
+                                bg-transaparent hover:!bg-yellow-400/45 hover:!backdrop-blur-0
+                                hover:shadow-md hover:shadow-gray-500 
+                              ">
+                              <span className="flex items-center">
+                                <Pen className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Edit</span>
+                              </span>
+                            </Button>
+                          
+                            <Button
+                                onClick={() => handleDeletingModal(transaction.id)}
+                                variant="outline"
+                                className="flex items-center gap-2 text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0">
+                                <span className="flex items-center">
+                                  <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
+                                </span>
+                              </Button>
+
+                              <Button
+                                onClick={() => TransactionDetailshandler(transaction)} 
+                                variant="outline"
+                                className="flex items-center gap-2 text-blue-700 border-blue-700 hover:bg-blue-700 hover:text-white hover:border-0"
+                              >
+                                <span className="flex items-center">
+                                  <Info className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true"/>
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Details</span>
+                                </span>
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+
+                        <Dialog open={TransactionIdToDelete === transaction.id} onOpenChange={(open) => setTransactionIdToDelete(open ? transaction.id : null)}>
+                            <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
+                            <DialogHeader>
+                                <DialogTitle className="tracking-wide font-bold text-2xl text-center">Delete this transaction?</DialogTitle>
+                                <DialogDescription className="text-[14.5px]/[22px] text-center">
+                                  Provide a reason for deleting this transaction. 
+                                </DialogDescription>
+                            </DialogHeader>
+                            <Textarea 
+                              required
+                              value={reason}
+                              onChange={(e)=> setReason(e.target.value)}
+                              placeholder="Type your reason here."
+                            />
+                            <div className="flex flex-col md:flex-row gap-2 justify-center">  
+                            <DialogFooter>
+                                  <Button 
+                                  type="button"
+                                  variant="outline"
+                                  onClick={handleSingleDelete}
+                                  className="border-2 border-green-400 
+                                  hover:border-0 hover:bg-green-400 
+                                  font-medium !text-base 
+                                  text-green-400 hover:text-white">
+                                    Yes
+                                  </Button>
+                                
+                                  <DialogClose asChild>
+                                    <Button
+                                      
+                                      onClick={handleCancelDeletingModal}
+                                      type="button"
+                                      variant="outline"
+                                      className="w-auto
+                                      font-medium !text-base
+                                      border-rose-600 hover:border-0 hover:bg-rose-600 
+                                      text-rose-600 hover:text-white"
+                                      >Cancel
+                                    </Button>
+                                  </DialogClose>
+                              
+                            </DialogFooter></div>
+                              
+                            </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                   ))

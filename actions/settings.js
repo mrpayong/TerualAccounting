@@ -320,6 +320,7 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
             
 
         const client = await clerkClient();
+        console.log("Deleting Clerk user with ID:", userToDelete.clerkUserId);
         await client.users.deleteUser(userToDelete.clerkUserId);
 
         // Delete user from your database
@@ -334,7 +335,7 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
             message: 'User deleted successfully'
         };
     } catch (error) {
-        console.log("Error user delete: ", error.message)
+        console.log("Error user delete: ", error)
         throw new Error("Error deleting user");
     }
 }

@@ -58,10 +58,15 @@ async function AccountsPage({ params }) {
   if (!accountData) {
     notFound();
   }
+
+  function formatNumberWithCommas(number) {
+    return Number(number).toLocaleString();
+  }
+
  return (
     <div className="space-y-8 px-5">
       <div className="flex flex-col md:flex-row sm:justify-between">
-<       div className="md:flex items-center">
+        <div className="md:flex items-center">
           <SideNavBar accountId={id} />
         </div>
         <div className="text-center">
@@ -70,7 +75,7 @@ async function AccountsPage({ params }) {
             {account.name}
           </h1>
           <p className={`${fontZenKaku.className} text-md text-gray-500`}>
-            {account._count.transactions} Transactions
+            {formatNumberWithCommas(account._count.transactions)} Transactions
           </p>
         </div>
         <div></div>

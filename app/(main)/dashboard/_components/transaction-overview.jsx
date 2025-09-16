@@ -17,12 +17,12 @@ import { BarChart, Bar } from 'recharts';
 import { Zen_Kaku_Gothic_Antique, Zen_Kaku_Gothic_New } from 'next/font/google';
 
 const fontZenKaku = Zen_Kaku_Gothic_Antique({
-  subsets:["latin"],
+  subsets: ['latin'],
   weight: ["400", "500"],
 })
 
 const fontZenKakuNew = Zen_Kaku_Gothic_New({
-  subsets:["latin"],
+  subsets: ['latin'],
   weight: "400",
 })
 

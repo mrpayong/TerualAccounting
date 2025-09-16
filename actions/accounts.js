@@ -178,7 +178,7 @@ export async function getAccountWithTransactions(accountId) {
 }
 
 
-export async function bulkDeleteTransactions(transactionIds, accountId) {
+export async function bulkDeleteTransactions(transactionIds, accountId, reason) {
   try {
       console.log("Starting bulk delete transactions");   
       const {userId} = await auth();
@@ -217,15 +217,15 @@ export async function bulkDeleteTransactions(transactionIds, accountId) {
             updatedAt:true,
           }
       });
-
       for (const transaction of transactions) {
+        const dataJSON = JSON.stringify([{transaction:transaction, reason:reason}]);
         const log = await archiveEntity({
           userId: user.id,
           accountId: accountId,
           action: "bulkDeleteTransaction",
           entityType: "Transaction",
           entityId: transaction.id,
-          data: transaction,
+          data: dataJSON,
         })
         if(log.success === false){
           await db.activityLog({
@@ -246,10 +246,10 @@ export async function bulkDeleteTransactions(transactionIds, accountId) {
 
       revalidatePath("/dashboard");
       revalidatePath(`/account/${accountId}`)
-      return {success: true};
+      return {code:200, success: true};
   } catch (error) {
     console.error("Error in bulkDeleteTransactions:", error);
-    return {success: false, error: error.message};
+    return {code:500, success: false, error: error.message};
   }
 }
 

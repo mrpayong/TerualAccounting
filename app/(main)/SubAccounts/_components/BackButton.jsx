@@ -17,7 +17,7 @@ export default function BackButton({id}) {
 
   const handleBackLoading = () => {
     setIsLoading(true);
-    router.push(`/account/${mainAccountId}`)
+    router.back();
   }
 
   return (

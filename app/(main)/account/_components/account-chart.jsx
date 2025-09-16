@@ -109,7 +109,6 @@ const AccountChart = ({ transactions}) => {
         }
       }
     });
-    console.log("Filtered transaction IDs for chart:", filteredTransactionIds);
     return allDates;
   }, [transactions, dateRange]);
 

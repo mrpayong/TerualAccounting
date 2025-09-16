@@ -490,7 +490,6 @@ useEffect(() => {
       if(!userToUpdateEmailId && !emailUpdate){
         toast.error("Please fill the blank.");
       }
-      console.log(userToUpdateEmailId, emailUpdate)
       udpateEmailFn(userToUpdateEmailId, emailUpdate);
     }
 
