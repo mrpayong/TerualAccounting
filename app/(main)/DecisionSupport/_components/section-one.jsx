@@ -473,9 +473,10 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
             gap-2 md:gap-0
             items-center">
             <div>
-              <CardTitle className="!font-bold text-xl text-center md:text-start">Client Income Summary</CardTitle>
+              <CardTitle className="!font-bold text-xl text-center md:text-start">Client Inflow Summary</CardTitle>
               <CardDescription className="text-sm font-normal tracking-wide">
-                Semiannual total income per month
+                Semiannual total inflows per month 
+                {/* (Add outflows to me) */}
               </CardDescription>
             </div>
             <Select
@@ -543,7 +544,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                 </LineChart>
               </ResponsiveContainer>) 
               : (<div className="flex items-center font-bold text-base md:text-lg justify-center h-full text-gray-400">
-                  Select an account to see the incomes.
+                  No inflows.
                 </div>
               )}
             </div>

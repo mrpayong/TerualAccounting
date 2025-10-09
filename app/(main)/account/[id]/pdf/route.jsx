@@ -169,13 +169,9 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
   }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString); // Parse the date string
-    const utcYear = date.getUTCFullYear();
-    const utcMonth = date.getUTCMonth(); // Month is zero-based
-    const utcDay = date.getUTCDate();
-  
+    const date = new Date(dateString); 
     // Format the date as "Month Day, Year"
-    return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toLocaleDateString(undefined, {
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -196,8 +192,8 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
   }
 
 
-  const formattedStartDate = startDate ? formatDate(startDate, 'MMMM dd, yyyy') : "N/A";
-  const formattedEndDate = endDate ? formatDate(endDate, 'MMMM dd, yyyy') : "N/A";
+  const formattedStartDate = formatDate(startDate);
+  const formattedEndDate = formatDate(endDate);
  
   const latestCashflow = cashflow;
   const transactionsIn = transactions;
@@ -334,9 +330,6 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
 
 
 
-
-
-
   
   return (
     <Document>
@@ -362,11 +355,11 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
               {/* Letterhead Text */}
               <View style={styles.letterheadText}>
                 <Text style={styles.title}>Teruel Accounting</Text>
-                <Text style={styles.subtitle}>{deterimeTimeFrame(cashflow.periodCashFlow)} Cashflow Statement</Text>
-                {startDate && endDate && startDate.toDateString() === endDate.toDateString()
-                    ? <Text style={styles.subtitle}>As of: {formattedStartDate}</Text>
-                    : <Text style={styles.subtitle}>For the period: {formattedStartDate} - {formattedEndDate}</Text>
-                  }
+                <Text style={styles.subtitle}>Cashflow Statement</Text>
+                {formattedStartDate === formattedEndDate
+                  ? <Text style={styles.subtitle}>As of: {formattedStartDate}</Text>
+                  : <Text style={styles.subtitle}>For the period: {formattedStartDate} - {formattedEndDate}</Text>
+                }
             </View>
           </View>
             

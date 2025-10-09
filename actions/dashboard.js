@@ -64,13 +64,15 @@ export async function createAccount(data) {
         if (!user) {
             throw new Error("User not Found");
         }
-
+        if(user.role != "STAFF"){
+            throw new Error("Unavailable action.")
+        }
         const existingAccount = await db.account.findUnique({
             where: { name: data.name },
         });
          
         if (existingAccount) {
-            throw new Error("Company name already exists.");
+            return {success: false, code:401, message:"Account name already exists."}
         }
         // Convert balance to float before save
        
@@ -102,10 +104,11 @@ export async function createAccount(data) {
         }
 
         revalidatePath("/dashboard");
-        return {success: true, data: serializedAccount};
+        return {code:200, success: true, data: serializedAccount};
     } catch (error) {
         console.log("Error creating account: ", error)
-        throw new Error(error.message);
+        console.log("error message:", error.message)
+        return {code:500, success: false};
     }
 }
 

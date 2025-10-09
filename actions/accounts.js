@@ -1087,3 +1087,39 @@ export async function updateClientInfo(data, accountId){
   }
 }
 
+export async function getSubAccTransactionRel(accountId){
+  try {
+    const {userId} = await auth();
+
+    if(!userId){
+      return{success:false, code:501, message:"[getSubAcc_T_Rel]:Unauthenticated"}
+    }
+    const user = await db.user.findUnique({
+      where:{clerkUserId: userId},
+      select:{role: true}
+    })
+    if(!user){
+      return{success:false, code:502, message:"[getSubAcc_T_Rel]:Unauthorized"}
+    }
+    if(user.role !== "STAFF"){
+      return{success:false, code:503, message:"[getSubAcc_T_Rel]: Unavailable action"}
+    }
+
+    const subAccounts = await db.subAccount.findMany({
+      where:{accountId: accountId},
+      select:{
+        id: true,
+      }
+    })
+    const relation = await db.SubAccountTransaction.findMany({
+      where:{
+        subAccountId: subAccounts.id
+      }
+    })
+
+    return{success:true, code:200, data: relation}
+  } catch (error) {
+    console.log("Error fetching Group Transaction and Transaction relation:", error)
+    return {success:false, code:500}
+  }
+}

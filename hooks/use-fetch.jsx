@@ -43,13 +43,13 @@ const useFetch = (cb) => {
   const fn = async (...args) => {
     setLoading(true);
     setError(null);
-    console.log("fetch hook initializing...", ...args, "The type is: ", typeof args);
+    // console.log("fetch hook initializing...", ...args, "The type is: ", typeof args);
 
     try {
       const response = await cb(...args);
       setData(response);
       setError(null);
-      console.log("response: ", response)
+      // console.log("response: ", response)
     } catch (error) {
       setError(error);
       toast.error(error.message);

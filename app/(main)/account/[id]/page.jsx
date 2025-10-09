@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import React, { Suspense } from "react";
 
 import { BarLoader } from "react-spinners";
-import { getAccountWithTransactions, getSubAccounts } from "@/actions/accounts";
+import { getAccountWithTransactions, getSubAccounts, getSubAccTransactionRel } from "@/actions/accounts";
 import AccountChart from "../_components/account-chart";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -47,7 +47,11 @@ async function AccountsPage({ params }) {
   const accountData = await getAccountWithTransactions(id);
   const subAccounts = await getSubAccounts(id);
   const recentCashflows = await getCashflowEnding(id)
+  const SubAccTransactionRel = await getSubAccTransactionRel(id);
 
+  console.log("SubAccTransactionRel:", SubAccTransactionRel)
+  const relatedIDs = SubAccTransactionRel.data.map(rel => rel.transactionId);
+  
   // const recentCashflows = fetchedCashflows.latestCashflows;
 
   const { transactions, ...account } = accountData; //extract transacs and acc data
@@ -96,7 +100,7 @@ async function AccountsPage({ params }) {
         }
       >
         <TransactionTable
-        
+          relatedIDs={relatedIDs}
           recentCashflows={recentCashflows}
           transactions={transactions}
           id={id}

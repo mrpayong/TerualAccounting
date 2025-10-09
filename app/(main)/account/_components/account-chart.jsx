@@ -182,7 +182,7 @@ const AccountChart = ({ transactions}) => {
         <div className="flex flex-col md:flex-row justify-around mb-6 text-sm">
           <div className="text-center">
             <p className={`${fontZenKaku.className} text-base font-normal text-muted-foreground`}>
-                <b>Total Income</b>
+                <b>Total Inflow</b>
             </p>
             <p className={`${fontZenKaku.className} tracking-wide text-xl md:text-2xl font-medium text-green-500`}>
               {formatAmount(totals.income)}
@@ -190,7 +190,7 @@ const AccountChart = ({ transactions}) => {
           </div>
           <div className="text-center">
             <p className={`${fontZenKaku.className} text-base font-normal text-muted-foreground`}>
-              <b>Total Expenses</b>
+              <b>Total Outflow</b>
             </p>
             <p className={`${fontZenKaku.className} tracking-wide text-xl md:text-2xl font-medium text-red-500`}>
               {formatAmount(totals.expense)}
@@ -198,7 +198,7 @@ const AccountChart = ({ transactions}) => {
           </div>
           <div className="text-center">
             <p className={`${fontZenKaku.className} text-base font-normal text-muted-foreground`}>
-             <b>Net Change</b>
+             <b>Net Flow</b>
             </p>
             <p
               className={`${fontZenKaku.className} tracking-wide text-xl md:text-2xl font-medium 
@@ -269,7 +269,7 @@ const AccountChart = ({ transactions}) => {
                 type="monotone"
                 dataKey="income"
                 stroke="#22c55e"
-                name="Income"
+                name="Inflow"
                 strokeWidth={2}
                 dot={false}
               />
@@ -277,7 +277,7 @@ const AccountChart = ({ transactions}) => {
                 type="monotone"
                 dataKey="expense"
                 stroke="#ef4444"
-                name="Expense"
+                name="Outflow"
                 strokeWidth={2}
                 dot={false}
               />

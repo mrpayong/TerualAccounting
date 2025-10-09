@@ -83,10 +83,18 @@ const CreateAccountDrawer = ({ children, names }) => {
 
   useEffect(() => {
     if (newAccount && !createAccountLoading) {
-      toast.success("Account created successfully");
-      reset();
-      setIsIndividual(null);
-      setOpen(false);
+      if(newAccount.code === 200){
+        toast.success("Account created successfully");
+        reset();
+        setIsIndividual(null);
+        setOpen(false);
+      }
+      if(newAccount.code === 500){
+        toast.error("Error creating account.");
+      }
+      if(newAccount.code === 401){
+        toast.error("Account name already exists.");
+      }
     }
   }, [createAccountLoading, newAccount]);
 
@@ -486,7 +494,7 @@ const CreateAccountDrawer = ({ children, names }) => {
                     Loading
                   </>
                 ) : (
-                  "Add Client"
+                  "Create Account"
                 )}
               </Button>
               <Button variant="outline" type="button" onClick={handleCancelForm} 

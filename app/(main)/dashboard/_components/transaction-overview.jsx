@@ -180,8 +180,8 @@ const groupedTransactions = pastThreeMonthsTransactions.reduce((acc, transaction
 const areaChartData = Object.entries(groupedTransactions)
   .map(([month, values]) => ({
     name: month,
-    Income: values.Income,
-    Expense: values.Expense,
+    Inflow: values.Income,
+    Outflow: values.Expense,
   })).reverse(); // Reverse the order so the most recent month appears last
 
 
@@ -299,7 +299,7 @@ const areaChartData = Object.entries(groupedTransactions)
             <Card>
                 <CardHeader className="flex flex-col-reverse gap-1 md:gap-0 md:flex-row items-center justify-between space-y-0 pb-4">
                     <CardTitle className={`${fontZenKaku.className} font-normal text-sm sm:text-base md:text-lg lg:text-xl`}>
-                        Highest source of income last month
+                        Highest source of Inflow last month
                     </CardTitle>
 
                     <Select
@@ -329,7 +329,7 @@ const areaChartData = Object.entries(groupedTransactions)
                         <div className='space-y-4'>
                         {topIncomeCategories.length === 0 ? (
                             <p className={`${fontZenKakuNew.className} text-center text-muted-foreground py-4`}>
-                                No income data available.
+                                No inflow data available.
                             </p>
                             ) : (
                                  <div className="w-full">
@@ -386,7 +386,7 @@ const areaChartData = Object.entries(groupedTransactions)
             <Card>
                 <CardHeader>
                     <CardTitle className={`${fontZenKaku.className} font-normal text-sm sm:text-base md:text-lg lg:text-xl`}>
-                        Monthly Expense Breakdown 
+                        Monthly Outflows Breakdown 
                     </CardTitle>    
                 </CardHeader>
 
@@ -394,7 +394,7 @@ const areaChartData = Object.entries(groupedTransactions)
                     {pieChartData.length === 0 
                         ? (
                             <p className={`${fontZenKakuNew.className} text-center text-muted-foreground py-4`}>
-                                No expenses this month.
+                                No Outflows this month.
                             </p>
                         )
                         : (
@@ -445,7 +445,7 @@ const areaChartData = Object.entries(groupedTransactions)
             <Card className="w-full">
                 <CardHeader>
                     <CardTitle className={`${fontZenKaku.className} font-normal text-sm sm:text-base md:text-lg lg:text-xl`}>
-                    Income vs Expense 
+                    Inflow vs. Outflow 
                     </CardTitle>
                 </CardHeader>
 
@@ -518,14 +518,14 @@ const areaChartData = Object.entries(groupedTransactions)
                             />
                             <Area
                             type="monotone"
-                            dataKey="Income"
+                            dataKey="Inflow"
                             stroke="#26A646"
                             fillOpacity={1} 
                             fill="url(#colorPv)"
                             />
                             <Area
                             type="monotone"
-                            dataKey="Expense"
+                            dataKey="Outflow"
                             stroke="#BF0413"
                             fillOpacity={1} 
                             fill="url(#colorUv)"

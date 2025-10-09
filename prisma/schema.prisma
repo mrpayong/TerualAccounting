@@ -196,6 +196,7 @@ model cashFlow {
 
 
   createdAt               DateTime    @default(now()) // timestamp for generation
+  updatedAt               DateTime    @default(now())
 
   @@index([accountId])
   @@index([userId])

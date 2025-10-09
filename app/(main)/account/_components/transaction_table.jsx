@@ -104,7 +104,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 
 
-const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => { 
+const TransactionTable = ({transactions, id, subAccounts, recentCashflows, relatedIDs}) => { 
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
@@ -171,6 +171,7 @@ const rowsPerPage = 10; // Default rows per page
     const [reason, setReason] = useState("");
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [TransactionIdToDelete, setTransactionIdToDelete] = useState("");
+    const [yesBtnStatus, setYesBtnStatus] = useState(false);
     
     const handleDeletingModal = (T_id) =>{ // delete button(menu dropdwn)
       setDeleteModalOpen(true);
@@ -185,7 +186,6 @@ const rowsPerPage = 10; // Default rows per page
       if(TransactionIdToDelete !== ""){
         setTransactionIdToDelete("")
         setDeleteModalOpen(false)
-        console.log("id:", TransactionIdToDelete)
       }
     }
 
@@ -194,7 +194,7 @@ const rowsPerPage = 10; // Default rows per page
       if(reason === "" || !reason || reason === null){
         toast.error("Reason of deletion is required.");
       }
-      setDeleteModalOpen(false);
+      
       if (TransactionIdToDelete && reason && acount_id){
         deleteFn([TransactionIdToDelete], acount_id, JSON.stringify(reason));
       }
@@ -251,7 +251,6 @@ const rowsPerPage = 10; // Default rows per page
              transaction.description?.toLowerCase().includes(searchLower) ||
              transaction.refNumber?.toLowerCase().includes(searchLower) ||
              transaction.category?.toLowerCase().includes(searchLower)
-             
             )
         );
         }
@@ -347,13 +346,13 @@ const rowsPerPage = 10; // Default rows per page
       };
 
     const handleSelectAll = () => {
-        const currentPageIds = paginatedTransactions.map((t) => t.id);
-        setSelectedIds((current) =>
-          currentPageIds.every((id) => current.includes(id))
-            ? current.filter((id) => !currentPageIds.includes(id)) // Deselect all on the current page
-            : [...current, ...currentPageIds.filter((id) => !current.includes(id))] // Select all on the current page
-        );
-      };
+      const allIds = filteredAndSortedTransactions.map((t) => t.id);
+      setSelectedIds((current) =>
+        allIds.every((id) => current.includes(id))
+          ? current.filter((id) => !allIds.includes(id)) // Deselect all
+          : [...current, ...allIds.filter((id) => !current.includes(id))] // Select all
+      );
+    };
     
     
 
@@ -383,19 +382,22 @@ const rowsPerPage = 10; // Default rows per page
     }
 
 
+
+
     const resetForm = () => {
         setResponse(0.00);
       };
     const handleCashflow = async (e) => {
         e.preventDefault();
-      
-       
             if (response === 0) {
               toast.error(`Beginning balance must not be zero.`);
               return;
             }
-        
-            if (selectedIds === null || selectedIds.length === 0 && selectedSubAccountIds.length === 0) {
+            console.log("selectedIds:", selectedIds)
+            const eligibleSelectedIds = selectedIds.filter(id => !relatedIDs.includes(id));
+            
+            console.log("eligibleSelectedIds:", eligibleSelectedIds)
+            if (eligibleSelectedIds === null || eligibleSelectedIds.length === 0 && selectedSubAccountIds.length === 0) {
               toast.error(`Select transactions.`);
               return;
             }
@@ -404,10 +406,9 @@ const rowsPerPage = 10; // Default rows per page
           //   console.log("Selected Transactions: ", selectedIds);
           //   // Create the cashflow
           //   await cfsFn(selectedIds, parseFloat(response));
-          if (response !== null || selectedIds.length !== 0){
-              await cfsFn(selectedIds, parseFloat(response), selectedSubAccountIds, id);
+          if (response !== null || eligibleSelectedIds.length !== 0){
+              await cfsFn(eligibleSelectedIds, parseFloat(response), selectedSubAccountIds, id);
           }
-        
       }; 
 
       useEffect(() => {
@@ -574,8 +575,8 @@ const rowsPerPage = 10; // Default rows per page
             toast.error("Transactions already related to this Group. Check selected transactions.")
           }
           if(subAccountData?.code === 423){
-            console.log("Select Transactions with same type (INCOME or EXPENSE).")
-            toast.error("Select Transactions with same type (INCOME or EXPENSE).")
+            console.log("Select Transactions with same type (INFLOW or OUTFLOW).")
+            toast.error("Select Transactions with same type (INFLOW or OUTFLOW).")
           }
           if(subAccountData?.code === 424){
             console.log("Transactions must be same Activity types.")
@@ -604,6 +605,10 @@ const rowsPerPage = 10; // Default rows per page
           if(subAccountData?.code === 505){
             console.log("Code:505, System Error.")
             toast.error("Error creating group. Consult System Admin.")
+          }
+          if(subAccountData?.code === 422){
+            console.log("Code:422, System Error.")
+            toast.error('The New Group Name already exists.')
           }
         }, [subAccountData])
 
@@ -719,6 +724,15 @@ const rowsPerPage = 10; // Default rows per page
         const second = d.getUTCSeconds().toString().padStart(2, "0");
         return `${month} ${day}, ${year}, ${hour}:${minute}:${second} UTC`;
       }
+
+      function typeFormat(type){
+        if(type === "EXPENSE"){
+          return "OUTFLOW"
+        }
+        if(type === "INCOME"){
+          return "INFLOW"
+        }
+      }
       const TransactionDetailshandler = (transaction) => {
         if (typeof window === "undefined") return;
         const formatDateTime = (dateString) => {
@@ -748,13 +762,12 @@ const rowsPerPage = 10; // Default rows per page
             <div class="${fontZenKaku.className} text-left space-y-2">
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Date of transaction:</label> ${formatDate(transaction.date)}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Amount:</label><span class="${amountColor}"> ${formatAmount(transaction.amount)}</span></p>
-              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Type:</label> ${transaction.type}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Type:</label> ${typeFormat(transaction.type)}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Reference number:</label> ${transaction.refNumber || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Account title:</label> ${transaction.category || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Activity type:</label> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Description:</label> ${transaction.description || "No description provided."}</p>
-              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Recorded on:</label> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>
-              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Edited on:</label> ${formatUtcDateWithTime(transaction.updatedAt) || "N/A"}</p>              
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Recorded on:</label> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>           
             </div>
             <div class="text-center mt-4">
               <p class="text-xs text-neutral-400 italic">
@@ -993,11 +1006,11 @@ const handleDownloadCDBExcel = () => {
 };
 
 
-const handleEditTransaction = (transactionId) => {
-  setDropdownDisabledId(true);
-  setEditLoadingId(true);
-  router.push(`/transaction/create?edit=${transactionId}`);
-};
+// const handleEditTransaction = (transactionId) => {
+//   setDropdownDisabledId(true);
+//   setEditLoadingId(true);
+//   router.push(`/transaction/create?edit=${transactionId}`);
+// };
 
   const [tableBg, setTableBg] = useState(null)
 
@@ -1005,7 +1018,9 @@ const handleEditTransaction = (transactionId) => {
     setTableBg(id)
   }
 
-
+  function formatNumberWithCommas(number) {
+    return Number(number).toLocaleString();
+  }
 
 
 
@@ -1066,8 +1081,8 @@ const handleEditTransaction = (transactionId) => {
                       </SelectTrigger>
 
                       <SelectContent>
-                          <SelectItem className={`${fontZenKaku.className} font-medium `} value='INCOME'>Income</SelectItem>
-                          <SelectItem className={`${fontZenKaku.className} font-medium `} value='EXPENSE'>Expense</SelectItem>
+                          <SelectItem className={`${fontZenKaku.className} font-medium `} value='INCOME'>Inflow</SelectItem>
+                          <SelectItem className={`${fontZenKaku.className} font-medium `} value='EXPENSE'>Outflow</SelectItem>
                       </SelectContent>
                   </Select>
 
@@ -1193,93 +1208,62 @@ const handleEditTransaction = (transactionId) => {
                               )}
                           </ul> */}
 
-                          <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
-                            {existingPeriodLabels.length === 0 ? (
-                              <li className="text-gray-400">No previous periods found.</li>
-                            ) : (
-                              existingPeriodLabels.map(({ label, value }) => (
-                                <li key={value} className="flex flex-row items-center gap-1">
-                                  <Checkbox
-                                    checked={selectedPeriod === value}
-                                    onCheckedChange={() => handleCheckboxChange(value)}
-                                    id={`checkbox-${value}`}
-                                  />
-                                  <label htmlFor={`checkbox-${value}`} className={`${fontZenKaku.className} font-normal`}>
-                                    {label}
-                                  </label>
-                                  <span className={`${fontZenKaku.className} font-medium ml-1 text-xs text-gray-500`}>
-                                    (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
-                                  </span>
-                                </li>
-                              ))
-                            )}
-                          </ul>
-                        </div>
-                      </div>
-                    
-                      <form onSubmit={handleCashflow} className="space-y-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                          <div className="w-full sm:w-64 relative min-h-[44px]">
-                            {/* Animated input switch */}
-                            <div className="relative">
-                              {/* Read-only, formatted input */}
-                              <Input
-                                type="text"
-                                readOnly
-                                value={
-                                  selectedPeriod && periodCashflowMap[selectedPeriod]
-                                    ? formatTableAmount(periodCashflowMap[selectedPeriod].endBalance)
-                                    : ""
-                                }
-                                className={`
-                                  ${fontZenKaku.className} font-normal tracking-wider !text-base absolute top-0 left-0 w-full bg-black/20 text-gray-800 border-purple-500/30
-                                  placeholder:text-gray-400 focus-visible:ring-purple-500
-                                  focus-visible:border-purple-500 transition-all duration-300
-                                  ${selectedPeriod && periodCashflowMap[selectedPeriod]
-                                    ? "opacity-100 translate-y-0 pointer-events-auto"
-                                    : "opacity-0 -translate-y-2 pointer-events-none"}
-                                `}
-                                style={{ zIndex: selectedPeriod && periodCashflowMap[selectedPeriod] ? 10 : 0 }}
-                              />
-                              {/* Editable number input */}
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={selectedPeriod && periodCashflowMap[selectedPeriod] ? "" : response}
-                                onChange={handleSample}
-                                placeholder="0.00"
-                                className={`
-                                  ${fontZenKaku.className} font-normal !text-base tracking-wider w-full bg-black/20 text-gray-800 border-purple-500/30
-                                  placeholder:text-gray-400 focus-visible:ring-purple-500
-                                  focus-visible:border-purple-500 transition-all duration-300
-                                  ${selectedPeriod && periodCashflowMap[selectedPeriod]
-                                    ? "opacity-0 translate-y-2 pointer-events-none absolute top-0 left-0"
-                                    : "opacity-100 translate-y-0 pointer-events-auto relative"}
-                                `}
-                                style={{ zIndex: selectedPeriod && periodCashflowMap[selectedPeriod] ? 0 : 10 }}
-                              />
-                            </div>
-                          </div>
-                          <Button
-                              variant="outline"
-                              className={`${fontZenKaku.className} font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
-                                  border border-blue-500/30 hover:border-blue-500/50
-                                  shadow-lg shadow-blue-500/20
-                                  transition-all duration-300
-                                  px-6 py-3 rounded-full !text-base
-                                  flex items-center gap-2
-                                  hover:scale-105`}
-                              size="sm"
-                              type="submit"
-                              disabled={cfsLoading || !response || selectedIds.length === 0 && selectedSubAccountIds.length === 0}
-                          >
-                          {!cfsLoading
-                              ? ("Generate")
-                              : (<><Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" /> <span className="text-gray-500">Generating</span></>)
-                          }
-                          </Button>
-                        </div>
-                      </form>
+      <label className={`${fontZenKaku.className} font-normal mb-1 block`}>Beginning Balance</label>
+      <select
+        className={`${fontZenKaku.className} font-normal w-full p-2 border border-gray-300 rounded bg-white`}
+        value={selectedPeriod || (response === "" ? "" : "custom")}
+        onChange={e => {
+          if (e.target.value === "custom") {
+            setSelectedPeriod(null);
+            setResponse("");
+          } else {
+            setSelectedPeriod(e.target.value);
+            setResponse(periodCashflowMap[e.target.value]?.endBalance ?? "");
+          }
+        }}
+      >
+        <option value="" disabled>Select previous period or custom</option>
+        {existingPeriodLabels.map(({ label, value }) => (
+          <option key={value} value={value}>
+            {label} (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
+          </option>
+        ))}
+        <option value="custom">Other (Enter manually)</option>
+      </select>
+      {(!selectedPeriod || selectedPeriod === "custom") && (
+        <Input
+          type="number"
+          step="0.01"
+          value={response}
+          onChange={handleSample}
+          placeholder="Enter beginning balance"
+          className={`${fontZenKaku.className} font-normal !text-base mt-2`}
+        />
+      )}
+    </div>
+  </div>
+  <form onSubmit={handleCashflow} className="space-y-4">
+    <div className="flex flex-col sm:flex-row items-center gap-4">
+      <Button
+        variant="outline"
+        className={`${fontZenKaku.className} font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+            border border-blue-500/30 hover:border-blue-500/50
+            shadow-lg shadow-blue-500/20
+            transition-all duration-300
+            px-6 py-3 rounded-full !text-base
+            flex items-center gap-2
+            hover:scale-105`}
+        size="sm"
+        type="submit"
+        disabled={cfsLoading || !response || selectedIds.length === 0 && selectedSubAccountIds.length === 0}
+      >
+        {!cfsLoading
+          ? ("Generate")
+          : (<><Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" /> <span className="text-gray-500">Generating</span></>)
+        }
+      </Button>
+    </div>
+  </form>
                       <p className={`${fontZenKaku.className} font-normal text-[0.85rem]/[1rem] text-gray-700 mt-4 tracking-wide`}>
                         Choose previous ending balance from respective period.<br/> 
                         Enter new beginning balance for new period only.
@@ -1407,8 +1391,8 @@ const handleEditTransaction = (transactionId) => {
                           )
                         }
                       <div className="flex justify-around items-center">
-                        <DialogFooter className="text-gray-400 tracking-normal">
-                          <DialogDescription>
+                        <DialogFooter>
+                          <DialogDescription className={`${fontZenKaku.className} text-black font-medium tracking-normal text-sm text-center`}>
                           {cfsLoading
                             ? "Re-assessing your last entry..."
                             : isSmallScreen
@@ -1591,7 +1575,7 @@ const handleEditTransaction = (transactionId) => {
                     ${fontZenKaku.className}`}
                 >
                   <Trash className="h-4 w-4" />
-                  <span>Delete {selectedIds.length} transactions</span> 
+                  <span>Delete {formatNumberWithCommas(selectedIds.length)} transactions</span> 
                 </Button>
               </div>
             )}
@@ -1800,7 +1784,7 @@ const handleEditTransaction = (transactionId) => {
                             sideOffset={8}>
 
                             <div className="flex flex-col gap-2">
-                            <Button
+                            {/* <Button
                               onClick={() => handleEditTransaction(transaction.id)}
                               variant="outline"
                               className="flex items-center gap-2 
@@ -1814,7 +1798,7 @@ const handleEditTransaction = (transactionId) => {
                                 <Pen className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
                                 <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Edit</span>
                               </span>
-                            </Button>
+                            </Button> */}
                           
                             <Button
                                 onClick={() => handleDeletingModal(transaction.id)}
@@ -1850,6 +1834,7 @@ const handleEditTransaction = (transactionId) => {
                             </DialogHeader>
                             <Textarea 
                               required
+                              disabled={deleteLoading}
                               value={reason}
                               onChange={(e)=> setReason(e.target.value)}
                               placeholder="Type your reason here."
@@ -1859,6 +1844,7 @@ const handleEditTransaction = (transactionId) => {
                                   <Button 
                                   type="button"
                                   variant="outline"
+                                  disabled={deleteLoading}
                                   onClick={handleSingleDelete}
                                   className="border-2 border-green-400 
                                   hover:border-0 hover:bg-green-400 
@@ -1869,7 +1855,7 @@ const handleEditTransaction = (transactionId) => {
                                 
                                   <DialogClose asChild>
                                     <Button
-                                      
+                                      disabled={deleteLoading}
                                       onClick={handleCancelDeletingModal}
                                       type="button"
                                       variant="outline"
@@ -2079,7 +2065,6 @@ const handleEditTransaction = (transactionId) => {
             />
           </div>
         </TabsContent>
-
       </Tabs>
       
       

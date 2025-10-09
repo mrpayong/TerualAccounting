@@ -350,152 +350,152 @@ function accumulateByMonth(transactions) {
   }
 }
 
-export async function getCashflowForecast(accountId) {
-  try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+// export async function getCashflowForecast(accountId) {
+//   try {
+//     const { userId } = await auth();
+//     if (!userId) throw new Error("Unauthorized");
 
-    // Find user in DB
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-      select: {
-        role: true,
-        id: true
-      }
-    });
-    if (!user) throw new Error("User not found.");
-    if (user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
+//     // Find user in DB
+//     const user = await db.user.findUnique({
+//       where: { clerkUserId: userId },
+//       select: {
+//         role: true,
+//         id: true
+//       }
+//     });
+//     if (!user) throw new Error("User not found.");
+//     if (user.role !== "ADMIN") {
+//       throw new Error("Unauthorized");
+//     }
 
-    // Fetch only monthly cashflow statements for the user, selecting only date and netChange
-    const cashflows = await db.cashFlow.findMany({
-      where: {
-        accountId,
-        periodCashFlow: "MONTHLY",
-      },
-      orderBy: { date: "asc" },
-      select: {
-        date: true,
-        netChange: true,
-        startBalance: true,
-        endBalance: true,
-        activityTotal: true,
-      },
-    });
+//     // Fetch only monthly cashflow statements for the user, selecting only date and netChange
+//     const cashflows = await db.cashFlow.findMany({
+//       where: {
+//         accountId,
+//         periodCashFlow: "MONTHLY",
+//       },
+//       orderBy: { date: "asc" },
+//       select: {
+//         date: true,
+//         netChange: true,
+//         startBalance: true,
+//         endBalance: true,
+//         activityTotal: true,
+//       },
+//     });
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+//     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
 
-    // Prepare prompt for Gemini
-    const prompt = `
-      You are an expert financial data analyst in an Accounting firm in the Philippines with clients that are also located in the Philippines. 
-      Given the cashflow data with monthly gross cashflow (netChange) values, 
-      forecast the gross cashflow for the next quarter (3 months) using the Moving Average method.
-      The activityTotal is an array of the total activities it is: [totalOperating, totalInvesting, totalFinancing].
-      Make an insight about the cashflow trends and potential accounting legal compliance issues that may 
-      come up base on the historical cashflow data provided to prevent penalties and compliance issues with the Bureau of Internal Revenue. 
-      List at least four possible financial legal compliance issues base on the historical cashflow data provided. 
-      If no possible financial legal compliance issues can be seen, then make suggestion for improvements, do not give suggestion for improvement 
-      if there are visible financial legal compliance issues. Keep it short and professional.
-      Return the forecast as a JSON object with each forecasted month and amount, and a brief insight.
+//     // Prepare prompt for Gemini
+//     const prompt = `
+//       You are an expert financial data analyst in an Accounting firm in the Philippines with clients that are also located in the Philippines. 
+//       Given the cashflow data with monthly gross cashflow (netChange) values, 
+//       forecast the gross cashflow for the next quarter (3 months) using the Moving Average method.
+//       The activityTotal is an array of the total activities it is: [totalOperating, totalInvesting, totalFinancing].
+//       Make an insight about the cashflow trends and potential accounting legal compliance issues that may 
+//       come up base on the historical cashflow data provided to prevent penalties and compliance issues with the Bureau of Internal Revenue. 
+//       List at least four possible financial legal compliance issues base on the historical cashflow data provided. 
+//       If no possible financial legal compliance issues can be seen, then make suggestion for improvements, do not give suggestion for improvement 
+//       if there are visible financial legal compliance issues. Keep it short and professional.
+//       Return the forecast as a JSON object with each forecasted month and amount, and a brief insight.
       
-      **Important instructions:**
-      - You must use the equation of the Moving Average type of Financial Forecasting.
-      - Do not skip a month in forecasting.
-      - The forecast will always begin on the month after the date of the last historical cashflow data.
-      - The "issuesOrImprovements" field must be an array of at least four short phrases (not sentences).
-      - Do not use full sentences. Each array item should be a phrase only.
-      - Do not include explanations or extra text outside the JSON.
-      - Example output:
-      {
-        "forecast": [
-          { "month": "2025-07", "amount": 12345 },
-          { "month": "2025-08", "amount": 23456 },
-          { "month": "2025-09", "amount": 34567 }
-        ],
-        "insight": "Steady cashflow growth observed.",
-        "issuesOrImprovements": [
-          "Delayed VAT remittance",
-          "Incomplete expense documentation",
-          "Unreconciled bank statements",
-          "Late tax filing"
-        ]
-      }
-      Gross Cashflow Data:
-      ${JSON.stringify(cashflows, null, 2)}
+//       **Important instructions:**
+//       - You must use the equation of the Moving Average type of Financial Forecasting.
+//       - Do not skip a month in forecasting.
+//       - The forecast will always begin on the month after the date of the last historical cashflow data.
+//       - The "issuesOrImprovements" field must be an array of at least four short phrases (not sentences).
+//       - Do not use full sentences. Each array item should be a phrase only.
+//       - Do not include explanations or extra text outside the JSON.
+//       - Example output:
+//       {
+//         "forecast": [
+//           { "month": "2025-07", "amount": 12345 },
+//           { "month": "2025-08", "amount": 23456 },
+//           { "month": "2025-09", "amount": 34567 }
+//         ],
+//         "insight": "Steady cashflow growth observed.",
+//         "issuesOrImprovements": [
+//           "Delayed VAT remittance",
+//           "Incomplete expense documentation",
+//           "Unreconciled bank statements",
+//           "Late tax filing"
+//         ]
+//       }
+//       Gross Cashflow Data:
+//       ${JSON.stringify(cashflows, null, 2)}
 
-      Only respond with valid JSON in this exact format:
-      {
-        "forecast": [
-          { "month": "YYYY-MM", "amount": "number" },
-          ...
-        ],
-        "insight": "string",
-        "issuesOrImprovements": [
-          "string",
-          "string",
-          "string",
-          "string",
-          ...
-        ]
-      }
-      `;
+//       Only respond with valid JSON in this exact format:
+//       {
+//         "forecast": [
+//           { "month": "YYYY-MM", "amount": "number" },
+//           ...
+//         ],
+//         "insight": "string",
+//         "issuesOrImprovements": [
+//           "string",
+//           "string",
+//           "string",
+//           "string",
+//           ...
+//         ]
+//       }
+//       `;
 
-    // Call Gemini 1.5 Flash
+//     // Call Gemini 1.5 Flash
 
-    const result = await model.generateContent([prompt]);
-    const response = await result.response;
-    const text = response.text();
-    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+//     const result = await model.generateContent([prompt]);
+//     const response = await result.response;
+//     const text = response.text();
+//     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
-    // Parse and return the forecast
-    const forecast = JSON.parse(cleanedText);
+//     // Parse and return the forecast
+//     const forecast = JSON.parse(cleanedText);
     
 
-    const updateLog = await activityLog({
-      userId: user.id,
-      action: "getCashflowForecast",
-      args: {
-        account_ID: accountId,
-        historical: cashflows.map(cf => ({
-          month: cf.date.toISOString().slice(0, 7), // "YYYY-MM"
-          netChange: cf.netChange,
-        })),
-        forecast: forecast.forecast,
-        insight: forecast.insight,
-        issuesOrImprovements: forecast.issuesOrImprovements,
-      },
-      timestamp: new Date()
-    });
-    if(updateLog.success === false){
-      await db.activityLog.create({
-        data: {
-          userId: user.id,
-          action: "getCashflowForecast",
-          meta: { message: "Possible System interruption: Failed to log AI Forecast of Cashflows" },
-        }
-      })
-    }
-    return {
-      code: 200,
-      historical: cashflows.map(cf => ({
-        month: cf.date.toISOString().slice(0, 7), // "YYYY-MM"
-        netChange: cf.netChange,
-      })),
-      forecast: forecast.forecast,
-      insight: forecast.insight,
-      issuesOrImprovements: forecast.issuesOrImprovements,
-    };
-  } catch (error) {
-    console.log("Error in getCashflowForecast:", error);
-    return {code:500, success: false, message: "Failed to generate net change forecast."}
-  }
-}
+//     const updateLog = await activityLog({
+//       userId: user.id,
+//       action: "getCashflowForecast",
+//       args: {
+//         account_ID: accountId,
+//         historical: cashflows.map(cf => ({
+//           month: cf.date.toISOString().slice(0, 7), // "YYYY-MM"
+//           netChange: cf.netChange,
+//         })),
+//         forecast: forecast.forecast,
+//         insight: forecast.insight,
+//         issuesOrImprovements: forecast.issuesOrImprovements,
+//       },
+//       timestamp: new Date()
+//     });
+//     if(updateLog.success === false){
+//       await db.activityLog.create({
+//         data: {
+//           userId: user.id,
+//           action: "getCashflowForecast",
+//           meta: { message: "Possible System interruption: Failed to log AI Forecast of Cashflows" },
+//         }
+//       })
+//     }
+//     return {
+//       code: 200,
+//       historical: cashflows.map(cf => ({
+//         month: cf.date.toISOString().slice(0, 7), // "YYYY-MM"
+//         netChange: cf.netChange,
+//       })),
+//       forecast: forecast.forecast,
+//       insight: forecast.insight,
+//       issuesOrImprovements: forecast.issuesOrImprovements,
+//     };
+//   } catch (error) {
+//     console.log("Error in getCashflowForecast:", error);
+//     return {code:500, success: false, message: "Failed to generate net change forecast."}
+//   }
+// }
 
 
 
-export async function getOverallFinancialDataAnalysis(cashflowForecast, inflowOutflowForecast) {
+export async function getOverallFinancialDataAnalysis(inflowOutflowForecast) {
   try {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -515,7 +515,6 @@ export async function getOverallFinancialDataAnalysis(cashflowForecast, inflowOu
     throw new Error("Unauthorized");
   }
   console.log(" inflowOutflowForecast[3]: ",  inflowOutflowForecast )
-  console.log("cashflowForecast[3]: ", cashflowForecast,  )
 
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -527,8 +526,7 @@ export async function getOverallFinancialDataAnalysis(cashflowForecast, inflowOu
     with a focus on practical, high-impact business recommendations relevant to the local economic context.
 
     The forecasted data provided are calculated from the historical financial data using the Moving Average type of financial forecasting. Using the data 
-    provided — which includes the forecast of overall cashflows as well as detailed inflow and outflow 
-    forecasts — generate exactly **four (4)** strategic recommendations. These will be presented to 
+    provided — which includes the forecast of detailed inflow and outflow — generate exactly **four (4)** strategic recommendations. These will be presented to 
     decision-makers through a hybrid Decision Support System. Your recommendations must be **data-driven**, 
     **concise**, and **actionable** within the operational realities of businesses in the Philippines. Only make recommendations that are relevant to the provided 
     financial data.
@@ -549,15 +547,12 @@ export async function getOverallFinancialDataAnalysis(cashflowForecast, inflowOu
 
     ### Example Output Format (strictly JSON):
     {
-      { "id": 1
+      { "id": 1,
         "recommendationTitle": Negotiate Lower Operating Costs,
         "detail": Identify areas where operating expenses can be reduced, such as renegotiating supplier contracts or streamlining processes. This will improve profitability and free up cash.,
         "impactLevel": HIGH IMPACT
       }
     }
-
-    Here is the cashflow forecast data:
-    ${JSON.stringify(cashflowForecast, null, 2)}
 
     Here is the inflow/outflow forecast data:
     ${JSON.stringify(inflowOutflowForecast, null, 2)}

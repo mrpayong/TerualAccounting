@@ -146,22 +146,23 @@ const typenHandle = (type) => {
       </CardHeader>
 
       <CardContent>
-      <div className={`${fontZenKaku.className} font-black text-3xl flex items-center gap-2`}>
-    {isLoading ? (
-      <>
-        <span className="opacity-50">{name}</span>
-        <Loader2 className="h-5 w-5 animate-spin text-neutral-500" />
-      </>
-    ) : (
-      name
-    )}
+      <div className={`${fontZenKaku.className} font-black text-3xl flex items-center  gap-2 !whitespace-nowrap !overflow-hidden !text-ellipsis`}>
+      {name}
   </div>
-        <Badge variant="outline"className={`mt-1 bg-black/85 text-[#FDBD01] border-black
-          ${fontOrbitron.className} tracking-wide md:tracking-wider 
-          font-normal text-xs md:text-[0.795rem]/[1rem]`}>
-          {typenHandle(type)}
-    
-        </Badge>
+        <div className="flex flex-row items-center gap-1">
+          <Badge variant="outline"className={`mt-1 bg-black/85 text-[#FDBD01] border-black
+            ${fontOrbitron.className} tracking-wide md:tracking-wider 
+            font-normal text-xs md:text-[0.795rem]/[1rem]`}>
+            {typenHandle(type)}
+          </Badge>
+          {isLoading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin text-neutral-500" />
+            </>
+          ) : (
+          ''
+          )} 
+        </div>       
       </CardContent>
 
     

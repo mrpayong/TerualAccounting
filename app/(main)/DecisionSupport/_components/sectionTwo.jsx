@@ -22,6 +22,7 @@ import { useFinancialData } from '../_context/FinancialDataContext';
 import { BarLoader } from 'react-spinners';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 
@@ -209,9 +210,11 @@ const getPhilippinesDate = () => {
   }
 
   useEffect(() => {
-    if (AIschedData?.code === 200) {
-      console.log("AI Schedule Data:", AIschedData);
-      toast.success("AI schedule generated successfully.");
+    if(AIschedData && !schedLoading){
+      if (AIschedData?.code === 200) {
+        console.log("AI Schedule Data:", AIschedData);
+        toast.success("AI schedule generated successfully.");
+      }
     }
   }, [schedLoading, AIschedData])
 
@@ -282,20 +285,19 @@ const getPhilippinesDate = () => {
     });
   }, [AIschedData]);
 
-    const aiInsight = AIschedData?.insight || "Click generate for an insight.";
+    const aiInsight = AIschedData?.schedule.insight || "Click 'Schedule task' for an insight."; 
 
 
   const [isResponsive, setIsResponsive] = useState(true);
  const sizingProps = isResponsive ? {} : { width: 500, height: 300 };
 
 
-  const [areaChartData, setAreaChartData] = useState([]);
   const { selectedAccountId, setCashflowData, setInflowOutflowData, setOverallAnalysis, setOverallAnalysisLoading } = useFinancialData();
-  const {
-      loading: cfsForecastLoading,
-      fn: cfsForecastFn,
-      data: cfsForecastData,
-    } = useFetch(getCashflowForecast);
+  // const {
+  //     loading: cfsForecastLoading,
+  //     fn: cfsForecastFn,
+  //     data: cfsForecastData,
+  //   } = useFetch(getCashflowForecast);
 
   const {
     loading: inflowOutflowloading,
@@ -319,7 +321,7 @@ const getPhilippinesDate = () => {
       setOverallAnalysisLoading(true);
       try {
       
-      await cfsForecastFn(selectedAccountId);
+      // await cfsForecastFn(selectedAccountId);
       await inflowOutflowfn(selectedAccountId);
 
     } catch (error) {
@@ -330,13 +332,13 @@ const getPhilippinesDate = () => {
     }
   }
 
-  useEffect(() => {
-    if (cfsForecastData?.code === 500) {
-      setOverallAnalysisLoading(false);
-      setForecastLoading(false);
-      toast.error("AI request quota limit might have been reached. Try again later.");
-    }
-  }, [cfsForecastData]);
+  // useEffect(() => {
+  //   if (cfsForecastData?.code === 500) {
+  //     setOverallAnalysisLoading(false);
+  //     setForecastLoading(false);
+  //     toast.error("AI request quota limit might have been reached. Try again later.");
+  //   }
+  // }, [cfsForecastData]);
 
   useEffect(() => {
     if (inflowOutflowdata?.code === 500) {
@@ -349,11 +351,9 @@ const getPhilippinesDate = () => {
   useEffect(() => {
     async function fetchOverallFinancialData() {
       try {
-        if (inflowOutflowdata?.code === 200 && cfsForecastData?.code === 200) {
-          console.log("Overall Financial Data Analysis:", cfsForecastData);
+        if (inflowOutflowdata?.code === 200) {
           console.log("Overall Financial Data Analysis:", inflowOutflowdata);
           await overallFinancialDataFn(
-            cfsForecastData,
             inflowOutflowdata,
           );
         }
@@ -364,34 +364,34 @@ const getPhilippinesDate = () => {
       }
     }
     fetchOverallFinancialData();
-  }, [inflowOutflowdata, cfsForecastData]);
+  }, [inflowOutflowdata]);
 
 
-  useEffect(() => {
-    if (cfsForecastData?.code === 200) {
-      // Combine historical and forecast data
+  // useEffect(() => {
+  //   if (cfsForecastData?.code === 200) {
+  //     // Combine historical and forecast data
 
-    const sortedHistorical = (cfsForecastData.historical || [])
-      .slice() // clone array
-      .sort((a, b) => a.month.localeCompare(b.month));
+  //   const sortedHistorical = (cfsForecastData.historical || [])
+  //     .slice() // clone array
+  //     .sort((a, b) => a.month.localeCompare(b.month));
 
-    const limitedHistorical = sortedHistorical.slice(-6).map(d => ({
-      month: d.month,
-      netChange: d.netChange,
-      isForecast: false,
-    }));
+  //   const limitedHistorical = sortedHistorical.slice(-6).map(d => ({
+  //     month: d.month,
+  //     netChange: d.netChange,
+  //     isForecast: false,
+  //   }));
 
-    const forecast = (cfsForecastData.forecast || []).map(d => ({
-      month: d.month,
-      netChange: d.amount,
-      isForecast: true,
-    }));
+  //   const forecast = (cfsForecastData.forecast || []).map(d => ({
+  //     month: d.month,
+  //     netChange: d.amount,
+  //     isForecast: true,
+  //   }));
 
-    // Combine for chart
-    setAreaChartData([...limitedHistorical, ...forecast]);
-    setCashflowData(cfsForecastData);
-    }
-  }, [cfsForecastData]);
+  //   // Combine for chart
+  //   setAreaChartData([...limitedHistorical, ...forecast]);
+  //   setCashflowData(cfsForecastData);
+  //   }
+  // }, [cfsForecastData]);
 
 
 
@@ -424,7 +424,7 @@ const getPhilippinesDate = () => {
 
     setBarChartData(merged);
     setInflowOutflowData(inflowOutflowdata);
-    toast.success("Cashflow forecast generated.")
+    toast.success("Forecast generated.")
     }
   }, [inflowOutflowdata])
 
@@ -453,8 +453,6 @@ const getPhilippinesDate = () => {
 
 
 
-
-const xProp = areaChartData.find(d => d.isForecast)?.month
 
 
 
@@ -490,11 +488,11 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
 
 
   return (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-1 gap-6">
     {/* Left Column: Financial Forecasts */}
     <div className="lg:col-span-2 space-y-6">
       {/* Financial Forecast Chart */}
-      <Card>
+      {/* <Card>
         <CardHeader className={`${fontZenKaku.className}`}>
           <CardTitle className='!font-bold text-xl'>Forecast of Cashflow</CardTitle>
           <CardDescription className='!font-normal text-sm tracking-wide'>
@@ -610,7 +608,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
               {cfsForecastData ? "Regenerate" : "Generate AI powered forecast"} 
           </Button>
         </CardFooter>
-      </Card>
+      </Card> */}
 
       {/* Cash Flow Projection */}
       <Card>
@@ -622,7 +620,7 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
         </CardHeader>
         <CardContent className={`${fontZenKaku.className}`}>
           <div className="w-full px-2 md:px-4 h-[350px]">
-            {inflowOutflowloading || forecastLoading ? (
+            {inflowOutflowloading ? (
                 <ChartSkeleton height="h-[350px]" />
               ) : (
               <div className="w-full h-[350px] overflow-x-auto sm:overflow-x-visible">
@@ -686,18 +684,39 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
             )}
           </div>
         </CardContent>
-        <CardFooter>
-          <span className={`${fontZenKaku.className} font-normal tracking-wide text-sm text-neutral-500 p-1`}>AI will read all the historical data but 
-          the chart will only show 6 months worth of historical data</span>
+        <CardFooter className='flex justify-end'>
+          <Button 
+            className={`${fontZenKaku.className}
+            !rounded-button whitespace-nowrap 
+            shine-effect
+            flex items-center gap-1
+            bg-black text-white
+            text-sm md:!text-base font-meidum
+            tracking-wide transition
+            hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
+            hover:shadow-lg hover:shadow-blue-500/60
+            cursor-pointer
+            relative
+            overflow-hidden
+            `}
+            type="button"
+            disabled={inflowOutflowloading}
+            onClick={cfsForecastHandler}>
+              {inflowOutflowloading
+                ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
+                : <Brain/> 
+              }
+              {inflowOutflowdata ? "Regenerate" : "Generate AI powered forecast"} 
+          </Button>
         </CardFooter>
       </Card>
     </div>
 
     {/* Right Column: Urgency Meters and Calendar */}
-    <div className="space-y-6 flex flex-col h-full lg:min-h-[700px]">
+    <div className="flex flex-row-reverse gap-5">
         {/* AI CFS forecast insight */}
-      <div className="flex flex-col gap-4 h-auto lg:min-h-[340px]">
-        <Card className="h-full">
+      {/* <div className="w-full flex gap-4 h-auto lg:min-h-[340px]"> */}
+        {/* <Card className="h-full">
           <CardHeader className={`${fontZenKaku.className}`}>
             <CardTitle className='!font-bold text-base'>Insight on the Forecast</CardTitle>
             <CardDescription className="font-normal text-sm tracking-wide">
@@ -726,8 +745,33 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
               </Alert>
             )}
           </CardContent>
-        </Card>
-        <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 h-full`}>
+        </Card> */}
+        {/* <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 `}>
+          <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
+            <Info className="h-6 w-6 text-sky-500" />
+            {AIschedData
+              ? "AI says the ideal priority today:"
+              : "Ideal Priority Today"
+            }
+          </AlertTitle>
+          <AlertDescription className="font-normal text-base text-zinc-500">
+            {aiInsight}
+          </AlertDescription>
+        </Alert>  */}
+      {/* </div> */}
+
+        {/* Weekly Calendar */}
+      <Card className="w-full flex flex-col">
+        <CardHeader className={`${fontZenKaku.className}`}>
+          <CardTitle className='!font-bold text-base'>Weekly Schedule</CardTitle>
+          <CardDescription className='!font-normal text-sm tracking-wide'>
+            Your tasks and appointments for this week.{" "}
+            <Popover>
+              <PopoverTrigger className='hover:underline text-muted-foreground hover:text-blue-600 !font-normal cursor-pointer'>
+                Show AI Priority Insight.
+              </PopoverTrigger>
+              <PopoverContent>
+                <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 `}>
           <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
             <Info className="h-6 w-6 text-sky-500" />
             {AIschedData
@@ -739,14 +783,8 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
             {aiInsight}
           </AlertDescription>
         </Alert>
-      </div>
-
-        {/* Weekly Calendar */}
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className={`${fontZenKaku.className}`}>
-          <CardTitle className='!font-bold text-base'>Weekly Schedule</CardTitle>
-          <CardDescription className='!font-normal text-sm tracking-wide'>
-            Your tasks and appointments for this week
+              </PopoverContent>
+            </Popover>
           </CardDescription>
         </CardHeader>
         {/* Make CardContent take all available vertical space and arrange children in a column */}
@@ -785,20 +823,19 @@ const xProp = areaChartData.find(d => d.isForecast)?.month
                         {day.tasks.map((task) => (
                           <div key={task.id} className="bg-white rounded-lg border p-3 shadow-sm">
                             <div className="flex justify-between items-start">
-                              <div>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge className={`!font-medium !text-xs ${task.color} mb-1`}>
+                              <div className='flex flex-col'>
+                                <Badge className={`!font-medium !text-xs ${task.color} mb-1`}>
                                         {task.urgencyLabel}
                                       </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="!font-medium !text-sm max-w-xs">
-                                      {task.description}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                <p className="text-base font-medium">{task.taskName}</p>
+                                <Popover>
+                                  <PopoverTrigger className="!text-base !font-medium">
+                                    {task.taskName}
+                                  </PopoverTrigger>
+                                  <PopoverContent className="!font-medium !text-sm max-w-xs">
+                                    {task.description}
+                                  </PopoverContent>
+                                </Popover>
+                                {/* <p className="text-base font-medium">{task.taskName}</p> */}
                               </div>
                             </div>
                           </div>

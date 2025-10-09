@@ -23,7 +23,7 @@ const SectionFour = () => {
         <CardHeader className={`${fontZenKaku.className} p-4`}>
           <div className="flex flex-col-reverse md:flex-row md:justify-between gap-2 items-center">
             <div>
-              <CardTitle className="!font-bold text-xl text-center md:text-start">Overall Financial Data Analysis</CardTitle>
+              <CardTitle className="!font-bold text-xl text-center md:text-start">Forecast Analysis</CardTitle>
               <CardDescription className="font-nomral text-sm tracking-wide text-center md:text-start">
                 Recommendations based on AI's financial data analysis.
               </CardDescription>

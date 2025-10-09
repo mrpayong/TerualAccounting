@@ -97,7 +97,7 @@ const AddTransactionForm = ({
             category: "",
             printNumber: "Manually encoded",
             accountId: accountId || accounts.find((ac) => ac.id)?.id,
-            date: getPhilippinesDate(),
+            date: "",
             isRecurring: false,
         },
     });
@@ -118,22 +118,38 @@ const AddTransactionForm = ({
         (category) => category.type === type
     );
     
+    const formatDate = (dateString) => {
+        const date = new Date(dateString); // Parse the date string
+        const utcYear = date.getFullYear();
+        const utcMonth = date.getMonth();
+        const utcDay = date.getDate();
+        
+        // Format the date as "Month Day, Year"
+        return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toISOString();
+    };
+
+    const formatDateLabel = (dateString) => {
+    const date = new Date(dateString); // Parse the date string
+    const utcYear = date.getFullYear();
+    const utcMonth = date.getMonth(); // Month is zero-based
+    const utcDay = date.getDate();
+    
+    // Format the date as "Month Day, Year"
+    return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+    };
+
     const onSubmit = async (data) => {
         
         const formData = {
             ...data,
             amount: parseFloat(data.amount),
+            date: formatDate(data.date)
         };
-        
-        const sign = Math.sign(formData.amount)
-        if(formData.type === "EXPENSE" && sign !== -1){
-            toast.error(`Type and amount mismatch. Expense and ${formData.amount}. Add "-".`)
-            return;
-        }
-       if(formData.type === "INCOME" && sign !== 1){
-            toast.error(`Type and amount mismatch. Income and ${formData.amount}.`)
-            return;
-        }
+        console.log("date: ", formData.date)
         if (editMode) {
             transactionFn(editId, formData);
             setButtonsDisabled(true);
@@ -144,27 +160,14 @@ const AddTransactionForm = ({
     };
   
     useEffect(() => {
-        if (transactionResult?.code === 200 && transactionResult?.success && !transactionLoading) {
-            toast.success(
-                editMode
-                    ? "Transaction updated successfully."
-                    : "Transaction created successfully.", {
-                        duration: editMode
-                            ? 1000
-                            : 0
-                    }
-                );
-            reset();
-            
-        editMode
-            ? setTimeout(() => {
-                const promise = () => new Promise((resolve) => setTimeout(() => resolve({ name: 'Sonner' }), 2000));
-                router.push(`/account/${transactionResult.data.accountId}`);
-                toast.promise(promise, { loading: 'Going back, please wait.'});
-            }, 1000)
-            : setButtonsDisabled(false);
+        if (transactionResult?.success && !transactionLoading) {
+            if(transactionResult.code === 200){
+                toast.success("Transaction added successfully.")
+                reset();      
+                setButtonsDisabled(false);          
+            }
         }
-    }, [transactionResult, transactionLoading, editMode]);
+    }, [transactionResult, transactionLoading]);
 
 
 
@@ -206,19 +209,7 @@ const AddTransactionForm = ({
     // };
 
 
-      const formatDate = (dateString) => {
-        const date = new Date(dateString); // Parse the date string
-        const utcYear = date.getUTCFullYear();
-        const utcMonth = date.getUTCMonth(); // Month is zero-based
-        const utcDay = date.getUTCDate();
-      
-        // Format the date as "Month Day, Year"
-        return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-      };
+
 
     const handleScanComplete = (scannedData) => {
         console.log("Scanned Data: ", scannedData);
@@ -292,8 +283,8 @@ const AddTransactionForm = ({
                     </SelectTrigger>
 
                     <SelectContent>
-                        <SelectItem className='!font-normal !text-sm' value="EXPENSE">Expense</SelectItem>
-                        <SelectItem className='!font-normal !text-sm' value="INCOME">Income</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="EXPENSE">Outflow</SelectItem>
+                        <SelectItem className='!font-normal !text-sm' value="INCOME">Inflow</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -419,7 +410,7 @@ const AddTransactionForm = ({
                     {/* <label className="text-sm font-medium">Date of transaction</label> */}
                     <DatePicker
                     timezone="Asia/Manila"
-                    label={date ? formatDate(date) : "Pick a date"}
+                    label={date ? formatDateLabel(date) : "Pick a date"}
                     value={date} // Watch the "date" field from react-hook-form
                     onChange={(date) => {
                         setValue("date", date); // Update the form state with the selected date

@@ -268,6 +268,7 @@ export async function getUnauthUser() {
     const {userId} = await auth();
 
     if (!userId) {
+        // test by removing "!" in the condition above
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         
