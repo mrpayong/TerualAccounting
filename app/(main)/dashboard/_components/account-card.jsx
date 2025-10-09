@@ -146,9 +146,9 @@ const typenHandle = (type) => {
       </CardHeader>
 
       <CardContent>
-      <div className={`${fontZenKaku.className} font-black text-3xl flex items-center  gap-2 !whitespace-nowrap !overflow-hidden !text-ellipsis`}>
-      {name}
-  </div>
+        <div className={`${fontZenKaku.className} font-black text-3xl flex items-center  gap-2`}>
+          <label className="sm:whitespace-nowrap sm:overflow-hidden sm:text-ellipsis">{name}</label>
+        </div>
         <div className="flex flex-row items-center gap-1">
           <Badge variant="outline"className={`mt-1 bg-black/85 text-[#FDBD01] border-black
             ${fontOrbitron.className} tracking-wide md:tracking-wider 
