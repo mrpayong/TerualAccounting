@@ -161,8 +161,8 @@ function calculateNextRecurringDate(startDate, interval) {
 export async function scanReceipt(file, ScannerUserId){
   try {
     console.log("[1]")
-    const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
-
+    const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
+    console.log("[1] model is: ", model);
     // converts file into ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
     
@@ -197,7 +197,7 @@ export async function scanReceipt(file, ScannerUserId){
           "particular": "string"
           "type": "string"
           "Activity": "string"
-          "printNumber": "string
+          "printNumber": "string"
         }
 
      
@@ -222,7 +222,6 @@ console.log("[4]")
 
 console.log("[5]")
       const data = JSON.parse(cleanedText);
-      console.log("Parsed data:", data);
       if (!data.merchantName) {
         return {code:401, success: false, message:"No Merchant name."};
       }

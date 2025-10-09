@@ -211,25 +211,23 @@ const getPhilippinesDate = () => {
 
   useEffect(() => {
     if(AIschedData && !schedLoading){
-      if (AIschedData?.code === 200) {
+      if (AIschedData.code === 200) {
         console.log("AI Schedule Data:", AIschedData);
         toast.success("AI schedule generated successfully.");
+        if (AIschedData.code === 500) {
+          console.log("Error:", AIschedData.message);
+          toast.error("AI request quota limit might have been reached. Try again later.");
+        }
+        if (AIschedData.code === 501) {
+          console.log("Error:", AIschedData.message);
+          toast.error("Failed to generate suggested schedule. Try again.");
+        }
       }
     }
   }, [schedLoading, AIschedData])
 
-  useEffect(() => {
-    if (AIschedData?.code === 500) {
-      console.log("Error:", AIschedData.message);
-      toast.error("AI request quota limit might have been reached. Try again later.");
-    }
-    if (AIschedData?.code === 501) {
-      console.log("Error:", AIschedData.message);
-      toast.error("Failed to generate suggested schedule. Try again.");
-    }
-  }, [AIschedData])
 
-
+console.log("AIschedData", AIschedData)
   
   function mapAIScheduleToWeekDays(AIschedData) {
       const today = new Date();
@@ -615,7 +613,7 @@ const getPhilippinesDate = () => {
         <CardHeader className={`${fontZenKaku.className}`}>
           <CardTitle className="!font-bold text-xl">Inflow and Outflow Forecast</CardTitle>
           <CardDescription className="!font-normal text-sm tracking-wide">
-            The forecast inflow and outflow of cash based on historical data.
+            The forecast of inflow and outflow of cash based on historical data.  
           </CardDescription>
         </CardHeader>
         <CardContent className={`${fontZenKaku.className}`}>
@@ -767,22 +765,23 @@ const getPhilippinesDate = () => {
           <CardDescription className='!font-normal text-sm tracking-wide'>
             Your tasks and appointments for this week.{" "}
             <Popover>
-              <PopoverTrigger className='hover:underline text-muted-foreground hover:text-blue-600 !font-normal cursor-pointer'>
+              <PopoverTrigger className={`${fontZenKaku.className} underline text-muted-foreground !text-blue-600 
+              !font-normal cursor-pointer hover:!font-bold hover:no-underline`}>
                 Show AI Priority Insight.
               </PopoverTrigger>
               <PopoverContent>
                 <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 `}>
-          <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
-            <Info className="h-6 w-6 text-sky-500" />
-            {AIschedData
-              ? "AI says the ideal priority today:"
-              : "Ideal Priority Today"
-            }
-          </AlertTitle>
-          <AlertDescription className="font-normal text-base text-zinc-500">
-            {aiInsight}
-          </AlertDescription>
-        </Alert>
+                  <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
+                    <Info className="h-6 w-6 text-sky-500" />
+                    {AIschedData
+                      ? "AI says the ideal priority today:"
+                      : "Ideal Priority Today"
+                    }
+                  </AlertTitle>
+                  <AlertDescription className="font-normal text-base text-zinc-500">
+                    {aiInsight}
+                  </AlertDescription>
+                </Alert>
               </PopoverContent>
             </Popover>
           </CardDescription>

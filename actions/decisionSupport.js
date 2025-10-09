@@ -62,7 +62,7 @@ export async function getSuggestedWeeklySchedule() {
       throw new Error("Unauthorized");
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     // Fetch all tasks for the user
     console.log("retrieving Tasks Data")
     const tasks = await db.Task.findMany({
@@ -201,7 +201,7 @@ export async function getInflowOutflowForecast(accountId){
     throw new Error("Unauthorized");
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Fetch all transactions for the user
   console.log("retrieving Transactions Data")
@@ -514,22 +514,29 @@ export async function getOverallFinancialDataAnalysis(inflowOutflowForecast) {
   if (user.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
-  console.log(" inflowOutflowForecast[3]: ",  inflowOutflowForecast )
+  console.log(" inflowOutflowForecast[3]: ",  inflowOutflowForecast.historical.inflows)
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   
   console.log("feeding to prompt...")
   const prompt = `
     You are a skilled and professional financial data analyst working in an Accounting firm based in the Philippines, 
     serving clients who are also based in the Philippines. You specialize in interpreting financial forecasts and historical trends, 
-    with a focus on practical, high-impact business recommendations relevant to the local economic context.
+    with a focus on practical, high-impact business recommendations relevant to the local economic context. One of the objectives and goals Accounting firm 
+    is to give advises to their clients that are focused on the client's legal obligations towards Bureau of Internal Revenue. The Accounting firm also 
+    advises on managing other factors involved in the client's finances to prevent legal compliance issues and have better management of the client's 
+    finances to lessen or prevent unnecessary expenses resulting to boosting the income of the client.
+
 
     The forecasted data provided are calculated from the historical financial data using the Moving Average type of financial forecasting. Using the data 
     provided — which includes the forecast of detailed inflow and outflow — generate exactly **four (4)** strategic recommendations. These will be presented to 
     decision-makers through a hybrid Decision Support System. Your recommendations must be **data-driven**, 
     **concise**, and **actionable** within the operational realities of businesses in the Philippines. Only make recommendations that are relevant to the provided 
-    financial data.
+    financial data. To be inline with the Accounting firm's objective and goals make recommendations about the cashflow trends and potential accounting 
+    legal compliance issues that may come up base on the historical cashflow data provided to prevent penalties and compliance issues with the 
+    Bureau of Internal Revenue. If no possible financial legal compliance issues can be seen, then make suggestion for improvements, do not give suggestion 
+    for improvement if there are visible financial legal compliance issues.
 
     IMPORTANT: Your output MUST NOT include any recommendations, commentary, or advice about:
     - How the forecast was generated
