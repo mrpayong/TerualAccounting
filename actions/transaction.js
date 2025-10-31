@@ -173,7 +173,7 @@ export async function scanReceipt(file, ScannerUserId){
       Analyze this receipt image and extract the following information in JSON format:
         - Total amount (just the number)
         - Date (in ISO format)
-        - Description or items purchased (brief summary)
+        - Description or items purchased (only list the itemized products/services)
         - Merchant/store name. Primarily look at the top of the receipt.
         - reference number
         - suggest the type of transaction
@@ -225,7 +225,7 @@ console.log("[5]")
         return {code:401, success: false, message:"No Merchant name."};
       }
 
-console.log("[6]:")
+console.log("[6]:", data)
      
      
     const updateLog = await activityLog({

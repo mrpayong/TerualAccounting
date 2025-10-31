@@ -28,7 +28,7 @@ async function ArchivePage ({ params }) {
   if(archives.code === 404 || archives.success === false){
     return NotFound404();
   }
-//comment
+
 
   return (
     <div className='flex flex-col justify-center mx-6'>
