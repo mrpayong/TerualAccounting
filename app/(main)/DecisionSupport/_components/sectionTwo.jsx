@@ -198,36 +198,36 @@ const getPhilippinesDate = () => {
   } = useFetch(getSuggestedWeeklySchedule);
 
 
-  const AIgenerateSchedHandler = async () => {
-    try {
-     await AIschedulingFn();
+  // const AIgenerateSchedHandler = async () => {
+  //   try {
+  //    await AIschedulingFn();
       
-      // You can add toast or UI feedback here if needed
-    } catch (error) {
-      console.error("Error generating schedule:", error);
-      toast.error("Failed to generate AI schedule.");
-    }
-  }
+  //     // You can add toast or UI feedback here if needed
+  //   } catch (error) {
+  //     console.error("Error generating schedule:", error);
+  //     toast.error("Failed to generate AI schedule.");
+  //   }
+  // }
 
-  useEffect(() => {
-    if(AIschedData && !schedLoading){
-      if (AIschedData.code === 200) {
-        console.log("AI Schedule Data:", AIschedData);
-        toast.success("AI schedule generated successfully.");
-        if (AIschedData.code === 500) {
-          console.log("Error:", AIschedData.message);
-          toast.error("AI request quota limit might have been reached. Try again later.");
-        }
-        if (AIschedData.code === 501) {
-          console.log("Error:", AIschedData.message);
-          toast.error("Failed to generate suggested schedule. Try again.");
-        }
-      }
-    }
-  }, [schedLoading, AIschedData])
+//   useEffect(() => {
+//     if(AIschedData && !schedLoading){
+//       if (AIschedData.code === 200) {
+//         console.log("AI Schedule Data:", AIschedData);
+//         toast.success("AI schedule generated successfully.");
+//         if (AIschedData.code === 500) {
+//           console.log("Error:", AIschedData.message);
+//           toast.error("AI request quota limit might have been reached. Try again later.");
+//         }
+//         if (AIschedData.code === 501) {
+//           console.log("Error:", AIschedData.message);
+//           toast.error("Failed to generate suggested schedule. Try again.");
+//         }
+//       }
+//     }
+//   }, [schedLoading, AIschedData])
 
 
-console.log("AIschedData", AIschedData)
+// console.log("AIschedData", AIschedData)
   
   function mapAIScheduleToWeekDays(AIschedData) {
       const today = new Date();
@@ -759,123 +759,6 @@ console.log("AIschedData", AIschedData)
       {/* </div> */}
 
         {/* Weekly Calendar */}
-      <Card className="w-full flex flex-col">
-        <CardHeader className={`${fontZenKaku.className}`}>
-          <CardTitle className='!font-bold text-base'>Weekly Schedule</CardTitle>
-          <CardDescription className='!font-normal text-sm tracking-wide'>
-            Your tasks and appointments for this week.{" "}
-            <Popover>
-              <PopoverTrigger className={`${fontZenKaku.className} underline text-muted-foreground !text-blue-600 
-              !font-normal cursor-pointer hover:!font-bold hover:no-underline`}>
-                Show AI Priority Insight.
-              </PopoverTrigger>
-              <PopoverContent>
-                <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 `}>
-                  <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
-                    <Info className="h-6 w-6 text-sky-500" />
-                    {AIschedData
-                      ? "AI says the ideal priority today:"
-                      : "Ideal Priority Today"
-                    }
-                  </AlertTitle>
-                  <AlertDescription className="font-normal text-base text-zinc-500">
-                    {aiInsight}
-                  </AlertDescription>
-                </Alert>
-              </PopoverContent>
-            </Popover>
-          </CardDescription>
-        </CardHeader>
-        {/* Make CardContent take all available vertical space and arrange children in a column */}
-        <CardContent className={`${fontZenKaku.className} flex-1 flex flex-col p-0`}>
-          <ScrollArea className="flex-1 min-h-[300px] max-h-[500px] pr-4">
-            <div className="space-y-4 px-6 pt-4 pb-2">
-              {schedLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4">
-                    <Skeleton className="w-10 h-10 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-40" />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                displayedWeekDays.map((day) => (
-                  <div key={day.dayName} className="space-y-2">
-                    <div className={`flex items-center ${day.isToday ? "text-blue-600 font-bold" : "text-gray-700"}`}>
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${day.isToday ? "bg-blue-100" : "bg-gray-100"}`}>
-                        <div className="text-center">
-                          <div className="font-medium text-xs">{day.dayName}</div>
-                          <div className="text-base font-medium">{day.dayNumber}</div>
-                        </div>
-                      </div>
-                      <span className="font-medium text-base">{formatDatePH(day.date)}</span>
-                      {day.isToday && (
-                        <Badge className="font-normal text-base ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100">
-                          Today
-                        </Badge>
-                      )}
-                    </div>
-                    {day.tasks.length > 0 ? (
-                      <div className="ml-13 pl-10 border-l-2 border-gray-200 space-y-3">
-                        {day.tasks.map((task) => (
-                          <div key={task.id} className="bg-white rounded-lg border p-3 shadow-sm">
-                            <div className="flex justify-between items-start">
-                              <div className='flex flex-col'>
-                                <Badge className={`!font-medium !text-xs ${task.color} mb-1`}>
-                                        {task.urgencyLabel}
-                                      </Badge>
-                                <Popover>
-                                  <PopoverTrigger className="!text-base !font-medium">
-                                    {task.taskName}
-                                  </PopoverTrigger>
-                                  <PopoverContent className="!font-medium !text-sm max-w-xs">
-                                    {task.description}
-                                  </PopoverContent>
-                                </Popover>
-                                {/* <p className="text-base font-medium">{task.taskName}</p> */}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="ml-13 pl-10 border-l-2 border-gray-200 py-2">
-                        <p className="font-bold text-base text-gray-500">No scheduled tasks</p>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-        <CardFooter className="pt-0">
-          <Button 
-            type="button"
-            onClick={AIgenerateSchedHandler}
-            disabled={schedLoading}
-            className={`${fontZenKaku.className}
-              w-full !rounded-button whitespace-nowrap 
-              shine-effect
-              flex items-center gap-1
-              bg-black text-white
-              text-sm md:!text-base font-medium
-              tracking-wide transition
-              hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
-              hover:shadow-lg hover:shadow-blue-500/60
-              cursor-pointer
-              relative
-              overflow-hidden
-            `}>
-            {schedLoading
-              ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
-              : <Bot className='mr-2'/> 
-            } Schedule task with AI
-          </Button>
-        </CardFooter>
-      </Card>
     </div>
   </div>
   )

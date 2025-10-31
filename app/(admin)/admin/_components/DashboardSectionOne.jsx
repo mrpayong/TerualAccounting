@@ -37,6 +37,7 @@ function CarouselDots() {
   )
 }
 
+
 const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activityCount}) => {
   const cards = [
     {

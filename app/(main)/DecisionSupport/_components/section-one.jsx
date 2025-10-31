@@ -330,7 +330,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
         <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300 h-full min-h-[320px] flex flex-col">
           <CardHeader className={`${fontZenKaku.className}`}>
             <CardTitle className="text-xl !font-bold">
-              Top 5 {barType === "INCOME" ? "Income" : "Expense"}
+              Top 5 {barType === "INCOME" ? "Inflow" : "Outflow"}
             </CardTitle>
             <CardDescription className="text-sm font-normal tracking-wide">
               Account titles across all accounts with largest accumulated amounts.
@@ -344,7 +344,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                 }`}
                 onClick={() => setBarType("INCOME")}
               >
-                Show Income
+                Show Inflow
               </button>
               <button
                 className={`px-3 py-1 rounded-full text-sm font-medium transition ${
@@ -354,7 +354,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                 }`}
                 onClick={() => setBarType("EXPENSE")}
               >
-                Show Expense
+                Show Outflow
               </button>
             </div>
           </CardHeader>

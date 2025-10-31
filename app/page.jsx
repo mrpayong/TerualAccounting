@@ -220,11 +220,10 @@ const Home = () => {
         "The page to create transactions is only for users with staff role.",
         "You can switch the account you are encoding for, in the Create Transaction page.",
         "Clicking on Reset button, resets all blanks including the Image field for scanning.",
-        "As long as Transaction type is Expense the amount is negative.",
+        "As long as Transaction type is Outflow the amount is negative.",
       ],
       list2: [
         "The AI is suggestive on descriptive information of a receipt.",
-        "The AI can detect the BIR Authority to Print number.",
         "The resolution of your phone's camera can affect the scanning phase.",
         "The vendor's name in the receipt can also be read by the AI.",
         "Always review before finalizing.",
@@ -248,7 +247,7 @@ const Home = () => {
         "The Download button also save the cashflow statement you created."
       ],
       list2: [
-        "The Account page enables your to quickly create Cashflow Statements solely for reporting purposes.",
+        "The Account page enables you to quickly create Cashflow Statements solely for reporting purposes.",
         "Created cashflow statements are automatically categorized by period base on the dates of your selected transactions.",
         "Quick preivew of cashflow statement on mobile device is not possible.",
         "When creating on mobile for reporting purposes, make sure to review your records for realignment.",

@@ -60,40 +60,40 @@ async function activityLog({userId, action, args, timestamp}){
 
 
 export async function getAdmin() {
-        try {
-            const {userId} = await auth();
-            if (!userId) {
-                throw new UnauthorizedError("[ADM]You are not a user. Notifying System Admin");
-            }
-
-            const user = await db.user.findUnique({
-                where: {clerkUserId: userId},
-            });
-
-            if (!user) {
-                return {authorized: false, reason: "[ADM]You are not a user. Notifying System Admin"};
-            }
-            if (user.role !== "ADMIN") {
-                return {authorized: false, reason: "[ADM]You are not an Admin. Notifying System Admin"};
-            }
-
-            return {authorized: true, data: user};
-            
-        } catch (error) {
-            if (error instanceof UnauthorizedError) {
-                console.warn("[ADM]authenticate: ", error.message);
-                return { authorized: false, reason: "[ADM]Now handling auth" }
-            }
-            if (error instanceof DatabaseError) {
-                console.error("[ADM]Now handling database", error.message);
-                return { authorized: false, reason: "[ADM]Now handling database"};
-            }
-    
-            // Log unexpected errors and return a generic response
-            console.error("[ADM]Unexpected error: ", error);
-            return { authorized: false, reason: "[ADM]Unexpected error" };
+    try {
+        const {userId} = await auth();
+        if (!userId) {
+            throw new UnauthorizedError("[ADM]You are not a user. Notifying System Admin");
         }
+
+        const user = await db.user.findUnique({
+            where: {clerkUserId: userId},
+        });
+
+        if (!user) {
+            return {authorized: false, reason: "[ADM]You are not a user. Notifying System Admin"};
+        }
+        if (user.role !== "ADMIN") {
+            return {authorized: false, reason: "[ADM]You are not an Admin. Notifying System Admin"};
+        }
+
+        return {authorized: true, data: user};
         
+    } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            console.warn("[ADM]authenticate: ", error.message);
+            return { authorized: false, reason: "[ADM]Now handling auth" }
+        }
+        if (error instanceof DatabaseError) {
+            console.error("[ADM]Now handling database", error.message);
+            return { authorized: false, reason: "[ADM]Now handling database"};
+        }
+
+        // Log unexpected errors and return a generic response
+        console.error("[ADM]Unexpected error: ", error);
+        return { authorized: false, reason: "[ADM]Unexpected error" };
+    }
+
 }
 
 export async function getSysAdmin() {
@@ -785,20 +785,38 @@ export async function getArchives(accountId){
         if(user.role !== "STAFF"){
             return { success: false, error: "Data Unavailable." };
         }
+
+        const today = new Date();
+        const DateNinety = new Date();
+        DateNinety.setDate(today.getDate() - 90);
+
+
         const archives = await db.archive.findMany({
             where:{ 
                 userId: user.id,
                 accountId: accountId,
+                createdAt:{
+                    gte: DateNinety,
+                    lte: today,
+                },
                 entityType: {
                     in: ["CashflowStatement", "Transaction", "Group Transaction"]
                 }
+            },
+            orderBy: {
+                createdAt: "desc",
             }
         });
+
         
-        return {success: true, data: archives};
+        return {success: true, code:200, data: archives};
     } catch (error) {
         console.log("Error returning data", error.message)
-        throw new Error("Error returnign data archives")
+        return {
+            success: false,
+            code: 404,
+            message: "An unexpected error occurred while retrieving archives.",
+        };
     }
 }
 

@@ -202,6 +202,7 @@ export async function bulkDeleteTransactions(transactionIds, accountId, reason) 
               userId: user.id,
           },
           select:{
+            accountId: true,
             id:true,       
             type:true,
             amount:true,

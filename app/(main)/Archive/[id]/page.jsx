@@ -4,7 +4,9 @@ import ArchiveTable from '../_components/ArchiveTable'
 import ButtonBack from '../_components/ButtonBack';
 import { getArchives, getStaff, getUnauthUser } from '@/actions/admin';
 import NotFound from '@/app/not-found';
+import NotFound404 from '@/app/404';
 import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+import { toast } from 'sonner';
 
 const fontZenKaku = Zen_Kaku_Gothic_Antique({
   subsets:["latin"],
@@ -23,6 +25,10 @@ async function ArchivePage ({ params }) {
   }
 
   const archives = await getArchives(id);
+  if(archives.code === 404 || archives.success === false){
+    return NotFound404();
+  }
+
 
   return (
     <div className='flex flex-col justify-center mx-6'>

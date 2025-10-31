@@ -123,7 +123,8 @@ const TransactionTable = ({transactions, id, subAccounts, recentCashflows, relat
     const [dropdownDisabledId, setDropdownDisabledId] = useState(false);
     const [editLoadingId, setEditLoadingId] = useState(false);
 // Removed duplicate declaration of rowsPerPage
-const rowsPerPage = 10; // Default rows per page
+// const rowsPerPage = 10; // Default rows per page
+const [rowsPerPage, setRowsPerPage] = useState(10);
     const {
         register,
         handleSubmit,
@@ -645,41 +646,95 @@ const rowsPerPage = 10; // Default rows per page
       const totalTransactionPages = Math.ceil(filteredAndSortedTransactions.length / rowsPerPage);
       const totalSubAccountPages = Math.ceil(filteredAndSortedSubAccounts.length / rowsPerPage);
       
-      const PaginationControls = ({ currentPage, totalPages, onPageChange }) => (
-        <div className={`${fontZenKaku.className} flex justify-between items-center mt-4`}>
-          <Button
-            variant="outline"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="font-medium !text-base"
-          >
-            Previous
-          </Button>
-          <span className="font-medium !text-base">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="font-medium !text-base"
-          >
-            Next
-          </Button>
+      // const PaginationControls = ({ currentPage, totalPages, onPageChange }) => (
+      //   <div className={`${fontZenKaku.className} flex justify-between items-center mt-4`}>
+      //     <Button
+      //       variant="outline"
+      //       onClick={() => onPageChange(currentPage - 1)}
+      //       disabled={currentPage === 1}
+      //       className="font-medium !text-base"
+      //     >
+      //       Previous
+      //     </Button>
+      //     <span className="font-medium !text-base">
+      //       Page {currentPage} of {totalPages}
+      //     </span>
+      //     <Button
+      //       variant="outline"
+      //       onClick={() => onPageChange(currentPage + 1)}
+      //       disabled={currentPage === totalPages}
+      //       className="font-medium !text-base"
+      //     >
+      //       Next
+      //     </Button>
+      //   </div>
+      // );
+      
+      const PaginationControls = ({ currentPage, totalPages, onPageChange, itemsPerPage, setItemsPerPage }) => (
+        <div className={`${fontZenKaku.className} font-medium flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4 mb-4 px-2`}>
+          <div className="flex flex-row items-center gap-2">
+            <label className={"text-sm hidden sm:inline-block sm:min-w-[6.5rem] whitespace-nowrap mr-2"}>Items per page</label>
+            <Select
+              value={String(itemsPerPage)}
+              onValueChange={(v) => {
+                const n = Number(v) || 10;
+                setItemsPerPage(n);
+              }}
+              className="w-28"
+            >
+              <SelectTrigger className="h-8 w-full" aria-label="Items per page">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="font-medium !text-base"
+            >
+              Previous
+            </Button>
+            <span className="font-medium !text-base">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="font-medium !text-base"
+            >
+              Next
+            </Button>
+          </div>
         </div>
       );
+      
       const paginatedTransactions = useMemo(() => {
         const startIndex = (currentTransactionPage - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         return filteredAndSortedTransactions.slice(startIndex, endIndex);
-      }, [filteredAndSortedTransactions, currentTransactionPage]);
+      }, [filteredAndSortedTransactions, currentTransactionPage, rowsPerPage]);
       
       const paginatedSubAccounts = useMemo(() => {
         const startIndex = (currentSubAccountPage - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         return filteredAndSortedSubAccounts.slice(startIndex, endIndex);
-      }, [filteredAndSortedSubAccounts, currentSubAccountPage]);
+      }, [filteredAndSortedSubAccounts, currentSubAccountPage, rowsPerPage]);
 
+      useEffect(() => {
+        setCurrentTransactionPage(1);
+        setCurrentSubAccountPage(1);
+      }, [rowsPerPage]);
 
       const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -766,6 +821,7 @@ const rowsPerPage = 10; // Default rows per page
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Reference number:</label> ${transaction.refNumber || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Account title:</label> ${transaction.category || "N/A"}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Activity type:</label> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
+              <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Sold By:</label> ${transaction.printNumber|| "No Merchant's name provided."}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Description:</label> ${transaction.description || "No description provided."}</p>
               <p class="font-medium !text-lg"><label class='font-bold !text-lg'>Recorded on:</label> ${formatUtcDateWithTime(transaction.createdAt) || "N/A"}</p>           
             </div>
@@ -1652,6 +1708,7 @@ const handleDownloadCDBExcel = () => {
               <TableHeader className={`bg-slate-300 ${fontZenKaku.className} `}>
                 <TableRow>
                   <TableHead className="w-[50px] text-center">
+                    {/* can Select All filtered data only */}
                     <Checkbox
                       onCheckedChange={handleSelectAll}
                       checked={
@@ -1881,6 +1938,8 @@ const handleDownloadCDBExcel = () => {
               currentPage={currentTransactionPage}
               totalPages={totalTransactionPages}
               onPageChange={setCurrentTransactionPage}
+              itemsPerPage={rowsPerPage}
+             setItemsPerPage={setRowsPerPage}
             />
           </div>
         </TabsContent>
@@ -2062,6 +2121,8 @@ const handleDownloadCDBExcel = () => {
               currentPage={currentSubAccountPage}
               totalPages={totalSubAccountPages}
               onPageChange={setCurrentSubAccountPage}
+              itemsPerPage={rowsPerPage}
+              setItemsPerPage={setRowsPerPage}
             />
           </div>
         </TabsContent>

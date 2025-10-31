@@ -437,6 +437,8 @@ const areaChartData = Object.entries(groupedTransactions)
                                 />
                         )
                     }
+
+                    
                 </CardContent>    
             </Card>
         </div>

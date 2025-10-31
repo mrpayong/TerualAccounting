@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/dialog"
 import { ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowLeft, ArrowRight, MoreHorizontal } from 'lucide-react';
 import { Zen_Kaku_Gothic_Antique } from 'next/font/google';
+import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -86,6 +88,7 @@ const ArchiveTable = ({archives}) => {
   const [page, setPage] = useState(1);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [actionFilter, setActionFilter] = useState("");
 
   const [sortConfig, setSortConfig] = useState({
     field: "createdAt",
@@ -108,6 +111,66 @@ const handleSort = (field) => {
 };
 
 
+
+  function tryParseJSONIfString(value) {
+    if (typeof value !== "string"){
+      return value;
+    }
+    const s = value.trim();
+    if (!s){
+      return value;
+    }
+    const first = s[0];
+    if (first !== "{" && first !== "[" && first !== '"') return value;
+    try {
+      return JSON.parse(s);
+    } catch {
+      return value;
+    }
+  }
+
+
+  
+  function parseArchiveItem(item) {
+    if (!item) return item;
+    let raw = tryParseJSONIfString(item.data);
+    // handle double-stringified JSON
+    if (typeof raw === "string") raw = tryParseJSONIfString(raw); 
+
+    // handle wrapper [{ transaction, reason }]
+    if (Array.isArray(raw) && raw.length > 0) {
+      const first = raw[0];
+      if (first && first.transaction) {
+        const merged = { ...first.transaction };
+        if (typeof first.reason !== "undefined") {
+          let reason = first.reason;
+          // try to clean double-quoted reason like "\"text\"" => "text"
+          const parsedReason = tryParseJSONIfString(reason);
+          if (parsedReason !== reason) reason = parsedReason;
+          merged.reason = reason;
+        }
+        raw = merged;
+      } else {
+        raw = raw[0];
+      }
+    }
+
+    // handle nested { transaction, reason } stored as object
+    if (raw && typeof raw === "object" && raw.transaction) {
+      const merged = { ...raw.transaction };
+      if (typeof raw.reason !== "undefined") {
+        let reason = raw.reason;
+        const parsedReason = tryParseJSONIfString(reason);
+        if (parsedReason !== reason) reason = parsedReason;
+        merged.reason = reason;
+      }
+      raw = merged;
+    }
+    return { ...item, data: raw };
+  }
+
+
+
   // Filtering logic
   const filteredArchives = useMemo(() => {
     let result = filteredArchiveList.filter((item) => {
@@ -117,6 +180,7 @@ const handleSort = (field) => {
       const to = toDate ? new Date(toDate) : null;
       if (from && created < from) return false;
       if (to && created > to) return false;
+      if(actionFilter && actionFilter !== "" && item.action !== actionFilter) return false;
       return true;
     });
 
@@ -130,8 +194,13 @@ const handleSort = (field) => {
         return bDate - aDate;
       });
     }
-    return result;
-  }, [archiveList, fromDate, toDate, sortConfig]);
+    const parsedResult = result.map((it) =>
+      it?.entityType === "Transaction" ? parseArchiveItem(it) : it
+    );
+
+    console.log("Filtered Archives:", parsedResult);
+    return parsedResult;
+  }, [archiveList, fromDate, toDate, sortConfig, actionFilter]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredArchives.length / ITEMS_PER_PAGE);
@@ -140,7 +209,6 @@ const handleSort = (field) => {
     page * ITEMS_PER_PAGE
   );
 
-  console.log("archives", archives)
   // Handlers
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
@@ -156,16 +224,35 @@ const handleSort = (field) => {
   const handleClearFilters = () => {
   setFromDate("");
   setToDate("");
+  setActionFilter("")
   setPage(1);
 };
 
+function TransactionType(type){
+  switch (type) {
+    case 'EXPENSE':
+    return 'Outflow';
+    case 'INCOME':
+    return 'Inflow';
 
+    default:
+    return type;
+  }
+}
 
+function ActivityType(activity){
+  switch (activity) {
+    case 'INVESTMENT':
+    return 'Investing';
+    case 'OPERATION':
+    return 'Operating';
+    case 'FINANCING':
+    return 'Financing';
 
-
-
-
-
+    default:
+    return activity;
+  }
+}
 
 
   return (
@@ -196,7 +283,23 @@ const handleSort = (field) => {
             className="max-w-[160px] font-medium !text-base"
           />
         </div>
-        {(fromDate || toDate) && (
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="to-date" className="font-medium text-base">
+            Action
+          </label>
+          <Select value={actionFilter} onValueChange={(val) => {setActionFilter(val); setPage(1);}}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select action filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bulkDeleteTransaction">Deleted Transactions</SelectItem>
+              <SelectItem value="deleteSubAccount">Deleted Group Transactions</SelectItem>
+              <SelectItem value="deleteCashflowStatement">Deleted Cashflow Statements</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(fromDate || toDate || actionFilter) && (
           <Button
             variant="secondary"
             size="sm"
@@ -263,8 +366,6 @@ const handleSort = (field) => {
                   <TableCell className='font-normal !text-base'>
                     {(() => {
                         switch (item.action) {
-                          case "deleteTransaction":
-                            return "Deleted Transaction";
                           case "bulkDeleteTransaction":
                             return "Deleted Transaction";
                           case "deleteSubAccount":
@@ -294,7 +395,7 @@ const handleSort = (field) => {
                         <div className="space-y-2 py-2">
                         {/* Transaction fields */}
                         {item.entityType === "Transaction" && (
-                            <>
+                          <>
                             <div>
                                 <span className="font-medium text-base">Recorded On:</span>{" "}
                                 <span className='font-normal text-base'>{formatManilaDate(item.data.createdAt)}</span>
@@ -302,6 +403,14 @@ const handleSort = (field) => {
                             <div>
                                 <span className="font-medium text-base">Amount:</span>{" "}
                                 <span className='font-normal text-base'>{formatTableAmount(item.data.amount)}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium text-base">Transaction type:</span>{" "}
+                                <span className='font-normal text-base'>{TransactionType(item.data.type)}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium text-base">Activity type:</span>{" "}
+                                <span className='font-normal text-base'>{ActivityType(item.data.Activity)}</span>
                             </div>
                             <div>
                                 <span className="font-medium text-base">Ref. Number:</span>{" "}
@@ -312,6 +421,10 @@ const handleSort = (field) => {
                                 <span className='font-normal text-base'>{item.data.particular}</span>
                             </div>
                             <div>
+                                <span className="font-medium text-base">Sold By:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.printNumber}</span>
+                            </div>
+                            <div>
                                 <span className="font-medium text-base">Description:</span>{" "}
                                 <span className='font-normal text-base'>{item.data.description}</span>
                             </div>
@@ -320,10 +433,14 @@ const handleSort = (field) => {
                                 <span className='font-normal text-base'>{item.data.accountId}</span>
                             </div>
                             <div>
+                                <span className="font-medium text-base">Reason:</span>{" "}
+                                <span className='font-normal text-base'>{item.data.reason}</span>
+                            </div>
+                            <div>
                                 <span className="font-medium text-base">Transaction ID:</span>{" "}
                                 <span className='font-normal text-base'>{item.data.id}</span>
                             </div>
-                            </>
+                          </>
                         )}
 
                         {/* SubAccount fields */}
@@ -423,6 +540,7 @@ const handleSort = (field) => {
                     </Dialog>
                   </TableCell>
                 </TableRow>
+                
               ))
             )}
           </TableBody>

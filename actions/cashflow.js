@@ -350,7 +350,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           const isFirstHalf = (month) => month >= 0 && month <= 5;
           const isSecondHalf = (month) => month >= 6 && month <= 11;
 
-
+          console.log("dateRangeInDays", dateRangeInDays)
           switch (true) {
             case (monthsDiff === 6 &&(
                 (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
@@ -369,7 +369,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
             case dateRangeInDays >= 365:
               periodCashFlow = "ANNUAL";
               break;
-            case dateRangeInDays >= 120:
+            case dateRangeInDays >= 90:
               periodCashFlow = "QUARTERLY";
               break;
             default:

@@ -95,7 +95,7 @@ const AddTransactionForm = ({
             amount: "",
             description: "",
             category: "",
-            printNumber: "Manually encoded",
+            printNumber: "",
             accountId: accountId || accounts.find((ac) => ac.id)?.id,
             date: "",
             isRecurring: false,
@@ -402,49 +402,63 @@ const AddTransactionForm = ({
         </div> 
         {/* category */}
     
-  
-        <div className='space-y-2'>
-            <label className='text-base font-medium'>Date of transaction</label>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <div className="space-y-2">
-                    {/* <label className="text-sm font-medium">Date of transaction</label> */}
-                    <DatePicker
-                    timezone="Asia/Manila"
-                    label={date ? formatDateLabel(date) : "Pick a date"}
-                    value={date} // Watch the "date" field from react-hook-form
-                    onChange={(date) => {
-                        setValue("date", date); // Update the form state with the selected date
-                    }}
-                    
-                    />
-                    {errors.date && (
-                    <p className="text-sm text-red-500">Invalid date</p>
-                    )}
-                </div>
-            </LocalizationProvider>
+        <div className="grid gap-6 md:grid-cols-2">
+            <div className='space-y-2'>
+                <label className='text-base font-medium'>Sold By</label>
+                <Input
+                    className='!font-normal !text-base tracking-wide'
+                    {...register("printNumber")}
+                    placeholder="Sold By"
+                />
+                {errors.category && (
+                    <p className="text-sm text-red-500">Invalid Name</p>
+                )}
+            </div> 
+            <div className='space-y-2'>
+                <label className='text-base font-medium'>Date of transaction</label>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <div className="space-y-2">
+                        {/* <label className="text-sm font-medium">Date of transaction</label> */}
+                        <DatePicker
+                        timezone="Asia/Manila"
+                        label={date ? formatDateLabel(date) : "Pick a date"}
+                        value={date} // Watch the "date" field from react-hook-form
+                        onChange={(date) => {
+                            setValue("date", date); // Update the form state with the selected date
+                        }}
+                        
+                        />
+                        {errors.date && (
+                        <p className="text-sm text-red-500">Invalid date</p>
+                        )}
+                    </div>
+                </LocalizationProvider>
 
+            </div>    
+            
         </div>
 
+
         
-            <div className="space-y-2 md:col-span-2">
-                <label htmlFor="description" className="text-base font-medium">Description</label>
-                <textarea
-                id="description"
-                placeholder="Enter a detailed description"
-                {...register("description")}
-                className="w-full h-32 p-4 border 
-                !font-normal !text-base tracking-wide
-                border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 
-                focus:ring-blue-500 focus:border-blue-500 resize-none"
-                ></textarea>
+        <div className="space-y-2 md:col-span-2">
+            <label htmlFor="description" className="text-base font-medium">Description</label>
+            <textarea
+            id="description"
+            placeholder="Enter a detailed description"
+            {...register("description")}
+            className="w-full h-32 p-4 border 
+            !font-normal !text-base tracking-wide
+            border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 
+            focus:ring-blue-500 focus:border-blue-500 resize-none"
+            ></textarea>
 
-                {errors.description &&
-                    <p className="text-sm text-red-500">{errors.description.message}</p>
-                }
-            </div> 
+            {errors.description &&
+                <p className="text-sm text-red-500">{errors.description.message}</p>
+            }
+        </div> 
 
 
-            <div className='flex gap-4'>
+        <div className='flex gap-4'>
             <Button
                 type="button"
                 variant="outline"

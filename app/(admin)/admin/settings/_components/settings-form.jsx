@@ -243,7 +243,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1080px)");
         error: updateRoleError,
     } = useFetch(updateUserRole)
 
-    const {
+  const {
     loading: createUserLoading,
     fn: createUserFn,
     data: createUserResult,
@@ -321,11 +321,41 @@ const handleCreateUser = async (data) => {
 };
 
 useEffect(() => {
-  if (createUserResult?.success && !createUserLoading) {
-    toast.success("User created successfully!");
-    setCreateUserDialog(false);
-    reset();
-    fetchUsers();
+  if (createUserResult && !createUserLoading) {
+    if(createUserResult.code === 200){
+      toast.success("User created successfully!");
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 421){
+      toast.error("Username might already exist.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 422){
+      toast.error("Email might already exist.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 423){
+      toast.error("Invalid Username format.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 500){
+      toast.error("Error creating user.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
   }
 }, [createUserResult, reset, createUserLoading]);
 
@@ -334,7 +364,7 @@ useEffect(() => {
   useEffect(() => {
     if (createUserError && !createUserLoading) {
       console.log(createUserError)
-          reset({
+      reset({
       ...watch(),
       email: "",
       username: "",

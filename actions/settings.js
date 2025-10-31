@@ -230,6 +230,9 @@ export async function createUser(data) {
         lastName: data.Lname,
         username: data.username,
     });
+  
+
+    
 
     // 3. Create user in your database
    
@@ -265,17 +268,22 @@ export async function createUser(data) {
     revalidatePath("/admin/settings")
     revalidatePath("/SysAdmin/settings")
 
-    return {
+    return {      
       success: true,
-      data: {
-        ...newUser,
-        createdAt: newUser.createdAt.toISOString(),
-        updatedAt: newUser.updatedAt.toISOString(),
-      },
+      code: 200,
     };
   } catch (error) {
     console.log("error createUser: ", error)
-    throw new Error("Email or Username might already exists.");
+    if(error.errors[0].message === 'That username is taken. Please try another.'){
+        return {code: 421, success:false, message: "Username might already exists."}
+    }
+    if(error.errors[0].message === 'That email address is taken. Please try another.'){
+        return {code: 422, success:false, message: "Email might already exists."}
+    }
+    if(error.errors[0].message === 'Username can only contain letters, numbers and - or _.'){
+        return {code: 423, success:false, message: "Invalid username format."}
+    }
+    return {code: 500, success: false, message:"Error creating user."}
   }
 }
 

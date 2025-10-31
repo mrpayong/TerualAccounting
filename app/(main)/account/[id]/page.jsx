@@ -49,7 +49,6 @@ async function AccountsPage({ params }) {
   const recentCashflows = await getCashflowEnding(id)
   const SubAccTransactionRel = await getSubAccTransactionRel(id);
 
-  console.log("SubAccTransactionRel:", SubAccTransactionRel)
   const relatedIDs = SubAccTransactionRel.data.map(rel => rel.transactionId);
   
   // const recentCashflows = fetchedCashflows.latestCashflows;

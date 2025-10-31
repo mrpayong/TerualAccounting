@@ -130,7 +130,7 @@ export async function createTransaction(data) {
 
     revalidatePath("/dashboard");
     revalidatePath(`/account/${transaction.accountId}`);
-    return { code:200, success: true, data: serializeAmount(transaction) };
+    return { code:200, success: true};
   } catch (error) {
     console.error("Error creating transaction.",error.message)
     return { code:500, success: false, message:"Failed to create transaction." };
@@ -162,7 +162,6 @@ export async function scanReceipt(file, ScannerUserId){
   try {
     console.log("[1]")
     const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
-    console.log("[1] model is: ", model);
     // converts file into ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
     
@@ -188,7 +187,7 @@ export async function scanReceipt(file, ScannerUserId){
         
         Only respond with valid JSON in this exact format:
         {
-          "amount": number,
+          "amount": "number",
           "refNumber": "string",
           "date": "ISO date string",
           "description": "string",
@@ -226,7 +225,7 @@ console.log("[5]")
         return {code:401, success: false, message:"No Merchant name."};
       }
 
-console.log("[6]")
+console.log("[6]:")
      
      
     const updateLog = await activityLog({
@@ -257,7 +256,7 @@ console.log("[6]")
         particular: data.particular,
         type: data.type,
         Activity: data.Activity,
-        printNumber: data.printNumber,
+        printNumber: data.merchantName, // label to be corrected in db model after final defense
       }
     
   } catch (error) {

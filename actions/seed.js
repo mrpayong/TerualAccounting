@@ -3,8 +3,8 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "eeb76e30-ec63-419c-b2f0-f596a1bbf1df";
-const USER_ID = "eeb76e30-ec63-419c-b2f0-f596a1bbf1df";
+const ACCOUNT_ID = "fbd28b18-12ac-4f5c-8e4d-6e191e047bed";
+const USER_ID = "e774c135-5562-4dbe-89e6-d34864f1a7f4";
 
 // Categories with their typical amount ranges 
 // const CATEGORIES = {
@@ -32,78 +32,36 @@ const USER_ID = "eeb76e30-ec63-419c-b2f0-f596a1bbf1df";
 // Construction-ready categories and realistic ranges (PHP)
 const CATEGORIES = {
   INCOME: [
-    { name: "wedding-shoot", range: [15000, 80000] },
-    { name: "pre-nup-shoot", range: [8000, 30000] },
-    { name: "corporate-event-shoot", range: [10000, 50000] },
-    { name: "portrait-session", range: [2000, 15000] },
-    { name: "product-photography", range: [3000, 20000] },
-    { name: "freelance-gig", range: [2000, 15000] },
-    { name: "stock-photo-sales", range: [500, 5000] },
-    { name: "video-shoot", range: [10000, 40000] },
-    { name: "social-media-content-shoot", range: [3000, 15000] },
-    { name: "other-service-income", range: [1000, 10000] },
+    { name: "product-sales", range: [1000, 10000] },
+    { name: "printing-services", range: [200, 1500] },
+    { name: "photocopy-services", range: [100, 800] },
+    { name: "lamination-and-binding", range: [150, 1000] },
   ],
-
   EXPENSE: [
-    // Operating
-    { name: "transportation", range: [500, 5000] },
-    { name: "meals-and-snacks", range: [200, 2000] },
-    { name: "utilities", range: [500, 3000] },
-    { name: "internet", range: [1000, 3000] },
-    { name: "printing-and-albums", range: [1000, 10000] },
-    { name: "props-and-backdrops", range: [500, 5000] },
-    { name: "software-subscriptions", range: [500, 2500] }, // Adobe, Lightroom
-    { name: "marketing-and-ads", range: [500, 8000] },
-    { name: "office-supplies", range: [200, 2000] },
-
-    // Financing
-    { name: "loan-repayment", range: [2000, 15000] },
-    { name: "interest-expense", range: [500, 3000] },
-
-    // Investing (CAPEX)
-    { name: "camera-purchase", range: [30000, 120000] },
-    { name: "lens-purchase", range: [20000, 80000] },
-    { name: "lighting-equipment", range: [5000, 30000] },
-    { name: "laptop-or-pc-upgrade", range: [20000, 80000] },
-    { name: "studio-rental-or-renovation", range: [10000, 50000] },
+    { name: "inventory-purchase", range: [3000, 12000] },
+    { name: "utilities", range: [800, 2500] },
+    { name: "transportation", range: [200, 800] },
+    { name: "employee-salary", range: [5000, 10000] },
+    { name: "equipment-maintenance", range: [500, 2000] },
+    { name: "insurance", range: [300, 1500] },
   ],
 };
 
-
+// Activity Mapping for Hardware Store
 const CATEGORY_ACTIVITY = {
-  // Income
-  "wedding-shoot": "OPERATION",
-  "pre-nup-shoot": "OPERATION",
-  "corporate-event-shoot": "OPERATION",
-  "portrait-session": "OPERATION",
-  "product-photography": "OPERATION",
-  "freelance-gig": "OPERATION",
-  "stock-photo-sales": "OPERATION",
-  "video-shoot": "OPERATION",
-  "social-media-content-shoot": "OPERATION",
-  "other-service-income": "OPERATION",
+  // INCOME
+  "product-sales": "OPERATION",
+  "printing-services": "OPERATION",
+  "photocopy-services": "OPERATION",
+  "lamination-and-binding": "OPERATION",
 
-  // Expenses (Operating)
-  "transportation": "OPERATION",
-  "meals-and-snacks": "OPERATION",
+  // EXPENSE
+  "inventory-purchase": "OPERATION",
   "utilities": "OPERATION",
-  "internet": "OPERATION",
-  "printing-and-albums": "OPERATION",
-  "props-and-backdrops": "OPERATION",
-  "software-subscriptions": "OPERATION",
-  "marketing-and-ads": "OPERATION",
-  "office-supplies": "OPERATION",
-
-  // Expenses (Financing)
-  "loan-repayment": "FINANCING",
-  "interest-expense": "FINANCING",
-
-  // Expenses (Investing)
-  "camera-purchase": "INVESTMENT",
-  "lens-purchase": "INVESTMENT",
-  "lighting-equipment": "INVESTMENT",
-  "laptop-or-pc-upgrade": "INVESTMENT",
-  "studio-rental-or-renovation": "INVESTMENT",
+  "transportation": "OPERATION",
+  "employee-salary": "OPERATION",
+  "equipment-maintenance": "INVESTMENT",
+  "insurance": "FINANCING",
 };
 
 // Helper to generate random amount within a range
