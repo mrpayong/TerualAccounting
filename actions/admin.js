@@ -114,7 +114,7 @@ export async function getSysAdmin() {
             return {authorized: false, reason: "[SYSA]You are not a System Admin. Notifying System admin."};
         }
 
-        return {authorized: true, user};
+        return {authorized: true};
         
     } catch (error) {
         if (error instanceof UnauthorizedError) {

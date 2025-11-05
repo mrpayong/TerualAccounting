@@ -13,6 +13,9 @@ const SysAdminLayout = async ({children}) => {
         await getUnauthUser();
         return notFound(); 
     }
+    if (SysAdminUser.authorized){ 
+        await getUnauthUser();
+    }
   return (
     <div className='h-full'>
       <Header SysAdminPage={true}/>
