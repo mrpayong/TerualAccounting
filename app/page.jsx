@@ -108,7 +108,7 @@ const Home = () => {
       title: "Account Creation",
       bestPracticeId: "account",
       icon: <IdCard/>,
-      src: "/createAcc.png",
+      src: "/addAccountForm.png",
       description: 
         "Create an account for your client.",
       steps: [
@@ -123,7 +123,7 @@ const Home = () => {
       id: "ai-transaction",
       title: "AI-Powered Transaction Recording",
       bestPracticeId: "infoAI",
-      src: "/AddTransaction.png",
+      src: "/AddTransac.png",
       icon: <Bot className="text-black group-hover:text-white group-hover:animate-bounce"/>,
       description:
         "Save time on recording the transactions in the accounts.",
@@ -141,7 +141,7 @@ const Home = () => {
       title: "Cashflow Statement Generation",
       bestPracticeId: "cashflowStatment",
       icon: <ChartLine/>,
-      src: "/cashflowModal.png",
+      src: "/cashflow.png",
       description:
         "Generate Cashflow Statements for specifc periods.",
       steps: [
@@ -157,7 +157,7 @@ const Home = () => {
       title: "Group Transaction",
       bestPracticeId: "groupTransaction",
       icon: <Folders/>,
-      src: "/groupTransaction.png",
+      src: "/GroupTransac.png",
       description:
         "Group transaction for long time framed cashflow statements.",
       steps: [
@@ -172,7 +172,7 @@ const Home = () => {
       title: "Decision Support System",
       bestPracticeId: "DSS",
       icon: <Brain className="text-black group-hover:text-white group-hover:animate-bounce"/>,
-      src: "/dss(1).png",
+      src: "/DecisionSupport.png",
       description:
         "Receive financial insights and recommendations through Hybrid Decision Support.",
       steps: [
@@ -375,7 +375,7 @@ const Home = () => {
           <div className="md:w-1/2 mt-8 md:mt-0 animate-slide-in-right">
             <img
               // src="https://readdy.ai/api/search-image?query=Modern%20financial%20dashboard%20interface%20with%20AI%20assistant%20helping%20user%20navigate%20through%20various%20financial%20tools%20and%20features%2C%20showing%20clean%20UI%20with%20data%20visualization%20elements%2C%20charts%20and%20helpful%20tooltips%20on%20a%20light%20background%20with%20blue%20accents&width=600&height=400&seq=hero1&orientation=landscape"
-              src="dashSS(1).png"
+              src="dashboard.png"
               alt="Financial System Overview"
               className="rounded-lg shadow-xl object-cover w-full h-auto"
             />

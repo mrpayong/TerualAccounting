@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {Loader2, Search, Shield, CheckCircle, Users, UserX, LaptopMinimalCheck, UserRoundPlus, UserRound, MoreHorizontal, Trash, X, Bolt, Pen, Check, Mail } from 'lucide-react';
 import useFetch from '@/hooks/use-fetch';
@@ -79,12 +79,13 @@ const roles = [
   {
     name: "STAFF",
     icon: <UserRound className="lg:w-6 lg:h-6 sm:w-5 sm:h-5 text-blue-500" />,
-    description: "Staff can manage and analyze data for their assigned client accounts. They have access to client dashboards, can create transactions, and manage cashflow statements.",
+    description: "Staff can manage and analyze data for their assigned client accounts. They can add transactions and manage cashflow statements.",
     accesses: [
       "Dashboard with analytics for assigned client",
-      "Clickable client cards to access account pages",
-      "Create transactions (AI-powered receipt scanning)",
-      "View and edit transactions",
+      "Account pages to have more control to client's account",
+      "Add transactions (AI-powered receipt scanning)",
+      "View transaction details",
+      "Archive page to view delete history",
       "Edit Cashflow Statements",
       "Access Disbursement & Cash Receipt Books",
       "Download Cashflow Statement as PDF",
@@ -97,11 +98,11 @@ const roles = [
     description: "Admins have access to decision support tools, advanced analytics, and user management. They can forecast, schedule tasks, and oversee all client and user activity.",
     accesses: [
       "Decision Support System (DSS) with analytics",
-      "AI-powered forecasting & task scheduling",
-      "Create and manage tasks",
+      "AI-powered forecasting & AI suggested schedule",
+      "Create and delete finished tasks",
       "Admin portal dashboard",
-      "View all activity logs",
-      "Access all client information",
+      "View activity logs",
+      "View all clients' information",
       "Manage user list"
     ]
   },
@@ -224,9 +225,11 @@ function RoleInfoTab() {
 
 
 const SettingsForm = () => {
-    const [userSearch, setUserSearch] = useState("");
-const isSmallScreen = useMediaQuery("(max-width: 1080px)");
+  const [userSearch, setUserSearch] = useState("");
+  const isSmallScreen = useMediaQuery("(max-width: 1080px)");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage, setUsersPerPage] = useState(6);
 // ADD MORE ROLE TO DROPDOWN MENU
 
     const {
@@ -273,21 +276,34 @@ const isSmallScreen = useMediaQuery("(max-width: 1080px)");
        }
     },[updateRoleResult])
 
-    const filteredUsers = usersData?.success
-        ? usersData.data.filter((user) => 
-            user.Fname?.toLowerCase().includes(userSearch.toLowerCase()) ||
-            user.Lname?.toLowerCase().includes(userSearch.toLowerCase()) ||
-            user.email?.toLowerCase().includes(userSearch.toLowerCase())
-        )
-        : [];
+  const filteredUsers = usersData?.success
+      ? usersData.data.filter((user) => 
+          user.Fname?.toLowerCase().includes(userSearch.toLowerCase()) ||
+          user.Lname?.toLowerCase().includes(userSearch.toLowerCase()) ||
+          user.email?.toLowerCase().includes(userSearch.toLowerCase())
+      )
+      : [];
     
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length/usersPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [userSearch, usersPerPage, usersData?.data?.length]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage -1) * usersPerPage;
+    return filteredUsers.slice(start, start + usersPerPage)
+  },[filteredUsers, currentPage, usersPerPage])
+
+  const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p-1));
+  const handleNextPage = () => setCurrentPage((p) => Math.min(totalPages, p+1))
 
 
-const handleChangeUserRole = async (role) => {
-  if (!userToChangeRole) return;
-  await updateRole(userToChangeRole.id, role);
-  setChangeRoleDialog(false);
-};
+  const handleChangeUserRole = async (role) => {
+    if (!userToChangeRole) return;
+    await updateRole(userToChangeRole.id, role);
+    setChangeRoleDialog(false);
+  };
 
 const [createUserDialog, setCreateUserDialog] = useState(false);
 
@@ -899,7 +915,7 @@ useEffect(() => {
                     </TableRow>
                   </TableHeader>
                   <TableBody className='font-medium text-base'>
-                    {filteredUsers.map((user) => (
+                    {paginatedUsers.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
@@ -1012,6 +1028,45 @@ useEffect(() => {
                     ))}
                   </TableBody>
                 </Table>
+
+                <div className="mt-4 flex flex-col sm:flex-row items-center sm:justify-between gap-3">
+                  <div className="text-sm text-muted-foreground">
+                    {(() => {
+                      const total = filteredUsers.length;
+                      const start = total === 0
+                        ? 0
+                        : (currentPage -1) * usersPerPage +1;
+                      const end = Math.min(total, currentPage * usersPerPage);
+                      return `Showing ${start}-${end} of ${total}`;
+                    })()}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1"
+                      aria-label="Previous Page">
+                      Previous
+                    </Button>
+
+                    <div className="text-sm hidden sm:inline">
+                      Page {currentPage} of {totalPages}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1"
+                      aria-label="Next Page">
+                      Next
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="py-12 text-center">

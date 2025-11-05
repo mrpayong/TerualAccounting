@@ -225,7 +225,7 @@ console.log("[5]")
         return {code:401, success: false, message:"No Merchant name."};
       }
 
-console.log("[6]:", data)
+console.log("[6]:")
      
      
     const updateLog = await activityLog({

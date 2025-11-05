@@ -58,7 +58,7 @@ async function activityLog({userId, action, args, timestamp}){
 
 
 
-
+// checks the user's role if admin
 export async function getAdmin() {
     try {
         const {userId} = await auth();
@@ -197,7 +197,6 @@ export async function getActivityLogs() {
         return { success: false, error: "Access denied. Only ADMIN can view activity logs." };
         }
 
-        
         const activityLogs = await db.activityLog.findMany({
             include: {
                 user:{
@@ -209,7 +208,7 @@ export async function getActivityLogs() {
                 }
             },
             orderBy: {createdAt: "desc"},
-            take: 200,
+            take: 200, // limit for performance 
         })
 
         
@@ -268,6 +267,25 @@ export async function getUnauthUser() {
     const {userId} = await auth();
 
     if (!userId) {
+        // test by removing "!" in the condition above
+        const headersList = await headers();
+        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        
+        const metaData = JSON.stringify({
+            message: "Unauthorized user attempting to access a prohibited page.",
+            ip_Add: ip,
+        })
+        await db.unauthz.create({
+          data: {  
+            IP: ip,
+            action:"getUnauthUser",
+            meta: metaData
+            }
+        })
+        return { authorized: false, reason: "Non-user attempting to access prohibited page" };
+    }
+
+    if (userId) {
         // test by removing "!" in the condition above
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
@@ -348,11 +366,11 @@ export async function UserSessionLogging({action, args, result, timestamp}) {
 
         
         const activity = await db.activityLog.create({
-        data: {
-            userId: user.id,
-            action,
-            meta: { args, result, localizedTimestamp },
-        },
+            data: {
+                userId: user.id,
+                action,
+                meta: { args, result, localizedTimestamp },
+            },
         });
         
         if (!activity) {
@@ -713,12 +731,12 @@ export async function getMonthlyActivityLogs() {
 
     // Get start of the current week (Sunday)
         const getStartOfWeek = (now) => {
-        const day = now.getDay(); // 0 = Sunday, 6 = Saturday
-        const start = new Date(now);
-        start.setHours(0, 0, 0, 0);
-        start.setDate(now.getDate() - day);
-        
-        return start;
+            const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+            const start = new Date(now);
+            start.setHours(0, 0, 0, 0);
+            start.setDate(now.getDate() - day);
+            
+            return start;
         };
 
         const startOfCurrentWeek = getStartOfWeek(now);
@@ -820,6 +838,46 @@ export async function getArchives(accountId){
     }
 }
 
+
+export async function getIntruder(){
+    try {
+        const { userId } = await auth();
+        if (!userId) {
+            throw new UnauthorizedError("Unauthorized");
+        }
+
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId },
+        });
+        if(!user){
+            return { success: false, error: "Data Unavailable." };
+        }
+        if(user.role !== "SYSADMIN"){
+            return { success: false, error: "Data Unavailable." };
+        }
+
+
+
+        const Unauthz = await db.Unauthz.findMany({
+            select: {
+                IP: true,
+                action:true,
+                meta: true,
+                createdAt:true,
+            }
+        });
+
+        
+        return {success: true, code:200, data: Unauthz};
+    } catch (error) {
+        console.log("Error returning data", error.message)
+        return {
+            success: false,
+            code: 404,
+            message: "An unexpected error occurred while retrieving archives.",
+        };
+    }
+}
 
 
 

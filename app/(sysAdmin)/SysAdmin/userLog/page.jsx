@@ -1,5 +1,5 @@
 
-import { getWebhookSessions } from '@/actions/admin'
+import { getIntruder, getWebhookSessions } from '@/actions/admin'
 import React from 'react'
 import UserSessionTable from './_component/userLogpage'
 import { Unica_One, Zen_Kaku_Gothic_Antique } from 'next/font/google';
@@ -16,7 +16,11 @@ const fontUnicaOne = Unica_One({
 })
 
 async function UserLog () {
+
   const sessions = await getWebhookSessions()
+  const unauth =  await getIntruder()
+
+  console.log("THE UNAUTH USERS: ", unauth)
 
   return (
     <div className='p-6'>
