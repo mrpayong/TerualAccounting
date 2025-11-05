@@ -2,7 +2,7 @@
 import Header from '@/components/header'
 import { notFound } from 'next/navigation'
 import React from 'react'
-import { getSysAdmin, getUnauthUser } from '@/actions/admin'
+import { getSysAdmin, getUnauthUser, getUnauthUserTest } from '@/actions/admin'
 import Sidebar from './SysAdmin/_components/sidebar';
 
 const SysAdminLayout = async ({children}) => {
@@ -13,8 +13,9 @@ const SysAdminLayout = async ({children}) => {
         await getUnauthUser();
         return notFound(); 
     }
-    if (SysAdminUser.authorized){ 
-        await getUnauthUser();
+    if (SysAdminUser.authorized === true){ 
+        await getUnauthUserTest();
+        return notFound(); 
     }
   return (
     <div className='h-full'>

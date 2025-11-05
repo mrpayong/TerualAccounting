@@ -327,6 +327,50 @@ export async function getUnauthUser() {
 }
 
 
+export async function getUnauthUserTest() {
+    const {userId} = await auth();
+
+    if (userId) {
+        // test by removing "!" in the condition above
+        const headersList = await headers();
+        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        
+        const metaData = JSON.stringify({
+            message: "Unauthorized user attempting to access a prohibited page.",
+            ip_Add: ip,
+        })
+        await db.unauthz.create({
+          data: {  
+            IP: ip,
+            action:"getUnauthUser",
+            meta: metaData
+            }
+        })
+        return { authorized: false, reason: "Non-user attempting to access prohibited page" };
+    }
+    const user = await db.user.findUnique({
+        where: {clerkUserId:userId},
+    });
+
+    await activityLog({
+        action: "getUnauthUser",
+        args: { attemptedUserId: userId, data: user },
+        result: {
+            message: "User attempting to access prohibited page."
+        },
+        timestamp: new Date().toISOString(),
+    });
+
+    if (!user) {
+        return {authorized: false, reason: "Non-user attempting access."};
+    }
+    if (user.role) {
+        return {authorized: false, data: user, reason: "User accessing possible prohibited page."};
+    }
+    return {authorized: false}; 
+}
+
+
 function formatToPhilippinesTime(isoString) {
   const date = new Date(isoString);
 
