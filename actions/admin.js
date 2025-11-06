@@ -272,57 +272,12 @@ export async function getUnauthUser() {
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
         
-        const metaData = JSON.stringify({
-            message: "Unauthorized user attempting to access a prohibited page.",
-            ip_Add: ip,
-        })
-        await db.unauthz.create({
-          data: {  
-            IP: ip,
-            action:"getUnauthUser",
-            meta: metaData
-            }
-        })
-        return { authorized: false, reason: "Non-user attempting to access prohibited page" };
-    }
-
-    const user = await db.user.findUnique({
-        where: {clerkUserId:userId},
-    });
-
-    await activityLog({
-        action: "getUnauthUser",
-        args: { attemptedUserId: userId, data: user },
-        result: {
-            message: "User attempting to access prohibited page."
-        },
-        timestamp: new Date().toISOString(),
-    });
-
-    if (!user) {
-        return {authorized: false, reason: "Non-user attempting access."};
-    }
-    if (user.role) {
-        return {authorized: false, data: user, reason: "User accessing possible prohibited page."};
-    }
-    return {authorized: false}; 
-}
-
-
-export async function getUnauthUserTest() {
-    const {userId} = await auth();
-
-    if (userId) {
-        // test by removing "!" in the condition above
-        const headersList = await headers();
-        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
-        
         // const city= JSON.stringify(headersList.get("x-geo-city")) || 'Unknown IP'
-        const city = headersList.get('X-Vercel-IP-City') || headersList.get('X-Vercel-IP-City'.toLowerCase()) || '';
-        const country = JSON.stringify(headersList.get('X-Vercel-IP-Country')) || 'Unknown IP'
-        const latitude = JSON.stringify(headersList.get('x-vercel-ip-latitude'))
-        const longitude = JSON.stringify(headersList.get('x-vercel-ip-longitude'))
-
+        const city = headersList.get('X-Vercel-IP-City') || headersList.get('X-Vercel-IP-City'.toLowerCase());
+        const country = JSON.stringify(headersList.get('X-Vercel-IP-Country'));
+        const latitude = JSON.stringify(headersList.get('x-vercel-ip-latitude'));
+        const longitude = JSON.stringify(headersList.get('x-vercel-ip-longitude'));
+        
         const metaData = JSON.stringify({
             message: "Unauthorized user attempting to access a prohibited pagesss.",
             ip_Add: ip,
@@ -340,6 +295,7 @@ export async function getUnauthUserTest() {
         })
         return { authorized: false, reason: "Non-user attempting to access prohibited page" };
     }
+
     const user = await db.user.findUnique({
         where: {clerkUserId:userId},
     });
