@@ -20,7 +20,8 @@ async function UserLog () {
   const sessions = await getWebhookSessions()
   const unauth =  await getIntruder()
 
-  console.log("THE UNAUTH USERS: ", unauth)
+  const unauthData = unauth.data;
+
 
   return (
     <div className='p-6'>
@@ -28,7 +29,7 @@ async function UserLog () {
         <span className={`${fontUnicaOne.className} text-6xl md:text-[5rem]/[1] font-normal`}>User Log</span>
         <span className={`${fontZenKaku.className} font-normal text-sm tracking-wide text-slate-600 p-0`}>These are logs of the sessions of every users.</span>
       </div>
-      <UserSessionTable sessions={sessions}/>
+      <UserSessionTable sessions={sessions} unauth={unauthData}/>
     </div>
   )
 }

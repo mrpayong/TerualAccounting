@@ -46,7 +46,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: ["400", "500", "700", "900"],
 })
 
-const UserSessionTable = ({ sessions = {} }) => {
+const UserSessionTable = ({ sessions = {}, unauth }) => {
   // State
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
@@ -57,6 +57,11 @@ const UserSessionTable = ({ sessions = {} }) => {
   const [toDateRaw, setToDateRaw] = useState(null);
 
   const activityArray = sessions.data ?? [];
+
+  const [unauthPage, setUnauthPage] = useState(1);
+  const [unauthPerPage, setUnauthPerPage] = useState(5);
+  const [unauthFromRaw, setUnauthFromRaw] = useState(null);
+  const [unauthToRaw, setUnauthToRaw] = useState(null);
 
   // Derived: unique actions for filter
   const actionOptions = useMemo(() => {
@@ -169,6 +174,101 @@ const UserSessionTable = ({ sessions = {} }) => {
     actionFilter !== "all" ||
     fromDateRaw !== null ||
     toDateRaw !== null;
+
+  const safeParseMeta = (raw) => {
+    if (!raw) return {};
+    if (typeof raw === "object") return raw;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      try {
+        const cleaned = raw.replace(/\\"/g, '"').replace(/\\'+/g, "'");
+        return JSON.parse(cleaned);
+      } catch (e2) {
+        return { raw: String(raw) };
+      }
+    }
+  };
+
+  // Normalize unauth entries for the unauth table (memoized to avoid re-parsing on each render)
+  const unauthList = useMemo(() => {
+    if (!Array.isArray(unauth)) return [];
+    return unauth.map((u, idx) => {
+      const meta = safeParseMeta(u.meta);
+      // prefer meta.ip_Add or top-level IP; strip extra quotes if present
+      const rawIp = u.IP || meta.ip_Add || meta.IP || meta.ip || "";
+      const ip = String(rawIp).replace(/^"+|"+$/g, "");
+
+      const cleanVal = (v) => 
+        String(v ?? "")
+          .replace(/^"+|"+$/g, "")
+          .replace(/\\+/g, "")
+          .trim();
+      const latitude = cleanVal(meta.latitude ?? meta.lat ?? meta.Latitude ?? meta.Lat);
+      const longitude = cleanVal(meta.longitude ?? meta.lon ?? meta.Longitude ?? meta.Long);
+      return {
+        id: u.id ?? `unauth-${idx}`,
+        ip,
+        action: u.action ?? "UNAUTH",
+        createdAt: u.createdAt ?? meta.createdAt ?? new Date().toISOString(),
+        city: meta.city || meta.City || "",
+        country: meta.country || meta.Country || "",
+        latitude,
+        longitude,
+        meta,
+      };
+    });
+  }, [unauth]);
+
+  const unauthFiltered = useMemo(() => {
+    if (!unauthList.length) return [];
+    const from = unauthFromRaw ? new Date(unauthFromRaw).setHours(0, 0, 0, 0) : null;
+    const to = unauthToRaw ? (() => { const d = new Date(unauthToRaw); d.setHours(23,59,59,999); return d.getTime(); })() : null;
+    return unauthList.filter((e) => {
+      if (!e.createdAt) return false;
+      const t = new Date(e.createdAt).getTime();
+      if (from !== null && t < from) return false;
+      if (to !== null && t > to) return false;
+      return true;
+    });
+  }, [unauthList, unauthFromRaw, unauthToRaw]);
+
+  const unauthTotalPages = Math.max(1, Math.ceil(unauthFiltered.length / unauthPerPage));
+  const unauthPaginated = useMemo(
+    () => unauthFiltered.slice((unauthPage - 1) * unauthPerPage, unauthPage * unauthPerPage),
+    [unauthFiltered, unauthPage, unauthPerPage]
+  );
+
+  useEffect(() => {
+    setUnauthPage(1);
+  }, [unauthFiltered.length, unauthPerPage]);
+
+  // Clamp unauthPage if total pages shrink
+  useEffect(() => {
+    if (unauthPage > unauthTotalPages) setUnauthPage(unauthTotalPages);
+  }, [unauthTotalPages, unauthPage]);
+
+  function actionFormat(action){
+    if(action === "getUnauthUser")
+      return "Unauthorized Access Attempt"
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -337,7 +437,6 @@ const UserSessionTable = ({ sessions = {} }) => {
           </TableBody>
         </Table>
       </div>
-
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 mt-6">
@@ -383,6 +482,148 @@ const UserSessionTable = ({ sessions = {} }) => {
           </Button>
         </div>
       )}
+
+            {/* Unauthenticated access attempts table */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-3">Nonusers Access Attempts</h3>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="From"
+                value={unauthFromRaw}
+                onChange={setUnauthFromRaw}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    className: "w-full sm:w-36 bg-white border border-gray-300 rounded px-2 py-1 text-xs",
+                  },
+                }}
+                disableFuture={false}
+                format="yyyy-MM-dd"
+              />
+              <DatePicker
+                label="To"
+                value={unauthToRaw}
+                onChange={setUnauthToRaw}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    className: "w-full sm:w-36 bg-white border border-gray-300 rounded px-2 py-1 text-xs",
+                  },
+                }}
+                disableFuture={false}
+                minDate={unauthFromRaw}
+                format="yyyy-MM-dd"
+              />
+            </LocalizationProvider>
+            <Button size="sm" variant="outline" onClick={() => { setUnauthFromRaw(null); setUnauthToRaw(null); }}>
+              Clear
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Select value={unauthPerPage.toString()} onValueChange={(v) => setUnauthPerPage(Number(v))}>
+              <SelectTrigger className="w-[90px] font-normal text-sm">
+                <SelectValue placeholder="Rows" />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 50].map((n) => (
+                  <SelectItem key={n} value={n.toString()} className="!text-sm">
+                    {n} / page
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        
+        <div className="overflow-x-auto rounded-lg border bg-white">
+          <Table>
+            <TableHeader className="font-bold text-md">
+              <TableRow>
+                <TableHead className="bg-gray-100 text-gray-800">IP Address</TableHead>
+                <TableHead className="bg-gray-100 text-center text-gray-800">Action</TableHead>
+                <TableHead className="bg-gray-100 text-center text-gray-800">Occurred On</TableHead>
+                <TableHead className="bg-gray-100 text-gray-800 hidden sm:table-cell">City</TableHead>
+                <TableHead className="bg-gray-100 text-gray-800 hidden sm:table-cell">Coordinates</TableHead>
+                <TableHead className="bg-gray-100 text-gray-800 hidden sm:table-cell">Country</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {unauthFiltered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="font-medium text-base text-center py-8">
+                    No unauthenticated attempts recorded.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                unauthPaginated.map((entry) => (
+                  <TableRow key={entry.id} className="font-medium text-sm hover:bg-gray-50">
+                    <TableCell className="whitespace-nowrap">{entry.ip || "Unknown IP"}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="bg-red-100 text-red-700 border-red-400 font-medium text-sm">
+                        {actionFormat(entry.action)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-center">
+                      {entry.createdAt ? formatToPhilippinesTime(entry.createdAt) : "-"}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {entry.latitude || entry.longitude
+                        ? `Lat.:${entry.latitude || "-"}, Long.:${entry.longitude || "-"}`
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{entry.city || "-"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{entry.country || "-"}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {unauthList.length > 0 && (
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm text-muted-foreground">
+            {(() => {
+              const total = unauthList.length;
+              const start = total === 0 ? 0 : (unauthPage - 1) * unauthPerPage + 1;
+              const end = Math.min(total, unauthPage * unauthPerPage);
+              return `Showing ${start}–${end} of ${total} unauth attempts`;
+            })()}
+          </div>
+
+          <div className="flex items-center gap-2">
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setUnauthPage((p) => Math.max(1, p - 1))}
+              disabled={unauthPage === 1}
+            >
+              Prev
+            </Button>
+
+            <div className="text-sm px-2">
+              Page {unauthPage} / {unauthTotalPages}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setUnauthPage((p) => Math.min(unauthTotalPages, p + 1))}
+              disabled={unauthPage === unauthTotalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 };
