@@ -62,6 +62,7 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
   const [unauthPerPage, setUnauthPerPage] = useState(5);
   const [unauthFromRaw, setUnauthFromRaw] = useState(null);
   const [unauthToRaw, setUnauthToRaw] = useState(null);
+  const [unauthSortState, setUnauthSortState] = useState("asc");
 
   // Derived: unique actions for filter
   const actionOptions = useMemo(() => {
@@ -233,21 +234,38 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
     });
   }, [unauthList, unauthFromRaw, unauthToRaw]);
 
+  const unauthSorted = useMemo(() => {
+    if (!unauthFiltered.length) return [];
+    if (unauthSortState === "none") return [...unauthFiltered];
+    return [...unauthFiltered].sort((a, b) => {
+      const tA = new Date(a.createdAt).getTime();
+      const tB = new Date(b.createdAt).getTime();
+      return unauthSortState === "asc" ? tA - tB : tB - tA;
+    });
+  }, [unauthFiltered, unauthSortState]);
+
   const unauthTotalPages = Math.max(1, Math.ceil(unauthFiltered.length / unauthPerPage));
   const unauthPaginated = useMemo(
-    () => unauthFiltered.slice((unauthPage - 1) * unauthPerPage, unauthPage * unauthPerPage),
-    [unauthFiltered, unauthPage, unauthPerPage]
+    () => unauthSorted.slice((unauthPage - 1) * unauthPerPage, unauthPage * unauthPerPage),
+    [unauthSorted, unauthPage, unauthPerPage]
   );
 
   useEffect(() => {
     setUnauthPage(1);
-  }, [unauthFiltered.length, unauthPerPage]);
+  }, [unauthSortState, unauthPerPage, unauthFromRaw, unauthToRaw]);
 
   // Clamp unauthPage if total pages shrink
   useEffect(() => {
     if (unauthPage > unauthTotalPages) setUnauthPage(unauthTotalPages);
   }, [unauthTotalPages, unauthPage]);
 
+  const handleUnauthSort = () => {
+    setUnauthSortState((prev) => {
+      if (prev === "asc") return "desc";
+      if (prev === "desc") return "none";
+      return "asc";
+    });
+  };
   function actionFormat(action){
     if(action === "getUnauthUser")
       return "Unauthorized Access Attempt"
@@ -517,9 +535,18 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
                 format="yyyy-MM-dd"
               />
             </LocalizationProvider>
-            <Button size="sm" variant="outline" onClick={() => { setUnauthFromRaw(null); setUnauthToRaw(null); }}>
-              Clear
-            </Button>
+            {(unauthToRaw || unauthFromRaw) && (
+              <Button className="
+                bg-white border border-rose-500
+                text-rose-500 hover:bg-rose-500
+                hover:text-white hover:border-0
+                hover:shadow-md hover:shadow-rose-500/25"
+                size="sm"
+                onClick={() => { setUnauthFromRaw(null); setUnauthToRaw(null); }}
+              >
+                 <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -545,7 +572,20 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
               <TableRow>
                 <TableHead className="bg-gray-100 text-gray-800">IP Address</TableHead>
                 <TableHead className="bg-gray-100 text-center text-gray-800">Action</TableHead>
-                <TableHead className="bg-gray-100 text-center text-gray-800">Occurred On</TableHead>
+                <TableHead className="bg-gray-100 text-center text-gray-800 cursor-pointer" onClick={handleUnauthSort}>
+                  <span className="flex items-center justify-center whitespace-nowrap">
+                    Occurred On
+                    {unauthSortState === "asc" && (
+                      <ArrowUpWideNarrow className="ml-1 text-blue-600" size={16} />
+                    )}
+                    {unauthSortState === "desc" && (
+                      <ArrowDownNarrowWide className="ml-1 text-blue-600" size={16} />
+                    )}
+                    {unauthSortState === "none" && (
+                      <ChevronsUpDown className="ml-1 text-gray-400" size={16} />
+                    )}
+                  </span>
+                </TableHead>
                 <TableHead className="bg-gray-100 text-gray-800 hidden sm:table-cell">City</TableHead>
                 <TableHead className="bg-gray-100 text-gray-800 hidden sm:table-cell">Coordinates</TableHead>
                 <TableHead className="bg-gray-100 text-gray-800 hidden sm:table-cell">Country</TableHead>
@@ -586,34 +626,28 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
       </div>
 
       {unauthList.length > 0 && (
-        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="text-sm text-muted-foreground">
-            {(() => {
-              const total = unauthList.length;
-              const start = total === 0 ? 0 : (unauthPage - 1) * unauthPerPage + 1;
-              const end = Math.min(total, unauthPage * unauthPerPage);
-              return `Showing ${start}–${end} of ${total} unauth attempts`;
-            })()}
-          </div>
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
 
           <div className="flex items-center gap-2">
 
             <Button
               variant="outline"
               size="sm"
+              className="rounded font-medium text-sm"
               onClick={() => setUnauthPage((p) => Math.max(1, p - 1))}
               disabled={unauthPage === 1}
             >
               Prev
             </Button>
 
-            <div className="text-sm px-2">
+            <div className="text-sm font-medium px-2">
               Page {unauthPage} / {unauthTotalPages}
             </div>
 
             <Button
               variant="outline"
               size="sm"
+              className="rounded font-medium text-sm"
               onClick={() => setUnauthPage((p) => Math.min(unauthTotalPages, p + 1))}
               disabled={unauthPage === unauthTotalPages}
             >
