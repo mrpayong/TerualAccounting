@@ -320,18 +320,22 @@ export async function getUnauthUserTest() {
         // const city= JSON.stringify(headersList.get("x-geo-city")) || 'Unknown IP'
         const city = headersList.get('X-Vercel-IP-City') || headersList.get('X-Vercel-IP-City'.toLowerCase()) || '';
         const country = JSON.stringify(headersList.get('X-Vercel-IP-Country')) || 'Unknown IP'
+        const latitude = JSON.stringify(headersList.headers.get('x-vercel-ip-latitude'))
+        const longitude = JSON.stringify(headersList.headers.get('x-vercel-ip-longitude'))
 
         const metaData = JSON.stringify({
             message: "Unauthorized user attempting to access a prohibited pagesss.",
             ip_Add: ip,
             city: city,
             country: country,
+            latitude:latitude,
+            longitude:longitude
         })
         await db.unauthz.create({
           data: {  
             IP: ip,
             action:"getUnauthUser",
-            meta: metaData
+            meta: metaData,
             }
         })
         return { authorized: false, reason: "Non-user attempting to access prohibited page" };

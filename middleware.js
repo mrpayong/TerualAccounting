@@ -50,9 +50,14 @@ function unauthCatch(req){
     const ip = ipAddress(req);
     const { city } = geolocation(req);
     const {country} = geolocation(req);
+    const {latitude} = geolocation(req);
+    const {longitude} = geolocation(req);
+    
     const response = NextResponse.next();
     response.headers.set('x-forwarded-for', ip || '');
     response.headers.set('X-Vercel-IP-City', city || '');
+    response.headers.set('x-vercel-ip-latitude', latitude || '');
+    response.headers.set('x-vercel-ip-longitude', longitude || '');
     response.headers.set('X-Vercel-IP-Country', country || '');
     return response;
 }
