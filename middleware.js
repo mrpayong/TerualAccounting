@@ -48,7 +48,7 @@ const clerk = clerkMiddleware(async (auth, req) => {
 function unauthCatch(req){
     // Geolocation/IP logic
     const ip = ipAddress(req);
-    const { city } = geolocation(request);
+    const { city } = geolocation(req);
     // const {country} = geolocation(req);
     const response = NextResponse.next();
     response.headers.set('x-forwarded-for', ip || '');
