@@ -47,12 +47,29 @@ const clerk = clerkMiddleware(async (auth, req) => {
 
 function unauthCatch(req){
     // Geolocation/IP logic
-    const ip = ipAddress(req);
-    const geo = geolocation(req);
+    // const ip = ipAddress(req);
+    // // const loc = geolocation(req);
+    // // const {country} = geolocation(req);
+    // const response = NextResponse.next();
+    // response.headers.set('x-forwarded-for', ip || '');
+    // // response.headers.set('X-Vercel-IP-City', loc || '');
+    // // response.headers.set('X-Vercel-IP-Country', country || '');
+    // return response;
+
+
+     // Use NextRequest.geo (available in Edge middleware) and request headers.
+    // req is a NextRequest in middleware runtime.
+    const geo = (req && req.geo) || {};
+    // Prefer existing forwarded header if present, fallback to empty string
+    const forwardedFor = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
+
     const response = NextResponse.next();
-    response.headers.set('x-forwarded-for', ip || '');
-    response.headers.set('x-geo-city', geo.city || '');
-    response.headers.set('x-geo-country', geo.country || '');
+    response.headers.set("x-forwarded-for", forwardedFor);
+    response.headers.set("x-geo-city", geo.city || "");
+    response.headers.set("x-geo-country", geo.country || "");
+    response.headers.set("x-geo-region", geo.region || "");
+    response.headers.set("x-geo-latitude", String(geo.latitude ?? ""));
+    response.headers.set("x-geo-longitude", String(geo.longitude ?? ""));
     return response;
 }
 

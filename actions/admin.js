@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { geolocation } from "@vercel/functions";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { NextRequest } from 'next/server'
@@ -285,25 +286,6 @@ export async function getUnauthUser() {
         return { authorized: false, reason: "Non-user attempting to access prohibited page" };
     }
 
-    if (userId) {
-        // test by removing "!" in the condition above
-        const headersList = await headers();
-        const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
-        
-        const metaData = JSON.stringify({
-            message: "Unauthorized user attempting to access a prohibited page.",
-            ip_Add: ip,
-        })
-        await db.unauthz.create({
-          data: {  
-            IP: ip,
-            action:"getUnauthUser",
-            meta: metaData
-            }
-        })
-        return { authorized: false, reason: "Non-user attempting to access prohibited page" };
-    }
-
     const user = await db.user.findUnique({
         where: {clerkUserId:userId},
     });
@@ -334,10 +316,14 @@ export async function getUnauthUserTest() {
         // test by removing "!" in the condition above
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
-        
+        const city= JSON.stringify(headersList.get("x-geo-city")) || 'Unknown IP'
+        // const country = JSON.stringify(headersList.get('X-Vercel-IP-Country')) || 'Unknown IP'
+      
         const metaData = JSON.stringify({
-            message: "Unauthorized user attempting to access a prohibited page.",
+            message: "Unauthorized user attempting to access a prohibited pagesss.",
             ip_Add: ip,
+            city: city,
+            // country: country,
         })
         await db.unauthz.create({
           data: {  
