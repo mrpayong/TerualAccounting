@@ -60,17 +60,21 @@ function unauthCatch(req){
      // Use NextRequest.geo (available in Edge middleware) and request headers.
     // req is a NextRequest in middleware runtime.
     const geo = (req && req.geo) || {};
-    // Prefer existing forwarded header if present, fallback to empty string
-    const forwardedFor = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
 
-    const response = NextResponse.next();
-    response.headers.set("x-forwarded-for", forwardedFor);
-    response.headers.set("x-geo-city", geo.city || "");
-    response.headers.set("x-geo-country", geo.country || "");
-    response.headers.set("x-geo-region", geo.region || "");
-    response.headers.set("x-geo-latitude", String(geo.latitude ?? ""));
-    response.headers.set("x-geo-longitude", String(geo.longitude ?? ""));
-    return response;
+    // copy existing request headers and add geo headers
+    const forwarded = new Headers(req.headers);
+    // preserve existing x-forwarded-for if present, else try req.ip (Edge may provide)
+    const existingFwd = forwarded.get("x-forwarded-for") || forwarded.get("x-real-ip") || (req.ip ? String(req.ip) : "");
+    if (existingFwd) forwarded.set("x-forwarded-for", existingFwd);
+
+    forwarded.set("x-geo-city", geo.city || "");
+    forwarded.set("x-geo-country", geo.country || "");
+    forwarded.set("x-geo-region", geo.region || "");
+    forwarded.set("x-geo-latitude", String(geo.latitude ?? ""));
+    forwarded.set("x-geo-longitude", String(geo.longitude ?? ""));
+
+    // Return NextResponse.next with modified request headers so downstream server code sees them.
+    return NextResponse.next({ request: { headers: forwarded } });
 }
 
 export default createMiddleware(aj, clerk, unauthCatch);
