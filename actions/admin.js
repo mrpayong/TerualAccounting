@@ -316,10 +316,11 @@ export async function getUnauthUserTest() {
         // test by removing "!" in the condition above
         const headersList = await headers();
         const ip = JSON.stringify(headersList.get('x-forwarded-for')) || 'Unknown IP'
+        
         // const city= JSON.stringify(headersList.get("x-geo-city")) || 'Unknown IP'
-        const city = headersList.get('x-geo-city') || headersList.get('x-geo-city'.toLowerCase()) || '';
+        const city = headersList.get('X-Vercel-IP-City') || headersList.get('X-Vercel-IP-City'.toLowerCase()) || '';
         // const country = JSON.stringify(headersList.get('X-Vercel-IP-Country')) || 'Unknown IP'
-      
+      console.log("HEADERS LIST", headersList, city)
         const metaData = JSON.stringify({
             message: "Unauthorized user attempting to access a prohibited pagesss.",
             ip_Add: ip,
