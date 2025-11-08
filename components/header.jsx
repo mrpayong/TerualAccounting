@@ -14,6 +14,7 @@ import HeaderClient from './HeaderClient'
 const Header = async ({isAdminPage = false, SysAdminPage=false}) => {
   const user = await checkUser();
 
+
   const isStaff = user?.role === "STAFF";
 
   const isAdmin = user?.role === "ADMIN";

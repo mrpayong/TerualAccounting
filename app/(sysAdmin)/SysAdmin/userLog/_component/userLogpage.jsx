@@ -502,7 +502,7 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
       )}
 
             {/* Unauthenticated access attempts table */}
-      <div className="mt-8">
+      {/* <div className="mt-8">
         <h3 className="text-lg font-semibold mb-3">Nonusers Access Attempts</h3>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -655,7 +655,7 @@ const UserSessionTable = ({ sessions = {}, unauth }) => {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
 
 
     </div>
