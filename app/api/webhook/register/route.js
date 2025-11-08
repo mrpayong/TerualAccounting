@@ -80,22 +80,9 @@ export async function POST(data) {
   }
 
    
-  try {
 
-    const result = await UserSessionLogging({
-      action: eventType.toUpperCase().replace('.', '-'),
-      args: args, 
-      timestamp:new Date().toISOString(),
-    });
-    if (!result.success) {
-      return new Response(result.error || "Failed", { status: 500 });
-    }
-    return Response.json({ success: true, status: 200 });
-  } catch (error) {
-    return new Response("Internal Server Error", { status: 500 });
-  }
   //   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  //   await fetch(`/api/sessionLog`, {
+  //   await fetch(`${baseUrl}/api/sessionLog`, {
   //   method: "POST",
   //   headers: { "Content-Type": "application/json" },
   //   body: JSON.stringify({
@@ -104,18 +91,17 @@ export async function POST(data) {
   //     timestamp: new Date().toISOString(),
   //   }),
   // });
-  // return new Response("Webhook processed successfully", { status: 200 });
+
+  const timestamp = new Date().toISOString();
+  const action = eventType.toUpperCase().replace('.', '-');
+
+  const result = await UserSessionLogging({ action: action, args: args, result, timestamp: timestamp });
+
+  if (!result?.success) {
+    console.error('UserSessionLogging failed', result);
+    return new Response("Failed to log session", { status: 500 });
+  }
+
+  return new Response("Webhook processed successfully", { status: 200 });
     
 }
-// 
-// async function WebhookSessionLog({action, args, res, timestamp}) {
-//   try {
-//     const result = await UserSessionLogging({action, args, res, timestamp});
-//     if (!result.success) {
-//       return new Response(result.error || "Failed", { status: 500 });
-//     }
-//     return Response.json({ success: true });
-//   } catch (error) {
-//     return new Response("Internal Server Error", { status: 500 });
-//   }
-// }
