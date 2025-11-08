@@ -1,4 +1,3 @@
-import useFetch from '@/hooks/use-fetch';
 import { db } from '@/lib/prisma';
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 
