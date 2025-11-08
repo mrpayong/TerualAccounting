@@ -1,9 +1,9 @@
-import { UserSessionLogging } from '@/actions/admin';
-import { db } from '@/lib/prisma';
+import { UserSessionLogging } from "@/actions/admin";
+import { db } from "@/lib/prisma";
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 
-export async function POST(data) {
-    const event = await verifyWebhook(data);
+export async function POST(req) {
+    const event = await verifyWebhook(req);
 
     console.log("Received Clerk webhook event:", event);
 
