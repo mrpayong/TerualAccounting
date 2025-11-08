@@ -1,11 +1,8 @@
-import { UserSessionLogging } from "@/actions/admin";
-import { db } from "@/lib/prisma";
+import { db } from '@/lib/prisma';
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 
-export async function POST(req) {
-    const event = await verifyWebhook(req);
-
-    console.log("Received Clerk webhook event:", event);
+export async function POST(data) {
+    const event = await verifyWebhook(data);
 
     const ClerkUserId =  event.data.user_id;
     
@@ -79,29 +76,19 @@ export async function POST(req) {
       return new Response("Event ignored", { status: 400 });
   }
 
+    
    
-
-  //   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  //   await fetch(`${baseUrl}/api/sessionLog`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({
-  //     action: eventType.toUpperCase().replace('.', '-'),
-  //     args,
-  //     timestamp: new Date().toISOString(),
-  //   }),
-  // });
-
-  const timestamp = new Date().toISOString();
-  const action = eventType.toUpperCase().replace('.', '-');
-
-  const result = await UserSessionLogging({ action: action, args: args, result, timestamp: timestamp });
-
-  if (!result?.success) {
-    console.error('UserSessionLogging failed', result);
-    return new Response("Failed to log session", { status: 500 });
-  }
-
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    await fetch(`${baseUrl}/api/sessionLog`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: eventType.toUpperCase().replace('.', '-'),
+      args,
+      timestamp: new Date().toISOString(),
+    }),
+  });
   return new Response("Webhook processed successfully", { status: 200 });
     
 }
+
