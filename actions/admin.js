@@ -343,9 +343,8 @@ function formatToPhilippinesTime(isoString) {
   return `${time} ${year}-${month}-${day}`;
 }
 
-export async function UserSessionLogging({action, args, result, timestamp}) {
+export async function UserSessionLogging({action, args, timestamp}) {
     try {
-        console.log('UserSessionLogging called with:', action, args, result, timestamp)
         if (!action || !args) {
             throw new UnauthorizedError("No actual session ongoing, secure database now.");
         }
@@ -362,7 +361,7 @@ export async function UserSessionLogging({action, args, result, timestamp}) {
             data: {
                 userId: user.id,
                 action,
-                meta: { args, result, localizedTimestamp },
+                meta: { args, localizedTimestamp },
             },
         });
         
@@ -371,7 +370,7 @@ export async function UserSessionLogging({action, args, result, timestamp}) {
         }
         return { success: true, message: "User session logging success." };
     } catch (error) {
-        console.error("User session logging error:", error);
+        console.log("User session logging error:", error);
         return { success: false, error: "Error logging user session" };
     }
 }
