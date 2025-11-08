@@ -6,6 +6,7 @@ export async function POST(data) {
   try {
     const event = await verifyWebhook(data);
 
+    console.log("test: [direct UserSessionLogging call]", event)
     const ClerkUserId =  event.data.user_id;
       
     if(!ClerkUserId) {
