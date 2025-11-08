@@ -348,8 +348,6 @@ export async function UserSessionLogging({action, args, timestamp}) {
         if (!action || !args) {
             throw new UnauthorizedError("No actual session ongoing, secure database now.");
         }
-        console.log("UserSessionLogging:", action, args, timestamp);
-
         const user = await db.user.findUnique({
             where: { clerkUserId: args.clerkUserId },
         });

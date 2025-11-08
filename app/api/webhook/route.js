@@ -6,7 +6,6 @@ export async function POST(data) {
   try {
     const event = await verifyWebhook(data);
 
-    console.log("test: [direct UserSessionLogging call]", event)
     const ClerkUserId =  event.data.user_id;
       
     if(!ClerkUserId) {
@@ -79,18 +78,6 @@ export async function POST(data) {
         return new Response("Event ignored", { status: 400 });
     }
 
-    
-  
-    // const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    // await fetch(`${baseUrl}/api/sessionLog`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     action: eventType.toUpperCase().replace('.', '-'),
-    //     args,
-    //     timestamp: new Date().toISOString(),
-    //   }),
-    // });
 
     const timestamp = new Date().toISOString();
     const action = eventType.toUpperCase().replace('.', '-');
