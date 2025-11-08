@@ -1,3 +1,4 @@
+import { UserSessionLogging } from '@/actions/admin';
 import { db } from '@/lib/prisma';
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 
@@ -79,18 +80,33 @@ export async function POST(data) {
   }
 
    
-   
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    await fetch(`/api/sessionLog`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: eventType.toUpperCase().replace('.', '-'),
-      args,
-      timestamp: new Date().toISOString(),
-    }),
-  });
+   await WebhookSessionLog({
+    action: eventType.toUpperCase().replace('.', '-'),
+    args,
+    timestamp: new Date().toISOString(),
+   })
+  //   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  //   await fetch(`/api/sessionLog`, {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({
+  //     action: eventType.toUpperCase().replace('.', '-'),
+  //     args,
+  //     timestamp: new Date().toISOString(),
+  //   }),
+  // });
   return new Response("Webhook processed successfully", { status: 200 });
     
 }
 
+async function WebhookSessionLog({action, args, res, timestamp}) {
+  try {
+    const result = await UserSessionLogging({action, args, res, timestamp});
+    if (!result.success) {
+      return new Response(result.error || "Failed", { status: 500 });
+    }
+    return Response.json({ success: true });
+  } catch (error) {
+    return new Response("Internal Server Error", { status: 500 });
+  }
+}

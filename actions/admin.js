@@ -345,6 +345,7 @@ function formatToPhilippinesTime(isoString) {
 
 export async function UserSessionLogging({action, args, result, timestamp}) {
     try {
+        console.log('UserSessionLogging called with:', action, args, result, timestamp)
         if (!action || !args) {
             throw new UnauthorizedError("No actual session ongoing, secure database now.");
         }
