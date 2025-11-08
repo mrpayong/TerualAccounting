@@ -1,3 +1,4 @@
+import useFetch from '@/hooks/use-fetch';
 import { db } from '@/lib/prisma';
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 
@@ -78,10 +79,10 @@ export async function POST(data) {
       return new Response("Event ignored", { status: 400 });
   }
 
-    
+   
    
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    await fetch(`${baseUrl}/api/sessionLog`, {
+    await fetch(`/api/sessionLog`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
