@@ -5,6 +5,7 @@ import {BarLoader} from "react-spinners"
 import { getStaff, getUnauthUser} from '@/actions/admin';
 import NotFound from '@/app/not-found';
 import { Unica_One } from 'next/font/google';
+import { headers } from 'next/headers';
 
 const fontUnicaOne = Unica_One({
   subsets:["latin"],
@@ -15,8 +16,10 @@ const DashboardLayout = async () => {
   const user = await getStaff();
 
 
-  if(!user.authorized){
-    await getUnauthUser();
+  if(user.authorized ===  true){
+    // await getUnauthUser();
+    const headersList = await headers();
+    console.log("Unauthorized access to dashboard at ", headersList.get("host"));
     return NotFound()
   }
   return (
