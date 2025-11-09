@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 "use server";
 import Header from '@/components/header'
 import { notFound } from 'next/navigation'

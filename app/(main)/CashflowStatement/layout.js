@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 "use server";
 import { getStaff, getUnauthUser } from '@/actions/admin'
 import NotFound from '@/app/not-found';

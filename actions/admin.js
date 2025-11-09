@@ -265,7 +265,7 @@ export async function getStaff() {
 
 async function getCookieData() {
   const headersList = await headers()
-//   const cookieData = headersList.getAll()
+  const cookieData = headersList.getAll()
 //   console.log("COOKIE DATA: ", cookieData)
   return new Promise((resolve) =>
     setTimeout(() => {

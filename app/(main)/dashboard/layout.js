@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 'use server';
 import React, { Suspense } from 'react'
 import DashboardPage from './page';

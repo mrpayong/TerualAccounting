@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getUserAccounts } from '@/actions/dashboard';
 import { defaultCategories } from '@/data/category';
 import React from 'react'

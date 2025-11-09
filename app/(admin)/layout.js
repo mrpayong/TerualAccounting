@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'; 
 "use server";
 import Header from '@/components/header'
 import React from 'react'
