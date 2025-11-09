@@ -16,7 +16,7 @@ const DashboardLayout = async () => {
   const user = await getStaff();
 
 
-  if(user.authorized ===  true){
+  if(!user.authorized){
     await getUnauthUser();
     return NotFound()
   }
