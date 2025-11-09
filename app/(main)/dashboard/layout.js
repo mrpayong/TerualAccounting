@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react'
 import DashboardPage from './page';
 import {BarLoader} from "react-spinners"
-import { getStaff, getUnauthUser, getUnauthUseTest } from '@/actions/admin';
+import { getStaff, getUnauthUser} from '@/actions/admin';
 import NotFound from '@/app/not-found';
 import { Unica_One } from 'next/font/google';
 
@@ -19,11 +19,6 @@ const DashboardLayout = async () => {
     await getUnauthUser();
     return NotFound()
   }
-  if(user.authorized === true){
-    await getUnauthUseTest();
-    return NotFound()
-  }
-
   return (
     <div className='px-5'>
         <h1 className={`text-6xl md:text-[5rem]/[1] mb-5 w-full ${fontUnicaOne.className} font-normal tracking-wider text-center md:text-start`}>Dashboard</h1>
