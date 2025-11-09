@@ -328,7 +328,6 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
             
 
         const client = await clerkClient();
-        console.log("Deleting Clerk user with ID:", userToDelete.clerkUserId);
         await client.users.deleteUser(userToDelete.clerkUserId);
 
         // Delete user from your database

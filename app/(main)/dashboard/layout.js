@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react'
 import DashboardPage from './page';
 import {BarLoader} from "react-spinners"
-import { getStaff, getUnauthUser } from '@/actions/admin';
+import { getStaff, getUnauthUser, getUnauthUseTest } from '@/actions/admin';
 import NotFound from '@/app/not-found';
 import { Unica_One } from 'next/font/google';
 
@@ -17,6 +17,10 @@ const DashboardLayout = async () => {
 
   if(!user.authorized){
     await getUnauthUser();
+    return NotFound()
+  }
+  if(user.authorized === true){
+    await getUnauthUseTest();
     return NotFound()
   }
 
