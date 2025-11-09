@@ -104,7 +104,6 @@ async function archiveEntity({
 // for updating which account is the default account
 export async function updateDefaultAccount(accountId) {
     try {
-        // for checking if the user exist or not
         const {userId} = await auth();
         if (!userId) throw new Error("Unauthorized");
 
