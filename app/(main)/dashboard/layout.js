@@ -19,7 +19,7 @@ const DashboardLayout = async () => {
   if(user.authorized ===  true){
     // await getUnauthUser();
     const headersList = await headers();
-    console.log("Unauthorized access to dashboard at ", headersList.get("host"));
+    console.log("Unauthorized access to dashboard at ", headersList);
     return NotFound()
   }
   return (
