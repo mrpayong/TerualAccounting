@@ -1,6 +1,4 @@
-
 'use server';
-export const dynamic = 'force-dynamic';
 import React, { Suspense } from 'react'
 import DashboardPage from './page';
 import {BarLoader} from "react-spinners"
