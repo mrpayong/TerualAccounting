@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
+
 import { getUserAccounts } from '@/actions/dashboard';
+export const dynamic = 'force-dynamic';
 import { defaultCategories } from '@/data/category';
 import React from 'react'
 import AddTransactionForm from '../_components/transaction-form';

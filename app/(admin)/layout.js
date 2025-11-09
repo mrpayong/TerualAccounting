@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic'; 
+
 "use server";
+export const dynamic = 'force-dynamic'; 
 import Header from '@/components/header'
 import React from 'react'
 import { getAdmin, getSysAdmin, getTestGeoIP, getUnauthUser } from '@/actions/admin'
