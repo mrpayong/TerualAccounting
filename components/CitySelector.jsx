@@ -155,13 +155,13 @@ const fontYsabeau = Ysabeau({
   weight: ['400', "500", '600', "700"]
 })
 
-const CitySelector = ({ register, setValue, errors, initialValue}) => {
+const CitySelector = ({ register, setValue, errors, initialValue, value: controlledValue = ""}) => {
   const [query, setQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCity, setSelectedCity] = useState(controlledValue);
 
   useEffect(() => {
-    setSelectedCity(initialValue || "");
-  }, [initialValue]);
+    setSelectedCity(controlledValue);
+  }, [controlledValue]);
 
   const filteredCities =
     query === ""

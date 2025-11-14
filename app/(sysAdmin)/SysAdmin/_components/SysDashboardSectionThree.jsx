@@ -56,10 +56,10 @@ const SysDashboardSectionThree = ({ UserRoleCount, recentSessions }) => {
       return "Log In";
     case "SESSION-REMOVED":
       return "Log Out";
-    case "EMAIL.CREATED":
+    case "EMAIL-CREATED":
       return "OTP Requested";
     default:
-      return "New Role";
+      return "Unknown Session";
   }
 }
 

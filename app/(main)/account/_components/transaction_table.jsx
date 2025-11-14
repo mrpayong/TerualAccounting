@@ -104,7 +104,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 
 
-const TransactionTable = ({transactions, id, subAccounts, recentCashflows, relatedIDs}) => { 
+const TransactionTable = ({transactions, id, subAccounts, recentCashflows, relatedIDs, relatedSubAccIDs,subAccTransactionRel}) => { 
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
@@ -246,14 +246,14 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
 
         // Apply search filter
         if(searchTerm) {
-            const searchLower = searchTerm.toLowerCase();
-        result = result.filter((transaction) =>
-            (transaction.particular?.toLowerCase().includes(searchLower) ||
-             transaction.description?.toLowerCase().includes(searchLower) ||
-             transaction.refNumber?.toLowerCase().includes(searchLower) ||
-             transaction.category?.toLowerCase().includes(searchLower)
-            )
-        );
+          const normalize = (s) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+          const searchLower = normalize(searchTerm);
+          result = result.filter((transaction) =>(
+            normalize(transaction.particular).includes(searchLower) ||
+            normalize(transaction.description).includes(searchLower) ||
+            normalize(transaction.refNumber).includes(searchLower) ||
+            normalize(transaction.category).includes(searchLower)
+          ));
         }
 
         // Apply recurring filter
@@ -309,6 +309,7 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
         }
         return result;
     },[transactions, searchTerm, typeFilter, activityFilter, sortConfig, fromDateRaw, toDateRaw])
+
     useEffect(() => {
       setCurrentTransactionPage(1);
     }, [searchTerm, typeFilter, activityFilter, fromDateRaw, toDateRaw]);
@@ -388,28 +389,88 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
     const resetForm = () => {
         setResponse(0.00);
       };
+
+    function computeEligibleSelected(selectedIds = [], selectedSubAccountIds = [], subAccTransactionRel = []) {
+      // normalize input arrays and types
+      const selectedSolo = Array.isArray(selectedIds) ? selectedIds.map(String) : [];
+      const selectedGroupsSet = new Set(Array.isArray(selectedSubAccountIds) 
+        ? selectedSubAccountIds.map(String) 
+        : []
+      );
+      // build map: transactionId -> subAccountId (both are strings)
+      const txnToSub = new Map();
+      if (Array.isArray(subAccTransactionRel)) {
+        for (const rel of subAccTransactionRel) {
+          if (!rel || rel.transactionId == null) continue;
+          // use the canonical field names your API returns
+          const tx = String(rel.transactionId);
+          const sub = rel.subAccountId == null 
+            ? null 
+            : String(rel.subAccountId);
+          txnToSub.set(tx, sub);
+          // output of txnToSub: {"transactionId" => "subAccountId"}
+          // in Map(): {"key" => "value"}
+          // transactionId is key and subAccountId is the value
+        }
+      }
+
+      // include a selected transaction only when:
+      //  - it has no mapping (not part of any sub-account), OR
+      //  - it is mapped but its parent sub-account is NOT selected
+      const eligibleIds = [];
+      for (const rawId of selectedSolo) {
+        const id = String(rawId);
+        // !txnToSub.has(id): if wala yung id sa loob ng txnToSub
+        if (!txnToSub.has(id)) {
+          // then push yung id sa eligibleIds array
+          eligibleIds.push(id);
+          continue;
+        }
+        const parent = txnToSub.get(id); // null means relation exists but parent unknown
+        // .get() will use transactiondId as parameter and output is matching subAccountId
+        if (parent === null || !selectedGroupsSet.has(parent)) {
+          // if wala yung parent sa loob ng selectedGroupsSet array
+          // then push the id{key} from txnToSub.get(id) inside eligibleIds array
+          eligibleIds.push(id);
+        }
+        // otherwise: parent exists and is selected => exclude id
+      }
+
+      return eligibleIds;
+    }
+
+
     const handleCashflow = async (e) => {
         e.preventDefault();
-            if (response === 0) {
-              toast.error(`Beginning balance must not be zero.`);
-              return;
-            }
-            console.log("selectedIds:", selectedIds)
-            const eligibleSelectedIds = selectedIds.filter(id => !relatedIDs.includes(id));
-            
-            console.log("eligibleSelectedIds:", eligibleSelectedIds)
-            if (eligibleSelectedIds === null || eligibleSelectedIds.length === 0 && selectedSubAccountIds.length === 0) {
-              toast.error(`Select transactions.`);
-              return;
-            }
-        
-          //   console.log("TAKEN DATA: ", "start balance: ", response);
-          //   console.log("Selected Transactions: ", selectedIds);
-          //   // Create the cashflow
-          //   await cfsFn(selectedIds, parseFloat(response));
-          if (response !== null || eligibleSelectedIds.length !== 0){
-              await cfsFn(eligibleSelectedIds, parseFloat(response), selectedSubAccountIds, id);
+          if (response === 0){
+            toast.error(`Beginning balance must not be zero.`);
+            return;
           }
+          
+          // const eligibleSelectedIds = selectedIds.filter(id => !relatedIDs.includes(id));
+          // eligibleSelectedIds asks if the ID is included in the relatedIDs array and if it
+          // does, it will not return the ID that matches.
+          // Output are IDs that do not have match in realtedIDs array
+          // eligibleSelectedIds are the selected transaction IDs that are not yet related to sub-accounts.
+
+          const eligibleIds = computeEligibleSelected(selectedIds, selectedSubAccountIds, subAccTransactionRel);
+
+            const hasSelection = (Array.isArray(eligibleIds) && eligibleIds.length > 0) ||
+                       (Array.isArray(selectedSubAccountIds) && selectedSubAccountIds.length > 0);
+
+
+          if (eligibleIds === null || eligibleIds.length === 0 && selectedSubAccountIds.length === 0) {
+            toast.error(`Select transactions.`);
+            return;
+          }
+      
+        //   console.log("TAKEN DATA: ", "start balance: ", response);
+        //   console.log("Selected Transactions: ", selectedIds);
+        //   // Create the cashflow
+        //   await cfsFn(selectedIds, parseFloat(response));
+        if (response !== null || eligibleIds.length !== 0){
+            await cfsFn(eligibleIds, parseFloat(response), selectedSubAccountIds, id);
+        }
       }; 
 
       useEffect(() => {

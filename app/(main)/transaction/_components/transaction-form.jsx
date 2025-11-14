@@ -164,6 +164,7 @@ const AddTransactionForm = ({
             if(transactionResult.code === 200){
                 toast.success("Transaction added successfully.")
                 reset();      
+                setScannedReceipt(null);
                 setButtonsDisabled(false);          
             }
         }

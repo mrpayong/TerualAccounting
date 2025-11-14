@@ -33,13 +33,13 @@ const fontYsabeau = Ysabeau({
   weight: ['400', "500", '600', "700"]
 })
 
-const RegionSelector = ({ register, setValue, errors, initialValue }) => {
+const RegionSelector = ({ register, setValue, errors, initialValue, value: controlledValue = "" }) => {
   const [query, setQuery] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState(controlledValue);
 
   useEffect(() => {
-    setSelectedRegion(initialValue || "");
-  }, [initialValue]);
+    setSelectedRegion(controlledValue);
+  }, [controlledValue]);
 
   const filteredRegions =
     query === ""

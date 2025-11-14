@@ -1109,14 +1109,22 @@ export async function getSubAccTransactionRel(accountId){
       where:{accountId: accountId},
       select:{
         id: true,
-      }
-    })
-    const relation = await db.SubAccountTransaction.findMany({
-      where:{
-        subAccountId: subAccounts.id
+        accountId:true
       }
     })
 
+    const subAccountIds = subAccounts.map(s => s.id);
+    if (subAccountIds.length === 0){
+      return{success:true, code:200, data: []}
+    }
+
+    // console.log("SUB ACCOUNTS FETCHED FOR REL: ", subAccountIds)
+    const relation = await db.SubAccountTransaction.findMany({
+      where:{
+        subAccountId: {in: subAccountIds}
+      }
+    })
+  
     return{success:true, code:200, data: relation}
   } catch (error) {
     console.log("Error fetching Group Transaction and Transaction relation:", error)

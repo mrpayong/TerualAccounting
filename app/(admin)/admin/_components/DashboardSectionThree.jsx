@@ -93,6 +93,12 @@ function getActionLabel(action) {
       return 'Edited Net Change';
     case 'updateBalanceQuick':
       return 'Quick Edit Balance';
+    case "SESSION-CREATED":
+      return "Logged In";
+    case "SESSION-REMOVED":
+      return "Logged Out";
+    case "EMAIL-CREATED":
+      return "OTP Requested";
     default:
       return action;
   }

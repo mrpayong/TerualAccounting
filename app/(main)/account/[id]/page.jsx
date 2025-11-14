@@ -49,8 +49,13 @@ async function AccountsPage({ params }) {
   const recentCashflows = await getCashflowEnding(id)
   const SubAccTransactionRel = await getSubAccTransactionRel(id);
 
+
+
   const relatedIDs = SubAccTransactionRel.data.map(rel => rel.transactionId);
-  
+  const relatedSubAccIDs = Array.from(new Set(SubAccTransactionRel.data.map(rel => String(rel.subAccountId || "")))).filter(Boolean)
+
+
+  const subAccTransactionRel = SubAccTransactionRel.data;
   // const recentCashflows = fetchedCashflows.latestCashflows;
 
   const { transactions, ...account } = accountData; //extract transacs and acc data
@@ -100,6 +105,8 @@ async function AccountsPage({ params }) {
       >
         <TransactionTable
           relatedIDs={relatedIDs}
+          relatedSubAccIDs={relatedSubAccIDs}
+          subAccTransactionRel={subAccTransactionRel}
           recentCashflows={recentCashflows}
           transactions={transactions}
           id={id}

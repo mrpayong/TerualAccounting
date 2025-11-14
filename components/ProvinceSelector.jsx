@@ -97,13 +97,13 @@ const fontYsabeau = Ysabeau({
   weight: ['400', "500", '600', "700"]
 })
 
-const ProvinceSelector = ({ register, setValue, errors, initialValue }) => {
+const ProvinceSelector = ({ register, setValue, errors, initialValue, value: controlledValue = "" }) => {
   const [query, setQuery] = useState(""); // Query for filtering
-  const [selectedProvince, setSelectedProvince] = useState(""); // Selected province
+  const [selectedProvince, setSelectedProvince] = useState(controlledValue); // Selected province
 
-    useEffect(() => {
-      setSelectedProvince(initialValue || "");
-    }, [initialValue]);
+  useEffect(() => {
+    setSelectedProvince(controlledValue);
+  }, [controlledValue]);
 
   const filteredProvinces =
     query === ""

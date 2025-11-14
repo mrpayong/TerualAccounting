@@ -298,7 +298,7 @@ const CreateAccountDrawer = ({ children, names }) => {
                   {errors.town && <p className={`${fontYsabeau.className} font-medium text-base text-red-500`}>{errors.town.message}</p>}
                 </div>
                 <div className="min-w-0">
-                  <CitySelector register={register} setValue={setValue} errors={errors} className="w-full" />
+                  <CitySelector value={watch("city") || ""} register={register} setValue={setValue} errors={errors} className="w-full" />
                 </div>
                 <div className="min-w-0">
                   <label htmlFor="zip" className={`${fontYsabeau.className} text-lg font-normal`}>
@@ -326,10 +326,10 @@ const CreateAccountDrawer = ({ children, names }) => {
                   {errors.zip && <p className={`${fontYsabeau.className} font-medium text-base text-red-500`}>{errors.zip.message}</p>}
                 </div>
                 <div className="min-w-0">
-                  <ProvinceSelector register={register} setValue={setValue} errors={errors} className="w-full" />
+                  <ProvinceSelector value={watch("province") || ""} register={register} setValue={setValue} errors={errors} className="w-full" />
                 </div>
                 <div className="min-w-0">
-                  <RegionSelector register={register} setValue={setValue} errors={errors} className="w-full" />
+                  <RegionSelector value={watch("region") || ""} register={register} setValue={setValue} errors={errors} className="w-full" />
                 </div>
               </div>
             </div>
