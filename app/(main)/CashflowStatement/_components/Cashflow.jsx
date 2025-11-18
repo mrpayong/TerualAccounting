@@ -9,10 +9,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowDown, ArrowUp, ChartLine, Check, CircleArrowUp, CircleX, Loader2, Pen, PenOff, Plus, Square, SquareArrowDown, SquareArrowUp, Trash, X } from "lucide-react";
+import { ArchiveX, ArrowDown, ArrowUp, ChartLine, Check, CircleArrowUp, CircleX, Loader2, Pen, PenOff, Plus, Square, SquareArrowDown, SquareArrowUp, Trash, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { deleteCashflow, updateBalanceQuick } from "@/actions/cashflow";
+import { deleteCashflow, deleteUnfinalizedCashflows, updateBalanceQuick } from "@/actions/cashflow";
 import useFetch from "@/hooks/use-fetch";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -35,7 +35,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 })
 
 
-function Cashflow ({cashflows, name, id}) {
+function Cashflow ({cashflows, name, id, unfinalizedData}) {
   const router = useRouter(); // For navigation
   const period = [...new Set(cashflows.map(c => c.periodCashFlow))];
   const [activeTab, setActiveTab] = useState(period[0] || ""); // Default to the first period or empty string
@@ -144,36 +144,6 @@ const accumulatedAmounts = cashflowRecords.reduce(
     setEditButton(false)
   }
 
-const handleSwitchChange = (checked) => {
-  setEditButtonShow(checked);
-  setEditButton(checked);
-    if (checked) {
-    toast.warning("Turn off Quick Edit Mode to view individual cashflow statement.", {
-      duration: 180000,
-      className: "tracking-wide",
-      actionButtonStyle: {
-        backgroundColor: "transparent",
-        color: "white",
-        border: "1px solid black",
-        padding: "8px 16px",
-        borderRadius: "4px",
-      },
-      icon: <PenOff className="text-rose-600 h-4 w-4"/>,
-      action: {
-        label: "Okay",
-        onClick: () => toast.dismiss(), // Dismiss toast on button click
-      },
-      style: {
-        background: '#d97706',
-        color: 'white'
-      }
-    });
-  }
-  if (!checked) {
-    setUpdateBalanceField(false); // Reset input field state
-    setCfsId("");                 // Reset editing card state
-  }
-};
 
   const handleActiveBalanceField = () => {
     // setCfsId(record.id);
@@ -277,7 +247,7 @@ const handleSwitchChange = (checked) => {
     if(deletedCFS && !deleteCFSLoading){
       setCardClickedLoad(false)
       setDeleteCfsId("")
-      toast.success("Deleted Cashflow.");
+      toast.success("Cashflow voided successfully.");
     }
   },[deletedCFS, deleteCFSLoading]);
 
@@ -344,8 +314,46 @@ const handleSwitchChange = (checked) => {
     cashflowRecords.some(record => record.periodCashFlow === period)
   );
 
+  const {
+    loading: deleteUnfinalizedLoading,
+    fn: deleteUnfinalizedFn,
+    data: deletedUnfinalizedData,
+  } = useFetch(deleteUnfinalizedCashflows);
 
+  const [archvButton, setArchvButton] = useState(false);
+  const unfinalizedDataIds = unfinalizedData.map(item => item.id);
+  const handlerArchiveButton = () => {
+    console.log("1")
+    setArchvButton(true)
+    handleDeleteUnfinalized(unfinalizedDataIds, true)
+  }
 
+  const handleDeleteUnfinalized = (id, showSwal = true) => {
+    if(showSwal){
+      Swal.fire({
+        icon: 'info',
+        title: 'Archiving Unfinalized Cashflow Statements',
+        text: '',
+        allowOutsideClick: true,
+      })
+    }
+    deleteUnfinalizedFn(id);
+  }
+
+  useEffect(() => {
+    if(deletedUnfinalizedData && !deleteUnfinalizedLoading){
+      if(deletedUnfinalizedData.code === 200){
+        setArchvButton(false)
+        toast.success("Unfinalized Cashflow Statements archived.");
+      }
+      if(deletedUnfinalizedData.code === 500){
+        console.log('message:', deletedUnfinalizedData.message)
+        setArchvButton(false)
+        toast.error("Error archiving Unfinalized Cashflow Statements. Consult System Admin.");
+      }
+    }
+  },[deletedUnfinalizedData, deleteUnfinalizedLoading]);
+  
 
 
 
@@ -366,9 +374,24 @@ const handleSwitchChange = (checked) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className={`${fontZenKaku.className} mb-8`}>
           <div className="flex flex-row items-center justify-between">
-            <h1 className="text-2xl md:text-5xl font-black text-blue-900 mb-2">
-              Cashflow Statements
-            </h1>
+            <div className="flex flex-row items-center gap-1">
+              <h1 className="text-2xl md:text-5xl font-black text-blue-900 mb-2">
+                Cashflow Statements
+              </h1>
+              {unfinalizedData.length !== 0
+                ?<Button
+                  onClick={handlerArchiveButton}
+                  variant="destructive"
+                >
+                  {archvButton
+                    ? (<Loader2 className="h-5 w-5 text-gray-500 animate-spin" />)
+                    : ( <ArchiveX/>)
+                  }
+                  Archive {unfinalizedData.length} Unfinalized Cashflow Statement
+                </Button>
+                : ""
+              }
+            </div>
             <Button
               variant="outline"
               disabled={backLoad}
@@ -449,17 +472,6 @@ const handleSwitchChange = (checked) => {
                   : ("")
                 }
             </div>
-            {cashflows.length === 0
-              ? ("")
-              : ( <div className="flex font-medium items-center space-x-2 whitespace-nowrap">
-                  <label className="text-sm md:text-base">Quick Edit Mode</label>
-                  <Switch 
-                      checked={editButtonShow}
-                      onCheckedChange={handleSwitchChange}
-                      className="data-[state=checked]:bg-blue-700"
-                    />
-                </div>)
-            }
           </div>
 
           <Tabs
@@ -536,66 +548,13 @@ const handleSwitchChange = (checked) => {
                                     <div className="flex items-start space-x-4">
                                       <div
                                         className={`w-12 h-12 rounded-full flex items-center justify-center bg-sky-100`}
-                                      >{editButtonShow
-                                        ? (<>
-                                            <Dialog onOpenChange={setOpenDeleteDialog}>
-                                              <DialogTrigger asChild>
-                                                <Button 
-                                                  className="border-0 bg-none rounded-full hover:bg-sky-100 
-                                                  bg-opacity-100 z-10" 
-                                                  onClick={() => handleDeleteCfsId(record.id)}
-                                                  variant="ghost">
-                                                    <Trash className="h-6 w-6 text-red-600 cursor-pointer"/>
-                                                </Button>
-                                              </DialogTrigger>
-                                              <DialogContent className="sm:max-w-[425px] [&>button]:hidden">
-                                                <DialogHeader>
-                                                  <DialogTitle >
-                                                    <label className="font-medium font-base flex justify-center">
-                                                      Delete this Cashflow Statement?
-                                                    </label>
-                                                    </DialogTitle>
-                                                </DialogHeader>
-                                                <div className="flex justify-center">
-                                                <DialogFooter>
-                                                  <DialogClose asChild>
-                                                    <Button
-                                                      disabled={deleteCFSLoading}
-                                                      className="font-medium !text-base
-                                                      bg-white border border-black text-black
-                                                      hover:bg-black hover:border-none hover:text-white" 
-                                                      onClick={handleCancelDeleteCfsId}
-                                                      variant="outline">Cancel</Button>
-                                                  </DialogClose>
-                                                  <Button
-                                                    disabled={deleteCFSLoading}
-                                                    onClick={handleDeleteCFS}
-                                                    type="button"
-                                                    variant="outline"
-                                                    className="w-auto font-medium !text-base
-                                                    border-rose-600 hover:border-0 hover:bg-rose-600 
-                                                    text-rose-600 hover:text-white"
-                                                    >Delete
-                                                  </Button>
-                                                </DialogFooter>
-                                                </div>
-                                              </DialogContent>
-                                            </Dialog>
-                                          
-                                          </>
-                                          )
-                                        : (
-                                          <>{record.netChange > 0 ? (
+                                      >{record.netChange > 0 ? (
                                             <SquareArrowUp className="text-green-600" />
                                           ) : record.netChange < 0 ? (
                                             <SquareArrowDown className="text-red-600" />
                                           ) : (
                                             <Square className="text-zinc-500" />
-                                          )}</>
-                                        )
-                                        
-                                      }
-                                          
+                                          )}
                                       </div>
                                       <div className="flex flex-col py-4 justify-center">
                                         <span className="font-medium text-base text-blue-600">
@@ -610,20 +569,6 @@ const handleSwitchChange = (checked) => {
 
                                     {/* RIGHT SIDE */}
                                     <div className="flex items-center space-x-4">
-                                      {updateBalanceField && updateCfsId === record.id
-                                        ? (
-                                          <input 
-                                          type="number" 
-                                          disabled={updateBalLoading}
-                                          onChange={e => setUpdateBegBal(e.target.value)}
-                                          value={updateBegBal}
-                                          className="border border-gray-300 border-b-black rounded
-                                          px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
-                                          focus:outline-none focus:ring-2 
-                                          focus:ring-blue-200 transition"
-                                          />
-                                          )
-                                        : (
                                             <TooltipProvider>
                                               <Tooltip>
                                                 <TooltipTrigger>
@@ -638,24 +583,7 @@ const handleSwitchChange = (checked) => {
                                                 </TooltipContent>
                                               </Tooltip>
                                             </TooltipProvider>
-                                          )
-                                      } 
-                                    
 
-                                    {/* Tooltip for Ending Balance */}
-                                    {updateBalanceField && updateCfsId === record.id
-                                        ? (
-                                          <input 
-                                          type="number" 
-                                          disabled={updateBalLoading}
-                                          onChange={e => setUpdateEndBal(e.target.value)}
-                                          value={updateEndBal}
-                                          className="border border-gray-300 border-b-black rounded
-                                          px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
-                                          focus:outline-none focus:ring-2 
-                                          focus:ring-blue-200 transition"/>
-                                          )
-                                        : (
                                     <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger>
@@ -670,22 +598,7 @@ const handleSwitchChange = (checked) => {
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider> 
-                                  )}
                                     
-
-                                    {updateBalanceField && updateCfsId === record.id
-                                        ? (
-                                          <input 
-                                          type="number" 
-                                          disabled={updateBalLoading}
-                                          onChange={e => setUpdateNetChange(e.target.value)}
-                                          value={updateNetChange}
-                                          className="border border-gray-300 border-b-black rounded
-                                          px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
-                                          focus:outline-none focus:ring-2 
-                                          focus:ring-blue-200 transition"/>
-                                          )
-                                        : (
                                       <span
                                         className={`font-medium text-xl ${
                                           record.netChange > 0
@@ -698,44 +611,6 @@ const handleSwitchChange = (checked) => {
                                         {record.netChange > 0 ? "+" : ""}
                                         {formatAmount(record.netChange)}
                                       </span>
-                                      )}
-                                      <div className={`
-                                        flex flex-roW
-                                        ${editButtonShow ? "gap-2" : ""}
-                                        `}>
-                                        {editButtonShow
-                                          ? (
-                                            updateCfsId === record.id ? (
-                                              <>
-                                                <Button 
-                                                  variant="outline"
-                                                  disabled={updateBalLoading}
-                                                  className="border-2 border-green-300 group hover:border-white hover:bg-green-400"
-                                                  onClick={handleActiveBalanceField}>
-                                                  <Check className="h-5 w-5 text-green-400 group-hover:text-white" />
-                                                </Button>
-                                                <Button 
-                                                  disabled={updateBalLoading}
-                                                  variant="destructive"
-                                                  onClick={handleCancelEditButton}>
-                                                  <PenOff className="h-5 w-5" />
-                                                </Button>
-                                              </>
-                                            ) : (
-                                              <Button
-                                                variant="outline"
-                                                className="border-2 border-yellow-400 group text-lg hover:border-white hover:bg-yellow-400"
-                                                onClick={() => handleEditButton(record.id, record)}>
-                                                <Pen className="w-5 h-5  text-yellow-400 group-hover:text-white" />
-                                              </Button>
-                                            )
-                                          )
-                                          : ""
-                                        }
-                                        
-
-                                        
-                                      </div>
                                     </div>
                                   </div>
                                 </Card>

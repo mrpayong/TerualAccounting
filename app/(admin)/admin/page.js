@@ -1,6 +1,6 @@
 import React from 'react'
 import DashboardSectionOne from './_components/DashboardSectionOne'
-import { getAccounts, getActivityLogs, getCountActLogs, getCountCFS, getCountTransactions, getCountUsers } from '@/actions/admin';
+import { getAccounts, getActivityLogs, getCountActLogs, getCountCFS, getCountTransactions, getCountUsers, getVoidsForApproval } from '@/actions/admin';
 import DashboardSectionTwo from './_components/DashboardSectionTwo';
 import DashboardSectionThree from './_components/DashboardSectionThree';
 import { getUser } from '@/actions/settings';
@@ -24,7 +24,6 @@ const AdminPage = async () => {
   const Users = await getCountUsers();
   const transactions = await getCountTransactions();
   const userList = await getUser();
-
   const activityCount = activityLogs.data;
   const CfsCount = CfsLogs.data;
   const accountCount = accounts.data.length;
@@ -64,6 +63,7 @@ const AdminPage = async () => {
     role,
     count,
   }));
+
 
 
 

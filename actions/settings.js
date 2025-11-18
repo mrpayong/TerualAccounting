@@ -96,6 +96,7 @@ export async function getUser(){
         return {
             authorized: true,
             success: true,
+            code: 200,
             data: users.map((user) => ({
                 ...user,
                 createdAt: user.createdAt.toISOString(),
@@ -103,7 +104,7 @@ export async function getUser(){
             })),
         };
     }catch (error) {
-        throw new Error("Error fetching users:" + error.message);
+        return {success: false, code: 500, message:"Error fetching users"}
     } 
 }
 

@@ -240,10 +240,15 @@ const CashReceiptBook = ({ inflows = [] }) => {
                     className={`hover:bg-amber-50 ${index % 2 === 0 ? "bg-green-400" : "bg-white"}`}
                   >
                     <TableCell className="max-w-[120px] truncate overflow-hidden whitespace-nowrap">
+                      <span title={formatDate(inflow.date) || "N/A"}>
                       {formatDate(inflow.date)}
+                      </span>
                     </TableCell>
                     <TableCell
-                      className="max-w-[180px] truncate overflow-hidden whitespace-nowrap">{inflow.description || "N/A"}</TableCell>
+                      className="max-w-[180px] truncate overflow-hidden whitespace-nowrap">
+                        <span title={inflow.description || "N/A"}>
+                        {inflow.description || "N/A"}</span>
+                        </TableCell>
                     <TableCell>{inflow.particular || "N/A"}</TableCell>
                     <TableCell>{inflow.refNumber || "N/A"}</TableCell>
                     <TableCell className="tracking-wide">{formatAmount(inflow.amount) || "0.00"}</TableCell>

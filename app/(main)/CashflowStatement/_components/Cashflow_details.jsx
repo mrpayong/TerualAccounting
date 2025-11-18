@@ -290,28 +290,6 @@ function CashflowDetails({ cashflow }) {
           </div>
         </CardContent>
         <CardFooter className="flex items-center gap-2 lg:justify-end justify-center">
-            <Button
-              onClick={() => handleEditLoading("editCashflow")}
-              disabled={isLoading !== null}
-              className="mt-4 px-4 py-2 
-              flex flex-row justify-between 
-              font-medium !text-base
-              items-center 
-              border border-black hover:border-0
-              bg-transparent hover:bg-amber-400
-              text-black 
-              hover:shadow-md hover:shadow-gray-500/45
-              rounded"
-            >
-              {isLoading === "editCashflow" ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Edit Cashflow
-                </>
-              ) : (
-                "Edit Cashflow"
-              )}
-            </Button>
           <Button 
             className="mt-4 px-4 py-2 
             font-medium !text-base

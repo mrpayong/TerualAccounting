@@ -245,10 +245,18 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
                   >
                     <TableCell
                       className="max-w-[120px] truncate overflow-hidden whitespace-nowrap"
-                    >{formatDate(outflow.date)}</TableCell>
+                    >
+                      <span title={formatDate(outflow.date) || "N/A"}>
+                      {formatDate(outflow.date)}
+                      </span>
+                      </TableCell>
                     <TableCell
                       className="max-w-[180px] truncate overflow-hidden whitespace-nowrap"
-                    >{outflow.description || "N/A"}</TableCell>
+                    >
+                      <span title={formatDate(outflow.date) || "N/A"}>
+                        {outflow.description || "N/A"}
+                      </span>
+                    </TableCell>
                     <TableCell>{outflow.particular || "N/A"}</TableCell>
                     <TableCell>{outflow.refNumber || "N/A"}</TableCell>
                     <TableCell className="tracking-wide">{formatAmount(outflow.amount) || "0.00"}</TableCell>
@@ -306,8 +314,10 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
                     }`}
                   >
                     {categories.map((category) => (
-                      <TableCell key={`${index}-${category}`} className={showBorders ? "border-r-2 border-gray-300" : ""}>
-                        {outflow.category === category ? `${formatAmount(outflow.amount) || "0.00"}` : ""}
+                      <TableCell key={`${index}-${category}`} className={showBorders ? "truncate overflow-hidden whitespace-nowrap border-r-2 border-gray-300" : ""}>
+                        <span title={outflow.category || "N/A"}>
+                         {outflow.category === category ? `${formatAmount(outflow.amount) || "0.00"}` : ""}
+                        </span>
                       </TableCell>
                     ))}
                   </TableRow>

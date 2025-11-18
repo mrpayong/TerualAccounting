@@ -181,8 +181,6 @@ export async function getSuggestedWeeklySchedule() {
 
 export async function getInflowOutflowForecast(accountId){
   try {
-    
-
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 

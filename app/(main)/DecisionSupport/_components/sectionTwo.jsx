@@ -99,7 +99,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: ["400", "500", "700", "900"],
 })
 
-const SectionTwo = ({ accounts, transactions }) => {
+const SectionTwo = ({ accounts, transactions, accountIDs }) => {
 
 
     const formatAmount = (amount) => {
@@ -310,6 +310,7 @@ const getPhilippinesDate = () => {
   } = useFetch(getOverallFinancialDataAnalysis)
 
   const [forecastLoading, setForecastLoading] = useState(false)
+
   const cfsForecastHandler = async () => {
       if (!selectedAccountId) {
         toast.error("Please select an account first.");
@@ -612,8 +613,8 @@ const getPhilippinesDate = () => {
       <Card>
         <CardHeader className={`${fontZenKaku.className}`}>
           <CardTitle className="!font-bold text-xl">Inflow and Outflow Forecast</CardTitle>
-          <CardDescription className="!font-normal text-sm tracking-wide">
-            The forecast of inflow and outflow of cash based on historical data.  
+          <CardDescription className="!font-normal !text-black text-sm tracking-wide">
+            The forecast of inflow and outflow of cash based on historical data. Only accounts with at least 5 years of transaction history are allowed for forecasting and analysis.
           </CardDescription>
         </CardHeader>
         <CardContent className={`${fontZenKaku.className}`}>

@@ -238,7 +238,6 @@ const MyPDFcfsPage = ({ cashflow, transactions, subAccounts }) => {
     new Date(transaction.date)
   )
 
-  console.log("transactionDates",transactionDates)
   const startDate =  new Date(Math.min(...transactionDates));
   const endDate = new Date(Math.max(...transactionDates));
 

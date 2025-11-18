@@ -8,9 +8,12 @@ import {
   PhilippinePeso,
   BookUser,
 } from 'lucide-react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useCarousel } from "@/components/ui/carousel"
 import { Zen_Kaku_Gothic_Antique } from 'next/font/google'
+import useFetch from '@/hooks/use-fetch'
+import { getVoidsForApproval, getVoidsNotification } from '@/actions/admin'
+import { toast } from 'sonner'
 
 const fontZenKaku = Zen_Kaku_Gothic_Antique({
   subsets:["latin"],
@@ -79,6 +82,60 @@ const DashboardSectionOne = ({transactionCount, accountCount, UserCount, activit
 ]
 
 const numberFormatter = new Intl.NumberFormat('en-US');
+
+
+const [toastShown, setToastShown] = useState(false);
+  const {
+    loading: fetchingVoids,
+    fn: fetchVoidsForApproval,
+    data: voidsData,
+  } = useFetch(getVoidsNotification);
+
+  // Trigger fetch on mount
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchVoidsForApproval();
+    }, 60000); // Fetch every 5 seconds
+    
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [fetchVoidsForApproval]);
+
+  useEffect(() => {
+    if (voidsData && voidsData.success && voidsData.code === 200) {
+      setToastShown(false); // Reset toastShown when new data is fetched
+    }
+  }, [voidsData]);
+
+  // Handle success and error states
+  useEffect(() => {
+    if (voidsData && !fetchingVoids && !toastShown) {
+      if (voidsData.success === true && voidsData.code === 200 && voidsData.data > 0) {
+        const requestWord = voidsData.data === 1 ? "request" : "requests";
+        toast.info(
+          `There are ${voidsData.data} void ${requestWord} pending for approval. Go to Activity Log page.`,
+          {
+            duration: 300000,
+            actionButtonStyle: {
+              backgroundColor: 'transparent',
+              color: 'black',
+              border: '1px solid black',
+              padding: '8px 16px',
+              borderRadius: '4px',
+            },
+            action: {
+              label: 'Okay',
+              onClick: () => toast.dismiss(), // Dismiss toast on button click
+            },
+          }
+        );
+        setToastShown(true);
+      }
+      if (voidsData.success === false && voidsData.code === 500) {
+        toast.error("Error fetching void request count. Consult System Admin.");
+      }
+    }
+  }, [voidsData, fetchingVoids, toastShown]);
+
 
   return (
     <div className={`${fontZenKaku.className} mb-6`}>

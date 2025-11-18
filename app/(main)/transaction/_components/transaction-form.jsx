@@ -101,7 +101,7 @@ const AddTransactionForm = ({
             isRecurring: false,
         },
     });
-
+ 
     const {
         loading: transactionLoading,
         fn: transactionFn,
@@ -149,6 +149,7 @@ const AddTransactionForm = ({
             amount: parseFloat(data.amount),
             date: formatDate(data.date)
         };
+        console.log('formatData:', formData)
         console.log("date: ", formData.date)
         if (editMode) {
             transactionFn(editId, formData);

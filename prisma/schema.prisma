@@ -107,8 +107,10 @@ model Transaction {
   particular            String?
   receiptUrl            String?
   Activity              activityType
-  printNumber           String   
+  printNumber           String   // is now used to store merchant's name
   refNumber             String    @unique 
+  reason                String?
+  voidingDate           DateTime?  //date when transaction was requested to be voided
 
   
   isRecurring           Boolean      @default(false)
@@ -120,6 +122,7 @@ model Transaction {
   user                  User        @relation(fields: [userId], references: [id])
   accountId             String
   account               Account     @relation(fields: [accountId], references: [id])
+  voided                Boolean     @default(false)
 
   cashFlow              cashFlow[]   @relation("TransactionToCashflow") // Define the relationship
   subAccounts            SubAccountTransaction[] // Explicit many-to-many relationship
@@ -184,6 +187,7 @@ model cashFlow {
   startBalance            Float    // beginning balance before the activities
   endBalance              Float    // ending balance, beginning balance + netChange
   description             String?
+  reason                  String?
   date                    DateTime    // date period of the CFS
   transactions            Transaction[] @relation("TransactionToCashflow")
   subAccounts             CashflowSubAccount[] @relation("CashflowToSubAccount")
@@ -192,11 +196,14 @@ model cashFlow {
   userId                  String
   user                    User        @relation(fields: [userId], references: [id])
   accountId               String
-  account                 Account     @relation(fields: [accountId], references: [id])           
+  account                 Account     @relation(fields: [accountId], references: [id])   
+  voided                  Boolean     @default(false)     
+  voidingDate             DateTime?   //date when cfs was requested to be voided   
 
 
   createdAt               DateTime    @default(now()) // timestamp for generation
   updatedAt               DateTime    @default(now())
+  FinalCreate             Boolean     @default(false) // whether the cfs is finalized or still draft
 
   @@index([accountId])
   @@index([userId])

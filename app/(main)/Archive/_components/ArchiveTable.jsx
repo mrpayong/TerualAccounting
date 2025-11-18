@@ -169,15 +169,22 @@ const handleSort = (field) => {
     return { ...item, data: raw };
   }
 
-
+function manilaDateToUtc(dateStr, endOfDay = false) {
+  // dateStr is in "yyyy-mm-dd" format from input[type="date"]
+  if (!dateStr) return null;
+  // Build Manila time string
+  const time = endOfDay ? "23:59:59.999" : "00:00:00.000";
+  const manilaDate = new Date(`${dateStr}T${time}+08:00`);
+  return manilaDate;
+}
 
   // Filtering logic
   const filteredArchives = useMemo(() => {
     let result = filteredArchiveList.filter((item) => {
       if (!item.createdAt) return false;
       const created = new Date(item.createdAt);
-      const from = fromDate ? new Date(fromDate) : null;
-      const to = toDate ? new Date(toDate) : null;
+      const from = fromDate ? manilaDateToUtc(fromDate) : null;
+      const to = toDate ? manilaDateToUtc(toDate, true) : null;
       if (from && created < from) return false;
       if (to && created > to) return false;
       if(actionFilter && actionFilter !== "" && item.action !== actionFilter) return false;
@@ -198,7 +205,8 @@ const handleSort = (field) => {
       it?.entityType === "Transaction" ? parseArchiveItem(it) : it
     );
 
-    console.log("Filtered Archives:", parsedResult);
+    console.log("parsedResult", parsedResult)
+
     return parsedResult;
   }, [archiveList, fromDate, toDate, sortConfig, actionFilter]);
 
@@ -254,6 +262,57 @@ function ActivityType(activity){
   }
 }
 
+function cleanReason(reason) {
+  if (typeof reason !== "string") return reason;
+  let cleaned = reason.trim();
+
+  // Remove leading/trailing quotes
+  if ((cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+      (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+    cleaned = cleaned.slice(1, -1);
+  }
+
+  // Remove escaped quotes
+  cleaned = cleaned.replace(/\\"/g, '"').replace(/\\'/g, "'");
+
+  // Try to parse JSON if possible
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (typeof parsed === "string") {
+      cleaned = parsed;
+    }
+  } catch {}
+
+  // Replace escaped newlines with actual newlines
+  cleaned = cleaned.replace(/\\n/g, '\n');
+
+  return cleaned;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   return (
     <div className="w-full">
@@ -293,9 +352,9 @@ function ActivityType(activity){
               <SelectValue placeholder="Select action filter" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bulkDeleteTransaction">Deleted Transactions</SelectItem>
-              <SelectItem value="deleteSubAccount">Deleted Group Transactions</SelectItem>
-              <SelectItem value="deleteCashflowStatement">Deleted Cashflow Statements</SelectItem>
+              <SelectItem value="approveVoidedTransaction">Voided Transactions</SelectItem>
+              <SelectItem value="deleteSubAccount">Ungrouped Transactions</SelectItem>
+              <SelectItem value="deleteUnfinalizedCashflow">Voided Cashflow Statements</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -351,9 +410,10 @@ function ActivityType(activity){
               paginatedArchives.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className='font-normal !text-base'>
-                    {item.createdAt
+                    {item.createdAt.toISOString()
                         ? formatManilaDate(item.createdAt)
-                        : "-"}
+                        : "-"
+                        }
                   </TableCell>
                   <TableCell className='font-normal !text-base'>
                     {item.entityType === "Group Transaction"
@@ -366,12 +426,12 @@ function ActivityType(activity){
                   <TableCell className='font-normal !text-base'>
                     {(() => {
                         switch (item.action) {
-                          case "bulkDeleteTransaction":
-                            return "Deleted Transaction";
+                          case "approveVoidedTransaction":
+                            return "Voided Transaction";
                           case "deleteSubAccount":
-                            return "Deleted Group Transactions";
-                          case "deleteCashflowStatement":
-                            return "Deleted Cashflow Statement";
+                            return "Ungrouped Transactions";
+                          case "deleteUnfinalizedCashflow":
+                            return "Voided Unsaved Cashflow Statement";
                           default:
                             return item.action || "-";
                         }
@@ -434,7 +494,7 @@ function ActivityType(activity){
                             </div>
                             <div>
                                 <span className="font-medium text-base">Reason:</span>{" "}
-                                <span className='font-normal text-base'>{item.data.reason}</span>
+                                <span className='font-normal text-base'>{cleanReason(item.data.reason)}</span>
                             </div>
                             <div>
                                 <span className="font-medium text-base">Transaction ID:</span>{" "}

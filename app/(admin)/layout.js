@@ -1,7 +1,7 @@
 "use server";
 import Header from '@/components/header'
 import React from 'react'
-import { getAdmin, getSysAdmin, getTestGeoIP, getUnauthUser } from '@/actions/admin'
+import { getAdmin, getSysAdmin, getTestGeoIP, getUnauthUser, getVoidsNotification } from '@/actions/admin'
 import { getUser } from '@/actions/settings';
 import Sidebar from './admin/_components/sidebar';
 import NotFound from '../not-found';
@@ -13,6 +13,7 @@ const AdminLayout = async ({children}) => {
         await getUnauthUser()
         return NotFound(); 
     }
+
   return (
     <div className='h-full'>
       <Header isAdminPage={true}/>
@@ -22,7 +23,6 @@ const AdminLayout = async ({children}) => {
         </div>
         <main className='md:pl-56 pt-[80px] h-full'>{children}</main>
     </div>
-
   )
 }
 

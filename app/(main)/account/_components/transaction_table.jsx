@@ -18,7 +18,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from "@/components/ui/tooltip"
-import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Folders, Info, Loader, Loader2, MoreHorizontal, Pen, PlusCircleIcon, RefreshCw, Search, SquareArrowOutUpRight, Trash, X } from 'lucide-react';
+import { ArchiveX, ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Folders, Info, Loader, Loader2, MoreHorizontal, Pen, PlusCircleIcon, RefreshCw, Search, SquareArrowOutUpRight, Trash, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -29,7 +29,7 @@ import { bulkDeleteTransactions, createSubAccount, deleteSubAccount } from '@/ac
 import { toast } from 'sonner';
 import { BarLoader, BeatLoader } from 'react-spinners';
 import Swal from 'sweetalert2';
-import { createCashflow, deleteCashflow} from '@/actions/cashflow';
+import { createCashflow, deleteCashflow, editFinalize} from '@/actions/cashflow';
 import { pdf, PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import MyPDFaccountPage from '../[id]/pdf/route';
 import {
@@ -62,6 +62,7 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Box } from '@mui/material';
 import { Textarea } from '@/components/ui/textarea';
+import { voidTransaction } from '@/actions/admin';
 
 
 
@@ -122,6 +123,7 @@ const TransactionTable = ({transactions, id, subAccounts, recentCashflows, relat
     const [toDateRaw, setToDateRaw] = useState(null);
     const [dropdownDisabledId, setDropdownDisabledId] = useState(false);
     const [editLoadingId, setEditLoadingId] = useState(false);
+    const [cancelCfsLoad, setCancelCfsLoad] = useState(false);
 // Removed duplicate declaration of rowsPerPage
 // const rowsPerPage = 10; // Default rows per page
 const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -229,7 +231,7 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
           setReason("")
           setDeleteModalOpen(false);
           setOpenBulkDltModal(false);
-          toast.success("Deleted Successfully!");
+          toast.success("Transaction pending for void.");
         }
         if(deleted?.code === 500 && deleted?.success === false){
           setReason("");
@@ -242,7 +244,8 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
 
   
     const filteredAndSortedTransactions = useMemo(() => {
-        let result = [...transactions];
+        const resultSource = Array.isArray(transactions) ? transactions.filter((t) => !t.voided) : [];
+        let result = [...resultSource];
 
         // Apply search filter
         if(searchTerm) {
@@ -473,10 +476,13 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
         }
       }; 
 
+      const [newCfsId, setNewCfsId] = useState("")
+      
       useEffect(() => {
         if (forCfs && forCfs.success) {
           setSelectedIds([])
           setSelectedSubAccountIds([])
+          setNewCfsId(forCfs.data.id)
           toast.success("Cashflow statement created successfully.");
     
           // Ensure forCfs.data.transactions is defined
@@ -542,7 +548,10 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
         //     console.error("Error during PDF export: ", error);
         //     toast.error("Failed exporting PDF.")
         // }
+
+        handleEditFinalize(newCfsId)
         setIsModalOpen(false);
+        
         setResponse(0.00);
         setSelectedIds([]);
     }
@@ -554,10 +563,11 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
       error: errorCfsDelete
     } = useFetch(deleteCashflow)
 
+    
     const handleCancelPDFdownload = async() => {
       setIsModalOpen(false);
       if (forCfs && forCfs.data && forCfs.data.id) {
-        toast.warning("Cancelling Cashflow Statement creation.")
+        setCancelCfsLoad(true)
         // Call the delete function with the ID of the cashflow statement
         await cfsDeleteFn(forCfs.data.id);
       }
@@ -566,14 +576,17 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
     useEffect(() => {
         if (cfsDeleteData?.code === 200 && cfsDeleteData.success) {
           toast.info("Cancelled creation of Cashflow Statement.");
+          setCancelCfsLoad(false)
           setIsModalOpen(false);
         }
         if (cfsDeleteData?.code === 404 && cfsDeleteData.success === false) {
           toast.error("Cashflow not found.");
+          setCancelCfsLoad(false)
           setIsModalOpen(false);
         }
         if (cfsDeleteData?.code === 500 && cfsDeleteData.success === false) {
           toast.error("Something went wrong.");
+          setCancelCfsLoad(false)
           setIsModalOpen(false);
         }
       }, [cfsDeleteData]);
@@ -1139,10 +1152,81 @@ const handleDownloadCDBExcel = () => {
     return Number(number).toLocaleString();
   }
 
+  const {
+    loading: editFinalizeLoading,
+    fn: editFinalizeFn,
+    data: editData,
+  } = useFetch(editFinalize)
+
+  const handleEditFinalize = (id) => {
+    console.log("test")
+    setIsModalOpen(false)
+    editFinalizeFn(id)
+  }
+
+  console.log("cfsID:", newCfsId)
+  useEffect(() => {
+    if(editData && !editFinalizeLoading){
+      if(editData.code === 200 && editData.success === true){
+        toast.success("Cashflow saved.")
+      }
+      if(editData.code === 400 && editData.success === false){
+        console.log("message:", editData.message)
+        toast.error("no CFS ID, consult system admin.")
+      }
+      if(editData.code === 500 && editData.success === false){
+        console.log("message:", editData.message)
+        toast.error("Error, consult system admin.")
+      }
+    }
+  }, [editData, editFinalizeLoading])
 
 
+  const {
+    loading: voidLoading,
+    fn: voidTransactionFn,
+    data: voidedData,
+  } = useFetch(voidTransaction)
+
+  const handleVoidTransaction = async () => {
+    if(reason === "" || !reason || reason === null){
+      toast.error("Reason to void is required.");
+    }
+    
+    if (TransactionIdToDelete && reason && acount_id){
+      voidTransactionFn([TransactionIdToDelete], acount_id, JSON.stringify(reason));
+    }
+  }
 
 
+  const handleBulkVoid = async () => {
+    if(reason === "" || !reason || reason === null){
+      toast.error("Reason to void is required.");
+    }
+    
+    if (selectedIds && reason && acount_id) {
+      voidTransactionFn(selectedIds, acount_id, JSON.stringify(reason));
+        // Call the delete function with selected IDs
+    }
+  };
+
+  useEffect(() => {
+    if (voidedData && !voidLoading) {
+      if(voidedData.code === 200 && voidedData.success === true){
+        toast.success("Success voiding transaction(s).");
+        setSelectedIds([]);
+        setReason("");
+        setTransactionIdToDelete("");
+        setOpenBulkDltModal(false);
+      }
+      if(voidedData.code === 500 && voidedData.success === false){
+        toast.error("Error voiding, consult system admin.");
+        setSelectedIds([]);
+        setReason("");
+        setTransactionIdToDelete("");
+      }
+    }
+  }, [voidedData, voidLoading]);
 
 
 
@@ -1158,12 +1242,14 @@ const handleDownloadCDBExcel = () => {
   return (
     
     <div className='space-y-4'>
-       {deleteLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {voidLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {updateLoading  && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {subAccountLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {deleteGroupLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {cfsLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {editLoadingId && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {cancelCfsLoad && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+
       {/* FILTERS */}
         <div className="lg:flex flex-row items-center justify-between gap-4 mb-4">
           <div className="flex flex-col 
@@ -1277,6 +1363,7 @@ const handleDownloadCDBExcel = () => {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
+                      disabled={selectedIds.length === 0 && selectedSubAccountIds.length === 0}
                       variant="outline"
                       className={cn(
                           "bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300",
@@ -1446,7 +1533,7 @@ const handleDownloadCDBExcel = () => {
                                       className="bg-white text-black border-black 
                                       hover:border-0 hover:bg-black 
                                       hover:text-white" 
-                                      onClick={() => setIsModalOpen(false)}>
+                                      onClick={() => handleEditFinalize(newCfsId)}>
                                     Save only
                                   </Button>
                                 </div>
@@ -1497,7 +1584,7 @@ const handleDownloadCDBExcel = () => {
                                         className="bg-white text-black border-black 
                                         hover:border-0 hover:bg-black 
                                         hover:text-white" 
-                                        onClick={() => setIsModalOpen(false)}>
+                                        onClick={() => handleEditFinalize(newCfsId)}>
                                       Save only
                                     </Button>
                                   </div>
@@ -1602,7 +1689,7 @@ const handleDownloadCDBExcel = () => {
 
                   {selectedIds.length > 0 && (
                     <>
-                    <Dialog open={isBulkEdit} onOpenChange={setIsBulkEdit}>
+                    {/* <Dialog open={isBulkEdit} onOpenChange={setIsBulkEdit}>
                       <DialogTrigger asChild>
                           <Button
                           className={`${fontZenKaku.className} font-bold
@@ -1658,7 +1745,7 @@ const handleDownloadCDBExcel = () => {
                           </div>
                           </form>
                       </DialogContent>
-                    </Dialog>
+                    </Dialog> */}
 
                     <Button
                       onClick={handleDownloadCDBExcel}
@@ -1691,21 +1778,22 @@ const handleDownloadCDBExcel = () => {
                     flex items-center gap-2 hover:scale-105
                     ${fontZenKaku.className}`}
                 >
-                  <Trash className="h-4 w-4" />
-                  <span>Delete {formatNumberWithCommas(selectedIds.length)} transactions</span> 
+                  <ArchiveX className="h-4 w-4" />
+                  <span>Void {formatNumberWithCommas(selectedIds.length)} transactions</span> 
                 </Button>
               </div>
             )}
             <Dialog open={openBulkDltModal} onOpenChange={setOpenBulkDltModal}>
               <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
               <DialogHeader>
-                  <DialogTitle className="tracking-wide font-bold text-2xl text-center">Delete {selectedIds.length} transaction?</DialogTitle>
+                  <DialogTitle className="tracking-wide font-bold text-2xl text-center">Void {selectedIds.length} transaction?</DialogTitle>
                   <DialogDescription className="text-[14.5px]/[22px] text-center">
-                    Provide a reason for deleting these transactions. 
+                    Provide a reason for voiding these transactions. 
                   </DialogDescription>
               </DialogHeader>
               <Textarea 
                 required
+                disabled={voidLoading}
                 value={reason}
                 onChange={(e)=> setReason(e.target.value)}
                 placeholder="Type your reason here."
@@ -1714,8 +1802,9 @@ const handleDownloadCDBExcel = () => {
               <DialogFooter>
                     <Button 
                     type="button"
+                    disabled={voidLoading}
                     variant="outline"
-                    onClick={handleBulkDelete}
+                    onClick={handleBulkVoid}
                     className="border-2 border-green-400 
                     hover:border-0 hover:bg-green-400 
                     font-medium !text-base 
@@ -1726,6 +1815,7 @@ const handleDownloadCDBExcel = () => {
                     <DialogClose asChild>
                       <Button
                         onClick={handleCancelBulkDeleteModal}
+                        disabled={voidLoading}
                         type="button"
                         variant="outline"
                         className="w-auto
@@ -1923,8 +2013,8 @@ const handleDownloadCDBExcel = () => {
                                 variant="outline"
                                 className="flex items-center gap-2 text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0">
                                 <span className="flex items-center">
-                                  <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
-                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
+                                  <ArchiveX className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Void</span>
                                 </span>
                               </Button>
 
@@ -1945,14 +2035,14 @@ const handleDownloadCDBExcel = () => {
                         <Dialog open={TransactionIdToDelete === transaction.id} onOpenChange={(open) => setTransactionIdToDelete(open ? transaction.id : null)}>
                             <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
                             <DialogHeader>
-                                <DialogTitle className="tracking-wide font-bold text-2xl text-center">Delete this transaction?</DialogTitle>
+                                <DialogTitle className="tracking-wide font-bold text-2xl text-center">Void this transaction?</DialogTitle>
                                 <DialogDescription className="text-[14.5px]/[22px] text-center">
-                                  Provide a reason for deleting this transaction. 
+                                  Provide a reason for voiding this transaction. 
                                 </DialogDescription>
                             </DialogHeader>
                             <Textarea 
                               required
-                              disabled={deleteLoading}
+                              disabled={voidLoading}
                               value={reason}
                               onChange={(e)=> setReason(e.target.value)}
                               placeholder="Type your reason here."
@@ -1962,8 +2052,8 @@ const handleDownloadCDBExcel = () => {
                                   <Button 
                                   type="button"
                                   variant="outline"
-                                  disabled={deleteLoading}
-                                  onClick={handleSingleDelete}
+                                  disabled={voidLoading}
+                                  onClick={handleVoidTransaction}
                                   className="border-2 border-green-400 
                                   hover:border-0 hover:bg-green-400 
                                   font-medium !text-base 
@@ -1973,7 +2063,7 @@ const handleDownloadCDBExcel = () => {
                                 
                                   <DialogClose asChild>
                                     <Button
-                                      disabled={deleteLoading}
+                                      disabled={voidLoading}
                                       onClick={handleCancelDeletingModal}
                                       type="button"
                                       variant="outline"
@@ -2067,8 +2157,8 @@ const handleDownloadCDBExcel = () => {
                                 variant="outline"
                                 className="flex items-center gap-2 text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0">
                                 <span className="flex items-center">
-                                  <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
-                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
+                                  <ArchiveX className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Ungroup</span>
                                 </span>
                               </Button>
 
@@ -2129,15 +2219,14 @@ const handleDownloadCDBExcel = () => {
                             </Button>
                           </DialogClose>
                           </DialogContent>
-                          
                       </Dialog>
                           
                       <Dialog open={groupToDeleteId === subAccount.id} onOpenChange={(open) => setGroupToDeleteId(open ? subAccount.id : null)}>
                           <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
                           <DialogHeader>
-                              <DialogTitle className="tracking-wide font-bold text-2xl text-center">Delete this group?</DialogTitle>
+                              <DialogTitle className="tracking-wide font-bold text-2xl text-center">Ungroup these transactions?</DialogTitle>
                               <DialogDescription className="text-[14.5px]/[22px] text-center">
-                                  Deleting this group will not delete other related child groups. 
+                                  Ungrouping will not ungroup other related child groups. 
                               </DialogDescription>
                           </DialogHeader>
                           <div className="flex flex-col md:flex-row gap-2 justify-center">

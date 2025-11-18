@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { geolocation } from "@vercel/functions";
+import { nb } from "date-fns/locale";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { NextRequest } from 'next/server'
@@ -37,6 +38,19 @@ const serializeTransaction = (obj) => {
     return serialized;
 };
 
+function formatManilaDateTime(dateInput) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  }).format(date);
+}
 
 async function activityLog({userId, action, args, timestamp}){
   try {
@@ -51,9 +65,45 @@ async function activityLog({userId, action, args, timestamp}){
     })
     return {status: 200, success: true}
   } catch (error) {
-    // console.log("Activity Log Error[1]: ", error);
+    console.log("Activity Log Error[1]: ", error);
     // console.log("Activity Log Error Message: ", error.message);
     return {status: 500, success: false}
+  }
+}
+
+
+async function archiveEntity({
+  userId,
+  accountId,
+  action,
+  entityType,
+  entityId,
+  data,
+}) {
+  try {
+    await db.archive.create({
+      data: {
+        userId,
+        accountId,
+        action,
+        entityType,
+        entityId,
+        data,
+      },
+    });
+
+    await activityLog({
+    userId,
+    action,
+    args: {data}, 
+    timestamp: new Date()
+    });
+    return {status: 200, success: true}
+  } catch (error) {
+    console.error("Archive Error Message: ", error.message);
+    console.error("Archive Error: ", error.message);
+    return {status: 500, success: false}
+    
   }
 }
 
@@ -657,6 +707,70 @@ export async function getUserAccount() {
 }
 
 
+export async function getUserAccountForDSS() {
+    try {
+        const {userId} = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const user = await db.user.findUnique({
+            where: {clerkUserId: userId},
+        });
+
+        if (!user) {
+            throw new Error("User not Found");
+        }
+        if (user.role !== "ADMIN") {
+            throw new Error("Unavailable data.");
+        }
+
+        const accounts = await db.account.findMany({
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                name:true,
+                transactions: {
+                    select: {
+                        date:true
+                    }
+                },
+            },
+        });
+
+        const FIVE_YEARS_MS = 5 * 365.25 * 24 * 60 * 60 * 1000;
+
+        const accountIds = [];
+        for(const acc of accounts){
+            const dates = Array.isArray(acc.transactions)
+                ? acc.transactions
+                    .map(t => t.date)
+                    .filter(Boolean)
+                    .map(d => new Date(d).getTime())
+                    .filter(Number.isFinite)
+                : [];
+            
+            if(dates.length === 0) continue;
+
+            const minTs = Math.min(...dates);
+            const maxTs = Math.max(...dates);
+            if(maxTs - minTs >= FIVE_YEARS_MS){
+                accountIds.push({ id: acc.id, name: acc.name });
+            }
+        }
+
+        if(accountIds.length === 0){
+            return{code:200, success:true, data:[]}
+        }
+
+
+        return { code: 200, success: true, data: accountIds }; 
+        // return serializedAccount;
+    } catch (error) {
+        console.error("Failed to fetch: ", error)
+        return {code: 500, success: false, message: "Failed to get."}
+    }
+}
+
+
 export async function getUserRoleCounts() {
   try {
     const { userId } = await auth();
@@ -777,6 +891,22 @@ export async function getMonthlyActivityLogs() {
     }
 }
 
+function getManilaUtcISOString(offsetDays = 0) {
+  // Get current UTC time
+  const now = new Date();
+
+  // Manila is UTC+8, so add 8 hours
+  const manilaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+
+  // Offset days if needed
+  if (offsetDays !== 0) {
+    manilaTime.setDate(manilaTime.getDate() + offsetDays);
+  }
+
+  // Return as UTC ISO string (matches DB format)
+  return manilaTime;
+}
+
 export async function getArchives(accountId){
     try {
         const { userId } = await auth();
@@ -794,32 +924,33 @@ export async function getArchives(accountId){
             return { success: false, error: "Data Unavailable." };
         }
 
-        const today = new Date();
-        const DateNinety = new Date();
-        DateNinety.setDate(today.getDate() - 90);
-
+         const todayISO = getManilaUtcISOString();
+        // const DateNinety = new Date();
+        // DateNinety.setDate(today.getDate() - 90);
+        const ninetyDaysAgoISO = getManilaUtcISOString(-90);
 
         const archives = await db.archive.findMany({
             where:{ 
-                userId: user.id,
                 accountId: accountId,
                 createdAt:{
-                    gte: DateNinety,
-                    lte: today,
+                    gte: ninetyDaysAgoISO,
+                    lte: new Date(),
+                },
+                action: {
+                    in: ['approveVoidedTransaction', 'deleteUnfinalizedCashflow', 'deleteSubAccount', "voidedCFS"]
                 },
                 entityType: {
-                    in: ["CashflowStatement", "Transaction", "Group Transaction"]
+                    in: ["Transaction", "CashflowStatement", "SubAccount"]
                 }
             },
             orderBy: {
                 createdAt: "desc",
-            }
+            },
         });
 
-        
         return {success: true, code:200, data: archives};
     } catch (error) {
-        console.log("Error returning data", error.message)
+        console.log("Error returning data", error)
         return {
             success: false,
             code: 404,
@@ -868,6 +999,258 @@ export async function getIntruder(){
         };
     }
 }
+
+export async function voidTransaction(id, accountId, reason){
+  try {
+    const {userId} = await auth();
+
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: {clerkUserId: userId}
+    })
+    if (!user){
+      throw new Error("Action unavailable.")
+    }
+
+    if(user.role !== "STAFF"){
+      throw new Error("Action unavailable.")
+    }
+
+    const existingTransaction = await db.transaction.findMany({
+      where: {
+        id: { in: id },
+        userId: user.id,
+     },
+    });
+
+    const voidingIds = existingTransaction.map((t) => t.id)
+
+    
+
+    const transaction = await db.transaction.updateMany({
+      where: {
+        id: { in: voidingIds }
+      },
+      data: {
+        voided: true,
+        reason: reason,
+        voidingDate: new Date(),
+      }
+    });
+
+
+    const updatedTransactions = await db.transaction.findMany({
+      where: { id: { in: voidingIds } },
+      select: { 
+        id: true, 
+        refNumber: true, 
+        accountId: true,
+        voided:true,
+        voidingDate:true
+     },
+    });
+
+    
+    for (const t of updatedTransactions) {
+      try {
+        await db.activityLog.create({
+          data: {
+            userId: user.id, // the DOer
+            action: "voidTransaction",
+            meta: {
+              transactionId: t.id,
+              refNumber: t.refNumber,
+              reason: reason,
+              accountId: t.accountId,
+              voided: t.voided,
+              voidingDate: t.voidingDate
+            },
+          },
+        });
+      } catch (logErr) {
+        console.error("Failed to create activity log for transaction", t.id, logErr);
+        // continue logging others
+      }
+    }
+
+    revalidatePath(`/account/${accountId}`);
+    revalidatePath("/admin");
+    return {code:200, success: true}
+  } catch (error) {
+    console.log("Error voiding transaction.", error.message)
+    return {code:500, success: false, message:"Failed to void transaction."}
+  }
+}
+
+export async function getVoidsForApproval(){
+  try {
+    const {userId} = await auth();
+
+    if (!userId) {
+        throw new UnauthorizedError("Unauthorized user.")
+    }  
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+        return { success: false, error: "User not found." };
+    }
+
+    if (user.role !== "ADMIN") {
+        return { success: false, error: "Access denied. Only ADMIN can view activity logs." };
+    }
+
+    const voidedTransactions = await db.transaction.findMany({
+      where: {
+        voided: true,
+        },
+        select: {
+            id: true,
+            type: true,
+            description: true,
+            date: true,
+            category: true,
+            particular: true,
+            Activity: true,
+            refNumber: true, 
+            printNumber: true, // now used to store merchant's name
+            userId: true,
+            accountId: true,
+            voided: true,
+            createdAt: true,
+            updatedAt: true,
+            reason: true,
+            amount:true,
+            voidingDate:true,
+            account:{
+                select:{
+                    name:true,
+                    id:true
+                },
+            },
+            user: {
+                select: {
+                    clerkUserId:true,
+                    Fname: true,
+                    Lname: true,
+                    email: true,
+                }
+            }
+        },
+        orderBy: {createdAt: "desc"},
+    })
+
+    const serializedVoidedTransactions = voidedTransactions.map(serializeTransaction);
+
+    return {code:200, success: true, data: serializedVoidedTransactions}
+  } catch (error) {
+    console.error("Error retrieving voided transactions:", error);
+    return {code:500, success: false, message: "An unexpected error occurred while retrieving request for void transactions.",};
+  }
+}
+
+export async function approveVoidedTransaction(id){
+    try {
+        const {userId} = await auth();
+
+        if (!userId) throw new Error("Unauthorized");
+        const user = await db.user.findUnique({
+            where: {clerkUserId: userId}
+        })
+        if (!user){
+            throw new Error("Action unavailable.")
+        }  
+        if(user.role !== "ADMIN"){
+            throw new Error("Action unavailable.")
+        }
+
+        const existingTransaction = await db.transaction.findUnique({
+            where: {id: id},
+        });
+
+        if(!existingTransaction && existingTransaction.voided === true){
+            return {code:404, success:false, message:"Transaction not found."}
+        }
+
+        const JSONedTransaction = JSON.stringify(existingTransaction);
+        const archiveResult = await archiveEntity({
+            userId: user.id,
+            accountId: existingTransaction.accountId,
+            action: "approveVoidedTransaction",
+            entityType: "Transaction",
+            entityId: existingTransaction.id,
+            data: JSONedTransaction,
+        });
+        if (!archiveResult || archiveResult.success === false) {
+            // fallback: create an activityLog entry to surface the failure
+            await db.activityLog.create({
+                data: {
+                    userId: user.id,
+                    action: "approveVoidedTransaction",
+                    meta: { message: "Possible System interruption: Failed to archive Approved Voided Transaction." },
+                },
+            });
+            return;
+        }
+
+        await db.transaction.delete({
+            where: {id: existingTransaction.id},
+        });
+
+        revalidatePath("/admin/activityLogs");
+        return {code:200, success: true}
+    } catch (error) {
+        console.log("Error approving voided transaction.", error)
+        return {code:500, success: false, message:"Failed to approve voided transaction."}
+    }
+}
+
+export async function getVoidsNotification() {
+  try {
+    // Authenticate the user
+    const { userId } = await auth();
+    if (!userId) {
+      console.log("getVoidsNotification: Unauthorized.")  
+      throw new Error("Unauthorized.")
+    }
+
+    // Check if the user has the ADMIN role
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if(!user){
+        throw new Error("Not available data.")
+    }
+
+    if (!user || user.role !== "ADMIN") {
+      throw new Error("Not available data.")
+    }
+
+    // Fetch void requests pending approval
+    // Fetch count of transactions with voided = true
+    const voidRequestsCount = await db.transaction.count({
+      where: {
+        voided: true, // Transactions requesting approval
+      },
+    });
+
+    // Return the count
+    return {
+      success: true,
+      code: 200,
+      data: voidRequestsCount, // Only the count is returned
+    };
+  } catch (error) {
+    // Handle errors gracefully
+    console.error("Error fetching void request count:", error);
+    return { success: false, code: 500, message: "Error fetching void requests. Consult System admin." };
+  }
+}
+
 
 
 

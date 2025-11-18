@@ -217,6 +217,7 @@ export async function bulkDeleteTransactions(transactionIds, accountId, reason) 
             updatedAt:true,
           }
       });
+      
       for (const transaction of transactions) {
         const dataJSON = JSON.stringify([{transaction:transaction, reason:reason}]);
         const log = await archiveEntity({

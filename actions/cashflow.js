@@ -350,7 +350,6 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           const isFirstHalf = (month) => month >= 0 && month <= 5;
           const isSecondHalf = (month) => month >= 6 && month <= 11;
 
-          console.log("dateRangeInDays", dateRangeInDays)
           switch (true) {
             case (monthsDiff === 6 &&(
                 (isFirstHalf(earliestMonth) && isFirstHalf(latestMonth)) ||
@@ -550,6 +549,10 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
       // const two = parseFloat(totalInvesting.toFixed(3));
       // const three = parseFloat(totalFinancing.toFixed(3));
 
+      const dateRange = JSON.stringify({
+        from: earliestDate, 
+        To: latestDate,
+      })
       const newCashflow = await db.cashFlow.create({
         data: {
           ...data,
@@ -560,7 +563,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           createdAt: new Date(),
           periodCashFlow,
 
-          description: NeededData?.description,
+          description: dateRange,
           date: cashflowDate,
           userId: user.id,
           accountId: accountId,
@@ -967,11 +970,8 @@ export async function getCashflowById(cfsID) {
 
 
 
-export async function deleteCashflow(cashflowId) {
-  console.log("THE BACKEND",cashflowId)
+export async function deleteCashflow(cashflowId, reason) {
   try {
-    console.log('Starting delete cashflow: ');
-
     const { userId } = await auth();
     if (!userId) throw new Error('Unauthorized');
 
@@ -995,6 +995,149 @@ export async function deleteCashflow(cashflowId) {
       },
       select: {
         id: true,
+        accountId: true,
+        createdAt: true,
+        voided:true,
+      }
+    });
+
+    if (!cashflow) {
+     return {code:404, success:false, message:'Cashflow not found.'}
+    }
+
+    await db.cashFlow.update({
+      where: { id: cashflow.id },
+      data: {
+        voided: true,
+        description: reason,
+        voidingDate: new Date(),
+      }
+    })
+
+
+
+    const updateLog = await activityLog({
+      userId: user.id,
+      action: "voidedCFS",
+      args: cashflow,
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "voidedCFS",
+          meta: { message: "Possible System interuption: Failed to log Cashflow Statement Void Request." },
+        }
+      })
+    }
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}`)
+    revalidatePath('/admin')
+    return {code:200, success: true};
+  } catch (error) {
+    console.error('Error cancelling Cashflow creation:', error);
+    return { code:500, success: false, message:'Something went wrong.' };
+  }
+}
+
+export async function getCFStoApprove() {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    if (user.role !== "ADMIN") {
+      throw new Error('Unavailable action.');
+    }
+
+
+    const cashflow = await db.cashFlow.findUnique({
+      where: {
+        id: cfsId,
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        accountId: true,
+        createdAt: true,
+        endBalance: true,
+        startBalance: true,
+        netChange: true,
+        activityTotal: true,
+        periodCashFlow: true,
+        voided:true,
+      }
+    });
+
+    if (!cashflow) {
+     return {code:404, success:false, message:'Cashflow not found.'}
+    }
+
+    await db.cashFlow.update({
+      where: { id: cashflow.id },
+      data: {
+        voided: true,
+        description: reason,
+        voidingDate: new Date(),
+      }
+    })
+
+
+
+    const updateLog = await activityLog({
+      userId: user.id,
+      action: "voidedCFS",
+      args: cashflow,
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "voidedCFS",
+          meta: { message: "Possible System interuption: Failed to log Cashflow Statement Void Request." },
+        }
+      })
+    }
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}`)
+    revalidatePath('/admin')
+    return {code:200, success: true};
+  } catch (error) {
+    console.error('Error cancelling Cashflow creation:', error);
+    return { code:500, success: false, message:'Something went wrong.' };
+  }
+}
+
+export async function approveVoidCFS(cashflowId) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    if (user.role !== "ADMIN") {
+      throw new Error('Unavailable action.');
+    }
+
+
+    const cashflow = await db.cashFlow.findUnique({
+      where: {
+        id: cashflowId,
+        userId: user.id,
+      },
+      select: {
+        id: true,
         periodCashFlow: true,
         accountId: true,
         startBalance: true,
@@ -1002,16 +1145,19 @@ export async function deleteCashflow(cashflowId) {
         activityTotal: true,
         netChange: true,
         createdAt: true,
+        updatedAt: true,
+        voided:true,
       }
     });
 
-    if (!cashflow) {
-     return {code:404, success:false, message:'Cashflow not found.'}
+    if(!cashflow && cashflow.voided === true){
+      return {code:404, success:false, message:"Cashflow not found."}
     }
+
     const archive = await archiveEntity({
       userId: user.id,
       accountId: cashflow.accountId,
-      action: "deleteCashflowStatement",
+      action: "voidedCFS",
       entityType: "CashflowStatement",
       entityId: cashflow.id,
       data: cashflow,
@@ -1020,28 +1166,23 @@ export async function deleteCashflow(cashflowId) {
       await db.activityLog.create({
         data: {
           userId: user.id,
-          action: "deleteCashflowStatement",
+          action: "voidedCFS",
           meta: { message: "Possible System interruption: Failed to log Deleted Cashflow" },
         } 
       })
     }
 
     await db.cashFlow.delete({
-      where: {
-        id: cashflow.id,
-      },
-    });
-
-    console.log('Cashflow deleted');
+      where: { id: cashflow.id}
+    })
     revalidatePath('/CashflowStatement')
-
+    revalidatePath('/admin')
     return { code:200, success: true, message: "Cancelled creating Cashflow Statement"};
   } catch (error) {
     console.error('Error cancelling Cashflow creation:', error);
     return { code:500, success: false, message:'Something went wrong.' };
   }
 }
-
 
 export async function updateCashflow(cashflowId, updatedTransactionIds, updatedSubAccountIds) {
   try {
@@ -1177,7 +1318,6 @@ export async function updateCashflow(cashflowId, updatedTransactionIds, updatedS
     }
 
 
-console.log("[2] update end. success.")
     return { success: true, message: "Cashflow updated successfully." };
   } catch (error) {
     console.log("[3] action end. failed.")
@@ -1220,7 +1360,6 @@ export async function updateNetchange(cfsId, amount){
     }
 
     const newAmount = Number(amount);
-    console.log("[3]Update Net change", cashflow);
     const updatedNetchange = await db.cashFlow.update({
       where: {id: cashflow.id},
       data: {
@@ -1723,9 +1862,6 @@ export async function updateTotalFinancing(cfsId, newValue) {
 
 export async function updateBalanceQuick(cfsId, netChange, begBalance, endBal){
   try {
-    console.log("[1] Auth")
-    console.log("[1]", cfsId, netChange, begBalance, endBal)
-    console.log("[1]", typeof cfsId, typeof netChange, typeof begBalance, typeof endBal)
     const { userId } = await auth();
 
     const user = await db.user.findUnique({
@@ -1757,7 +1893,6 @@ export async function updateBalanceQuick(cfsId, netChange, begBalance, endBal){
       throw new Error("[2] Cashflow do not exist")
     }
 
-    console.log("[3] Update Balances")
     const currNetChange = Number(netChange);
     const currStartBalance = Number(begBalance);
     const currEndBalance = Number(endBal);
@@ -1810,5 +1945,139 @@ export async function updateBalanceQuick(cfsId, netChange, begBalance, endBal){
   } catch (error) {
     console.log("Error quick balance update");
     return { success: false, error: error.message };
+  }
+}
+
+export async function getUnfinalizedCashflows(accountId) {
+  try {
+    const { userId } = await auth();
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId}
+    });
+
+    if(!user){
+      throw new Error("Unauthorized");
+    };
+
+    if(user.role !== "STAFF"){
+      throw new Error("Unavailable action");
+    };
+    
+      const drafts = await db.cashFlow.findMany({
+        where: { 
+          accountId: accountId,
+          FinalCreate: false 
+        },
+        select:{
+          id:true,
+          accountId:true,
+          FinalCreate:true,
+        }
+      });
+      return { code: 200, success: true, data: drafts }
+  } catch (error) {
+    console.error("getUnfinalizedCashflows error:", error);
+    return { code: 500, success: false, message: "Failed to fetch unfinalized cashflows." };
+  }
+}
+
+export async function deleteUnfinalizedCashflows(cashflowId, accountId) {
+  try {
+    const { userId } = await auth();
+
+    if(!userId){
+      throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+      where: {clerkUserId: userId}
+    });
+
+    if(!user){
+      throw new Error("Unauthorized");
+    };
+
+    if(user.role !== "STAFF"){
+      throw new Error("Unavailable action");
+    };
+    
+
+    // console.log("cashflowId:", cashflowId)
+    const draftsCashflow = await db.cashFlow.findMany({
+      where: { 
+        id: {
+          in: cashflowId
+        }
+       },
+    });
+
+    const idsToDelete = draftsCashflow.map(d => d.id);
+    
+
+    // Archive each draft before deletion (best effort)
+     await Promise.all(draftsCashflow.map(async (d) => {
+      try {
+        const archive = await archiveEntity({
+          userId: user.id,
+          accountId: d.accountId,
+          action: "deleteUnfinalizedCashflow",
+          entityType: "CashflowStatement",
+          entityId: d.id,
+          data: d,
+        });
+      } catch (err) {
+        // continue even if archive for one fails; log and proceed
+        console.error("Failed to archive draft before bulk delete:", d.id, err?.message || err);
+        await db.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "deleteUnfinalizedCashflow_archive_failed",
+            meta: { id: d.id, error: err?.message || String(err) },
+          },
+        }).catch(() => {});
+      }
+    }));
+    
+    await db.cashFlow.deleteMany({
+      where: { id: { in: idsToDelete } },
+    });
+
+    revalidatePath(`/CashflowStatement/${accountId}`);
+    return { code: 200, success: true}
+  } catch (error) {
+    console.error("getUnfinalizedCashflows error:", error);
+    return { code: 500, success: false, message: "Failed to archive unfinalized cashflows." };
+  }
+}
+
+export async function editFinalize(cashflowId) {
+  try {
+    const { userId } = await auth();
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId}
+    });
+
+    if(!user){
+      throw new Error("Unauthorized");
+    };
+
+    if(user.role !== "STAFF"){
+      throw new Error("Unavailable action");
+    };
+
+    if(!cashflowId){
+      return { code: 400, success: false, message: "Cashflow ID not found." };
+    }
+
+    await db.cashFlow.update({
+      where: { id: cashflowId },
+      data: { FinalCreate: true }
+    });
+    return { code: 200, success: true }
+  } catch (error) {
+    console.error("editFinalize error:", error);
+    return { code: 500, success: false, message: "Failed to finalize cashflow." };
   }
 }

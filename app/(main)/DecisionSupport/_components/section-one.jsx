@@ -64,7 +64,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: ["400", "500", "700", "900"],
 })
 
-const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows, entryCounts}) => {
+const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows, entryCounts, accCount}) => {
 const barChartData = React.useMemo(() => {
   // const categoryMap = {};
   // tasks.forEach(task => {
@@ -230,7 +230,7 @@ const summaryCards = [
   {
     title: "Clients",
     description: "All clients of the firm",
-    value: accounts.data.length,
+    value: accCount,
     icon: <Users className="h-8 w-8 text-cyan-600" />,
     iconBg: "bg-blue-100",
     iconText: "text-blue-600",
@@ -474,8 +474,8 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
             items-center">
             <div>
               <CardTitle className="!font-bold text-xl text-center md:text-start">Client Inflow Summary</CardTitle>
-              <CardDescription className="text-sm font-normal tracking-wide">
-                Semiannual total inflows per month 
+              <CardDescription className="text-sm !text-black font-normal tracking-wide">
+                Semiannual total inflows per month. Pre-select here the account you want forecast and analysis for.
                 {/* (Add outflows to me) */}
               </CardDescription>
             </div>

@@ -7,7 +7,7 @@ import TaskTable from './_components/taskTable';
 import { getTask } from '@/actions/task';
 import { FinancialDataProvider } from './_context/FinancialDataContext';
 import { entryCount, getAllInflows, getAllOutflows, getAllTransactions} from '@/actions/decisionSupport';
-import { getUserAccount } from '@/actions/admin';
+import { getUserAccount, getUserAccountForDSS } from '@/actions/admin';
 
 
 
@@ -20,7 +20,9 @@ async function DecisionSupport () {
       const outflows = await getAllOutflows();
       const AllTransactions = await getAllTransactions();
       const entryCounts = await entryCount();
+      const accountsClient = await getUserAccountForDSS()
 
+      const accCount = accounts.data.length;
       
       const transactions = await getDashboardData();
 
@@ -31,7 +33,8 @@ async function DecisionSupport () {
         <section>
           <SectionOne 
             entryCounts={entryCounts}
-            accounts={accounts} 
+            accCount={accCount}
+            accounts={accountsClient} 
             transactions={transactions || []} 
             tasks={task}
             AllTransactions={AllTransactions}
