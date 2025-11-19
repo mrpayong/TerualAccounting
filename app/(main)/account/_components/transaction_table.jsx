@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import useFetch from '@/hooks/use-fetch';
-import { bulkDeleteTransactions, createSubAccount, deleteSubAccount } from '@/actions/accounts';
+import { bulkDeleteTransactions, createSubAccount, createSubAccountNote, deleteSubAccount } from '@/actions/accounts';
 import { toast } from 'sonner';
 import { BarLoader, BeatLoader } from 'react-spinners';
 import Swal from 'sweetalert2';
@@ -1159,12 +1159,10 @@ const handleDownloadCDBExcel = () => {
   } = useFetch(editFinalize)
 
   const handleEditFinalize = (id) => {
-    console.log("test")
     setIsModalOpen(false)
     editFinalizeFn(id)
   }
 
-  console.log("cfsID:", newCfsId)
   useEffect(() => {
     if(editData && !editFinalizeLoading){
       if(editData.code === 200 && editData.success === true){
@@ -1230,6 +1228,110 @@ const handleDownloadCDBExcel = () => {
 
 
 
+    const {
+      loading: createNoteLoading,
+      fn: noteFn,
+      data: noteData,
+    } = useFetch(createSubAccountNote)
+
+  const [note, setNote] = useState("")
+
+
+  const [groupNoteDialog, setGroupNoteDialog] = useState(false);
+  const [groupToNoteId, setGroupToNoteId] = useState("");
+
+
+
+  const handleGroupToNoteId = (id) => {
+    setGroupToNoteId(id);
+    if(groupToNoteId !== ""){
+      setGroupNoteDialog(true);
+    }
+  }
+
+  const handleCancelGroupToNoteId = () => {
+    setGroupToNoteId("");
+    if(groupToNoteId !== ""){
+      setGroupNoteDialog(false);
+    }
+  }
+  
+  const handleNote = async () => {
+    if(note === "" || !note || note === null){
+      toast.error("Note is required to proceed.");
+    }
+    
+    if (groupToNoteId && note){
+      noteFn(groupToNoteId, JSON.stringify(note));
+    }
+  }
+
+
+  useEffect(() => {
+    if (noteData && !createNoteLoading) {
+      if(noteData.code === 200 && noteData.success === true){
+        toast.success("Success adding note.");
+        setGroupToNoteId("")
+        setGroupNoteDialog(false)
+        setNote("");
+      }
+      if(noteData.code === 500 && noteData.success === false){
+        console.log("message:", noteData.message)
+        setNote("");
+        toast.error("Error adding note, consult system admin.");
+      }
+      if(noteData.code === 400 && noteData.success === false){
+        console.log("message:", noteData.message)
+        setNote("");
+        toast.error("Group not found, consult system admin.");
+      }
+    }
+  }, [noteData, createNoteLoading]);
+
+
+  function cleanJsonString(str) {
+    if (typeof str !== "string") return str;
+    let cleaned = str.trim();
+
+    // Try to parse JSON if possible
+    try {
+      const parsed = JSON.parse(cleaned);
+      // If parsed is a string, return it
+      if (typeof parsed === "string") return parsed.trim();
+      // If parsed is an object, return its stringified version
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      // If not JSON, remove leading/trailing quotes and return
+      if ((cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+          (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+        cleaned = cleaned.slice(1, -1);
+      }
+      return cleaned;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1245,7 +1347,7 @@ const handleDownloadCDBExcel = () => {
        {voidLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {updateLoading  && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {subAccountLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
-       {deleteGroupLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {createNoteLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {cfsLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {editLoadingId && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
        {cancelCfsLoad && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
@@ -2153,12 +2255,12 @@ const handleDownloadCDBExcel = () => {
                             <div className="flex flex-col gap-2">
                           
                             <Button
-                                onClick={() => handleGroupToDeleteId(subAccount.id)}
+                                onClick={() => handleGroupToNoteId(subAccount.id)}
                                 variant="outline"
-                                className="flex items-center gap-2 text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0">
+                                className="flex items-center gap-2 text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white hover:border-0">
                                 <span className="flex items-center">
-                                  <ArchiveX className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
-                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Ungroup</span>
+                                  <Pen className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Note</span>
                                 </span>
                               </Button>
 
@@ -2199,7 +2301,7 @@ const handleDownloadCDBExcel = () => {
                                   <label className='!font-bold !text-medium md:!text-lg'>Transactions in this group only:</label> {subAccount.transactions.length || "No Transactions"}
                                 </p>
                                 <p className="font-medium text-base text-gray-700">
-                                  <label className='!font-bold !text-medium md:!text-lg'>Description:</label> {subAccount.description || "No description available"}
+                                  <label className='!font-bold !text-medium md:!text-lg'>Description:</label> {cleanJsonString(subAccount.description) || "No description available"}
                                 </p>
                                 <p className="font-medium text-base text-gray-700">
                                   <label className='!font-bold !text-medium md:!text-lg'>Created On:</label> {formatUtcDateWithTime(subAccount.createdAt) || "No date"}
@@ -2221,21 +2323,27 @@ const handleDownloadCDBExcel = () => {
                           </DialogContent>
                       </Dialog>
                           
-                      <Dialog open={groupToDeleteId === subAccount.id} onOpenChange={(open) => setGroupToDeleteId(open ? subAccount.id : null)}>
+                      <Dialog open={groupToNoteId === subAccount.id} onOpenChange={(open) => setGroupToNoteId(open ? subAccount.id : null)}>
                           <DialogContent className={`${fontZenKaku.className} [&>button:last-child]:hidden`}>
                           <DialogHeader>
-                              <DialogTitle className="tracking-wide font-bold text-2xl text-center">Ungroup these transactions?</DialogTitle>
+                              <DialogTitle className="tracking-wide font-bold text-2xl text-center">Describe This Group</DialogTitle>
                               <DialogDescription className="text-[14.5px]/[22px] text-center">
-                                  Ungrouping will not ungroup other related child groups. 
+                                  Provide desciption for this group.  
                               </DialogDescription>
                           </DialogHeader>
+                          <Textarea 
+                            disabled={createNoteLoading}
+                            value={note}
+                            onChange={(e)=> setNote(e.target.value)}
+                            placeholder="Description"
+                          />
                           <div className="flex flex-col md:flex-row gap-2 justify-center">
                           <DialogFooter>
                                 <Button 
-                                disabled={deleteGroupLoading}
+                                disabled={createNoteLoading}
                                 type="button"
                                 variant="outline"
-                                onClick={handleDeleteGroup}
+                                onClick={handleNote}
                                 className="border-2 border-green-400 
                                 hover:border-0 hover:bg-green-400 
                                 font-medium !text-base 
@@ -2245,8 +2353,8 @@ const handleDownloadCDBExcel = () => {
                               
                                 <DialogClose asChild>
                                   <Button
-                                    disabled={deleteGroupLoading}
-                                    onClick={handleCancelGroupToDeleteId}
+                                    disabled={createNoteLoading}
+                                    onClick={handleCancelGroupToNoteId}
                                     type="button"
                                     variant="outline"
                                     className="w-auto

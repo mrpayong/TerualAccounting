@@ -129,6 +129,7 @@ export async function getUserForSysAdmin(){
         return {
             success: true,
             authorized: true,
+            code: 200,
             data: users.map((user) => ({
                 ...user,
                 createdAt: user.createdAt.toISOString(),
@@ -136,7 +137,12 @@ export async function getUserForSysAdmin(){
             })),
         };
     }catch (error) {
-        throw new Error("Error fetching users:" + error.message);
+        console.log("Error getUserForSysAdmin: ", error)
+        return {
+            success: true,
+            code: 500,
+            message:"Error fetching users"
+        };
     } 
 }
 
@@ -197,9 +203,10 @@ export async function updateUserRole(UserIdRoleUpdate, newRole){
         }
         revalidatePath('/admin/settings')
         revalidatePath('/SysAdmin/settings')
-        return {success: true}
+        return {success: true, code: 200}
     }catch (error) {
-        throw new Error("Error role udpate:" + error.message);
+        console.log("Error updateUserRole: ", error)
+        return {success: false, code: 500, message: "Error updating user role"}
     } 
 }
 
@@ -339,19 +346,23 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
         revalidatePath("/admin/settings");
         revalidatePath("/SysAdmin/settings")
         return { 
+            code:200,
             success: true, 
             message: 'User deleted successfully'
         };
     } catch (error) {
         console.log("Error user delete: ", error)
-        throw new Error("Error deleting user");
+        return { 
+            code:500,
+            success: false, 
+            message: 'User Deletion failed'
+        };
     }
 }
 
 
 export async function updateUser(updateClerkId, newFname, newLname, newuserName) {
     try {
-        console.log("[1] Auth")
         console.log(updateClerkId, newFname, newLname, newuserName)
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
@@ -367,7 +378,6 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
         }
 
         // fetch wich user to udpate first
-        console.log("[1] Fetch user to update")
         const user = await db.user.findUnique({
             where: {id: updateClerkId },
             select: {
@@ -485,7 +495,6 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
         });
 
         // 2. Set as primary
-        console.log("[2] ", newEmailObj)
         await client.users.updateUser(
             userToUpdate.clerkUserId, 
             {
@@ -496,18 +505,15 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
         // 3. Remove old email address
         
         const userClerk = await client.users.getUser(userToUpdate.clerkUserId);
-        console.log("[3] ", userClerk)
         const oldEmailObj = userClerk.emailAddresses.find(
             (e) => e.emailAddress !== newUserEmail
         );
         if (oldEmailObj) {
-             console.log("[4] oldEmail=True", oldEmailObj)
             await client.emailAddresses.deleteEmailAddress(oldEmailObj.id);
         }
 
 
 
-        console.log("[5] update db", oldEmailObj)
         const newUserUpdated = await db.user.update({
             where: { id: userToUpdate.id },
             data:{
@@ -547,9 +553,9 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
         revalidatePath("/admin/settings");
         revalidatePath("/SysAdmin/settings");
         revalidatePath("/");
-        console.log("[6] Email updated")
         return{ success: true, status: 200 };
     } catch (error) {
-        throw new Error("!");
+        console.log("Error update email: ", error)
+        return{ success: false, status: 500, message: "error to update email" }
     }
 }

@@ -118,7 +118,9 @@ export async function getCashOutflow(id) {
       },
       include: {
         transactions: {
-          where: { type: "EXPENSE" },
+          where: { type: "EXPENSE",
+            voided:false
+           },
           select:{
             Activity: true,
             accountId: true,
@@ -180,7 +182,7 @@ export async function getCashInflow(id) {
       },
       include: {
         transactions: {
-          where: { type: "INCOME" },
+          where: { type: "INCOME", voided:false },
           select:{
             Activity: true,
             accountId: true,
@@ -196,6 +198,7 @@ export async function getCashInflow(id) {
             userId: true,
             refNumber:true,
             particular: true,
+            voided:true
           }
         },
       },
@@ -696,6 +699,7 @@ export async function getCashflow(accountId, userId, cashFlowId) {
       orderBy: { createdAt: "desc" }, // Order by descending createdAt
       include: {  
        transactions: {
+        where:{voided:false},
         select: {
           id: true,
           type: true,
@@ -703,6 +707,7 @@ export async function getCashflow(accountId, userId, cashFlowId) {
           amount: true,
           Activity: true,
           date: true,
+          voided:true,
         }
        },
         account: {
@@ -830,6 +835,7 @@ export async function getCashflowById(cfsID) {
       where: { id: cfsID },
       include: {
         transactions: {
+          where:{voided:false},
           select: {
             id: true,
             type: true,
@@ -838,6 +844,7 @@ export async function getCashflowById(cfsID) {
             Activity: true,
             particular:true, 
             date: true,
+            voided:true,
           },
         },
         subAccounts: {
@@ -859,6 +866,7 @@ export async function getCashflowById(cfsID) {
                         amount: true,
                         description: true,
                         date: true,
+                        voided:true,
                       },
                     },
                   },
@@ -880,6 +888,7 @@ export async function getCashflowById(cfsID) {
                                 amount: true,
                                 description: true,
                                 date: true,
+                                voided:true,
                               },
                             },
                           },
@@ -901,6 +910,7 @@ export async function getCashflowById(cfsID) {
                                         amount: true,
                                         description: true,
                                         date: true,
+                                        voided:true,
                                       },
                                     },
                                   },
@@ -924,6 +934,8 @@ export async function getCashflowById(cfsID) {
         },
       },
     });
+
+    console.log("Fetched cashflow:", cashflow);
 
     if (!cashflow) {
       console.log("Cashflow not found for ID:", cfsID);

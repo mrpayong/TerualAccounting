@@ -36,13 +36,13 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 })
 
 async function AccountsPage({ params }) {
-  // const user = await getStaff();
+  const user = await getStaff();
   
 
-  // if(!user.authorized){
-  //   await getUnauthUser();
-  //   return NotFound();
-  // }
+  if(!user.authorized){
+    await getUnauthUser();
+    return NotFound();
+  }
   const { id } = await params;
   const accountData = await getAccountWithTransactions(id);
   const subAccounts = await getSubAccounts(id);
@@ -54,12 +54,10 @@ async function AccountsPage({ params }) {
   const relatedIDs = SubAccTransactionRel.data.map(rel => rel.transactionId);
   const relatedSubAccIDs = Array.from(new Set(SubAccTransactionRel.data.map(rel => String(rel.subAccountId || "")))).filter(Boolean)
 
-
   const subAccTransactionRel = SubAccTransactionRel.data;
   // const recentCashflows = fetchedCashflows.latestCashflows;
 
   const { transactions, ...account } = accountData; //extract transacs and acc data
-  // console.info("THE ACCOUNT DATUM:  ",accountData)
 
   // const cashflow = await getCashflow(id);
 

@@ -66,7 +66,6 @@ export async function getSuggestedWeeklySchedule() {
     // Fetch all tasks for the user
     console.log("retrieving Tasks Data")
     const tasks = await db.Task.findMany({
-      where: { userId: user.id },
       select: {
         id: true,
         taskName: true,
@@ -676,11 +675,13 @@ export async function getAllInflows() {
   const inflows = await db.Transaction.findMany({
     where: { 
       // userId: user.id,
-      type: "INCOME" 
+      type: "INCOME",
+      voided:false
     },
     select: { 
       category: true,
       amount: true, 
+      voided:true,
       accountId: true,
       type: true,
       date: true,
@@ -692,6 +693,8 @@ export async function getAllInflows() {
     },
     orderBy: { date: "asc" },
   });
+
+  
   const inflowsSerialize = inflows.map(inflow => ({
     ...inflow,
     amount: Number(inflow.amount),
@@ -722,13 +725,14 @@ export async function getAllOutflows() {
   // Fetch all outflow transactions for the user
   const outflows = await db.Transaction.findMany({
     where: { 
-      userId: user.id,
-      type: "EXPENSE" 
+      type: "EXPENSE",
+      voided:false
     },
     select: { 
       category: true,
       amount: true, 
       accountId: true,
+      voided:true,
       account: {
         select: {
           name: true
@@ -771,6 +775,7 @@ export async function getAllTransactions() {
       amount: true,
       category: true,
       createdAt: true,
+      voided:true
     },
   });
 
@@ -832,7 +837,8 @@ export async function entryCount() {
       createdAt: {
         gte: new Date(`${todayStr}T00:00:00`),
         lt: new Date(`${todayStr}T23:59:59.999`)
-      }
+      },
+      voided: false,
     }
   });
 
@@ -842,7 +848,8 @@ export async function entryCount() {
       createdAt: {
         gte: new Date(`${yestStr}T00:00:00`),
         lt: new Date(`${yestStr}T23:59:59.999`)
-      }
+      },
+      voided: false,
     }
   });
 

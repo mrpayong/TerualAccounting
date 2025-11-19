@@ -8,6 +8,7 @@ import { BarLoader } from "react-spinners";
 import { Badge } from "@/components/ui/badge";
 import Swal from "sweetalert2";
 import { Zen_Kaku_Gothic_Antique } from "next/font/google";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const fontZenKaku = Zen_Kaku_Gothic_Antique({
   subsets:["latin"],
@@ -16,7 +17,6 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 
 const SubAccount = ({ subAccount, level = 0}) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
   const formatAmount = (amount) => {
     return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -145,6 +145,7 @@ const SubAccount = ({ subAccount, level = 0}) => {
 
   const getTotalAmount = (account) => {
     // Sum transactions for this account
+    
     const transactionSum = account.transactions.reduce(
       (sum, t) => sum + (Number(t.amount) || 0),
       0
@@ -164,6 +165,32 @@ const totalAmount = getTotalAmount(subAccount);
   const isBalanceMismatch =
     subAccount.balance !== null &&
     Math.abs(Number(subAccount.balance) - totalAmount) > 0.009; // Allowing for floating point rounding
+
+  function cleanJsonString(str) {
+    if (typeof str !== "string") return str;
+    let cleaned = str.trim();
+
+    // Try to parse JSON if possible
+    try {
+      const parsed = JSON.parse(cleaned);
+      // If parsed is a string, return it
+      if (typeof parsed === "string") return parsed.trim();
+      // If parsed is an object, return its stringified version
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      // If not JSON, remove leading/trailing quotes and return
+      if ((cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+          (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+        cleaned = cleaned.slice(1, -1);
+      }
+      return cleaned;
+    }
+  }
+
+
+
+
+
 
 
 
@@ -214,7 +241,7 @@ const totalAmount = getTotalAmount(subAccount);
           </div>
         </td>
         <td className={`${fontZenKaku.className} font-medium py-2 px-4 text-sm text-gray-500`}>
-          <label>Transactions + Grouped child: </label>
+          <label>Summary: </label>
           <label className="tracking-wide">{formatAmount(totalAmount)}</label>
         </td>
         <td className={`${fontZenKaku.className} py-2 px-4 flex flex-row items-center text-gold-600 font-medium`}>
@@ -226,7 +253,6 @@ const totalAmount = getTotalAmount(subAccount);
                 className="border border-gray-300 rounded-md px-2 py-1 w-32"
                 value={subAccountBalance}
               />
-              
               )
             : (
               <label className="tracking-wide text-base">
@@ -238,34 +264,19 @@ const totalAmount = getTotalAmount(subAccount);
           {isBalanceMismatch && (
           <td className="py-2 px-4 text-gray-500">
             <div className="flex flex-row gap-2 items-center px-2">
-              {balanceEditButton
-                ? (
-                  <button
-                  onClick={handleUpdateBalance}>
-                  <Check className="text-green-500"/>
-                </button>
-                ) 
-                : (
-                  <TriangleAlert className="text-yellow-400 h-4 w-4 ml-2" title="Balance does not match transaction total"/>
-                )
-              }
-            
-            {balanceEditButton
-              ? (
-                <button
-                  onClick={handleCancelBalanceField}>
-                  <PenOff className="text-rose-500"/>
-                </button>
-              ) : (
-                <button
-                onClick={handleActiveBalanceField}>
-                  <PenLine className="text-yellow-400"/>
-                </button>
-              )
-            }
-            
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TriangleAlert
+                      className="text-yellow-400 h-4 w-4 ml-2 cursor-pointer"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center" className="max-w-xs break-words">
+                    {subAccount.description ? cleanJsonString(subAccount.description) : "No description"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-          
         </td>)}
       </tr>
 
@@ -282,13 +293,6 @@ const totalAmount = getTotalAmount(subAccount);
                     <li className="list-none grid grid-cols-3 justify-center py-2" key={transaction.id}>
                       <p className="font-medium text-base text-start ml-2">{transaction.particular || transaction.description}</p>
                       <p className="font-medium text-base text-center">{formatAmount(transaction.amount)}</p>
-                      <p className="text-center mr-2">
-                      <button 
-                        onClick={() => handleRemoveTransaction(transaction.id)}
-                        className="hover:bg-gray-200 items-center">
-                          <X className="text-rose-600 h-3 w-3"/>
-                      </button>
-                      </p>
                     </li>
                     
                   ))}

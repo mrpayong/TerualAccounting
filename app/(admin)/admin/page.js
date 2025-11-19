@@ -24,6 +24,7 @@ const AdminPage = async () => {
   const Users = await getCountUsers();
   const transactions = await getCountTransactions();
   const userList = await getUser();
+
   const activityCount = activityLogs.data;
   const CfsCount = CfsLogs.data;
   const accountCount = accounts.data.length;
@@ -69,8 +70,6 @@ const AdminPage = async () => {
 
 
   
-
-
   return (
     <div className='p-6'>
       <div className='flex flex-col justify-start mb-6'>

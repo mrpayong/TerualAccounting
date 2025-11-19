@@ -96,9 +96,8 @@ export async function getTask() {
   if(!user) throw new Error("User not found");
   
 
-  const Task = await db.Task.findMany({
-    where: { userId: user.id },
-  });
+  const Task = await db.Task.findMany();
+
   
   if (!Task) throw new Error("Task not found.");
 

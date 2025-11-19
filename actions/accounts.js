@@ -160,10 +160,15 @@ export async function getAccountWithTransactions(accountId) {
         where: { id: accountId, userId: user.id },
         include: {
             transactions: {
-                orderBy: {date: "desc" },
+              where: {voided:false},  
+              orderBy: {date: "desc" },
             },
             _count: {
-                select: { transactions: true },
+                select: { 
+                  transactions:{
+                    where: {voided:false}
+                  } 
+                },
             },
         },
     });
@@ -637,7 +642,8 @@ export async function createSubAccount(transactionIds, data, id) {
      return{success:true, code:200, message:"Proccessing Group Success", id:parentSubAccount.id, balanceFloat:balanceFloat}
     });
 
-    const createdSubAccount = [data, transactions]
+    
+    const createdSubAccount = [data, transactions, `message: ${subAccountCreated.message}`]
     const updateLog = await activityLog({
       userId: user.id,
       action: "createSubAccount",
@@ -716,6 +722,7 @@ export async function getSubAccounts(accountId) {
       where: { accountId },
       include: {
         transactions: {
+          where: { transaction: { voided: false } },
           include: {
             transaction: true,
           },
@@ -1130,5 +1137,70 @@ export async function getSubAccTransactionRel(accountId){
   } catch (error) {
     console.log("Error fetching Group Transaction and Transaction relation:", error)
     return {success:false, code:500}
+  }
+}
+
+export async function createSubAccountNote(subAccountId, noteContent){
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+    if (!user){
+      throw new Error("User not found");
+    }
+    if (user.role !== "STAFF"){ 
+      throw new Error("Unavailable action");
+    }
+
+    const accountToUpdate = await db.subAccount.findUnique({
+      where: {id: subAccountId},
+      select:{
+        id: true,
+        name: true,
+        accountId:true,
+      }
+    });
+
+    console.log("accountToUpdate for note: ", accountToUpdate)
+
+    if(!accountToUpdate){
+      return {success: false, code:400, message:"Group transaction not found."};
+    }
+
+    
+    const updatedClientInfo = await db.subAccount.update({
+      where: {id: accountToUpdate.id},
+      data: {
+        description: noteContent,
+      },
+    });
+    
+     const updateLog = await activityLog({
+      userId: user.id,
+      action: "updatedSubAccountDescription",
+      args: {
+        subAccount: accountToUpdate,
+        description: noteContent
+      }, 
+      timestamp: new Date()
+    });
+    if(updateLog.success === false){
+      await db.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "updatedSubAccountDescription",
+          meta: { message: "Possible System interruption: Failed to log Edit Client Information." },
+        }
+      })
+    }
+    
+    revalidatePath(`/account/${accountToUpdate.accountId}`);
+    return {success: true, code:200, message:"Note created."};
+  } catch (error) {
+    console.log("Error editing noting group transaction: ", error)
+    return {success: false, code:500, message:"Failed to note group."};
   }
 }

@@ -130,6 +130,8 @@ function getActionLabel(action) {
       return "Requested Transaction Void";
     case "approveVoidedTransaction":
       return "Approved Transaction Void";
+    case "updatedSubAccountDescription":
+      return "Added Note to Group Transaction"
     default:
       return action;
   }

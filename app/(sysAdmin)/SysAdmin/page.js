@@ -45,8 +45,8 @@ const SysAdminPage = async () => {
   // Take the 5 most recent and map to required fields
   const recentSessions = sortedSessions.slice(0, 5).map(session => ({
     action: session.action,
-    Fname: session.meta?.args?.Fname || '',
-    Lname: session.meta?.args?.Lname || '',
+    Fname: session.user?.Fname || '',
+    Lname: session.user?.Lname || '',
     localizedTimestamp: session.meta?.localizedTimestamp || '',
   }));
 

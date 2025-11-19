@@ -459,6 +459,7 @@ export async function getWebhookSessions() {
             take: 100,
         })
 
+
         return {
             success: true,
             data: sessionLogs
@@ -508,10 +509,10 @@ export async function getAccounts() {
             },
         })
 
-        return {success: true, data: accounts}
+        return {success: true, data: accounts, code:200}
     } catch (error) {
         console.error('Error fetching accounts:', error)
-        throw new Error("Error getting data.")
+        return {success: false, code:500}
     }
 }
 
@@ -643,8 +644,11 @@ export async function getCountTransactions() {
         }
 
         
-        const activityLogs = await db.Transaction.count()
+        const activityLogs = await db.Transaction.count({
+            where:{voided:false}
+        })
 
+        
         return {
             success: true,
             data: activityLogs
@@ -682,7 +686,7 @@ export async function getUserAccount() {
             include: { //include the count of all transacs
                 _count: {   
                     select: {
-                        transactions: true,
+                        transactions: {where: {voided: false}}, //only count non-voided transacs
                     },
                 },
                 user: {
@@ -729,6 +733,9 @@ export async function getUserAccountForDSS() {
                 id: true,
                 name:true,
                 transactions: {
+                    where:{
+                        voided:false
+                    },
                     select: {
                         date:true
                     }
@@ -937,10 +944,10 @@ export async function getArchives(accountId){
                     lte: new Date(),
                 },
                 action: {
-                    in: ['approveVoidedTransaction', 'deleteUnfinalizedCashflow', 'deleteSubAccount', "voidedCFS"]
+                    in: ['approveVoidedTransaction', 'deleteUnfinalizedCashflow', "voidedCFS"]
                 },
                 entityType: {
-                    in: ["Transaction", "CashflowStatement", "SubAccount"]
+                    in: ["Transaction", "CashflowStatement"]
                 }
             },
             orderBy: {

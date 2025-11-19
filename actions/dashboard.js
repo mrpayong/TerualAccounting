@@ -134,7 +134,9 @@ export async function getUserAccounts() {
         include: { //include the count of all transacs
             _count: {   
                 select: {
-                    transactions: true,
+                    transactions: {
+                        where: {voided:false}
+                    },
                 },
             },
         },
@@ -159,10 +161,42 @@ export async function getDashboardData() {
 
     // Get all user transactions
     const transactions = await db.transaction.findMany({
-        where: {userId: user.id},
+        where: {
+            userId: user.id,
+            voided:false
+        },
         orderBy: {date: "desc"},
     });
 
 
     return transactions.map(serializeTransaction);
+}
+
+export async function getDashboardDataForDss() {
+    try {
+        const {userId} = await auth();
+        if (!userId) throw new Error ("Unauthorized");
+
+        const user = await db.user.findUnique({
+            where: {clerkUserId: userId},
+        });
+
+        if (!user) {
+            throw new Error ("User not found.");
+        }
+
+        // Get all user transactions
+        const transactions = await db.transaction.findMany({
+            where: {
+                voided:false
+            },
+            orderBy: {date: "desc"},
+        });
+
+
+        return {data:transactions.map(serializeTransaction), code:200, success:true}
+    } catch (error) {
+        console.log("Error fetching Transaction data for DSS: ", error);
+        return{code:500, success:false, message:'failed to fetch Transaction data for DSS'}
+    }
 }

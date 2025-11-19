@@ -250,6 +250,13 @@ const SettingsForm = () => {
     error: createUserError,
   } = useFetch(createUser);
 
+    useEffect(() => {
+      if(usersData && !fetchingUsers){
+        if(usersData.code === 500 && usersData.success === false){
+          toast.error(`Failed to fetch users, please wait.`);
+        }
+      }
+    },[usersData, fetchingUsers])
 
     // error handler
     useEffect(() => {
@@ -265,13 +272,19 @@ const SettingsForm = () => {
         fetchUsers();
     },[])
 
-    // success handler
+    // success & error handler
     useEffect(() => {
-       if(updateRoleResult?.success){
-        toast.success("User role has been updated.");
-        fetchUsers();
-       }
-    },[updateRoleResult])
+       if(updateRoleResult && !updatingRole){
+        if(updateRoleResult.code === 200 && updateRoleResult.success === true){
+          toast.success("User role has been updated.");
+          fetchUsers();          
+        }
+        if(updateRoleResult.code === 500 && updateRoleResult.success === false){
+          console.log("Message: ",updateRoleResult.message)
+          toast.error(`Failed to update user role`);
+        }
+      }
+    },[updateRoleResult, updatingRole, fetchUsers])
 
     const filteredUsers = usersData?.success
         ? usersData.data.filter((user) => 
@@ -320,13 +333,43 @@ const handleCreateUser = async (data) => {
 };
 
 useEffect(() => {
-  if (createUserResult?.success) {
-    toast.success("User created successfully!");
-    setCreateUserDialog(false);
-    reset();
-    fetchUsers();
+  if (createUserResult && !createUserLoading) {
+    if(createUserResult.code === 200){
+      toast.success("User created successfully!");
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 421){
+      toast.error("Username might already exist.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 422){
+      toast.error("Email might already exist.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 423){
+      toast.error("Invalid Username format.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
+    if(createUserResult.code === 500){
+      toast.error("Error creating user.");
+      console.log(createUserResult.message);
+      setCreateUserDialog(false);
+      reset();
+      fetchUsers();
+    }
   }
-}, [createUserResult, reset]);
+}, [createUserResult, reset, createUserLoading, fetchUsers]);
 
 
 
@@ -345,7 +388,6 @@ useEffect(() => {
     loading: userDeleteLoading,
     fn: userDeleteFn,
     data: userDeleted,
-    error: userDeleteError
   } = useFetch(deleteUser);
 
 
@@ -373,19 +415,19 @@ useEffect(() => {
     };
 
     useEffect(() => {
-      if (userDeleted){
-        toast.success("User has been deleted.", {icon: <Trash className='text-green-500 h-4 w-4'/>})
-        console.log("Success Deleting user")
-        fetchUsers();
+      if (userDeleted && !userDeleteLoading) {
+        if (userDeleted.code === 200 && userDeleted.success === true) {
+          toast.success("User has been deleted.", {icon: <Trash className='text-green-500 h-4 w-4'/>})
+          console.log("Success Deleting user")
+          fetchUsers();
+        }
+        if (userDeleted.code === 500 && userDeleted.success === false) {
+          toast.error("Failed to delete user.")
+          console.log("Message: ",userDeleted.message)
+        }
       }
-    }, [userDeleted])
+    }, [userDeleted, userDeleteLoading]);
 
-    useEffect(() => {
-      if(userDeleteError){
-        console.log("error user deletion")
-        toast.error("Error deleting user.")
-      }
-    }, [])
 
     const [changeRoleDialog, setChangeRoleDialog] = useState(false)
     const [userToChangeRole, setUserToChangeRole] = useState(null);
@@ -422,10 +464,18 @@ const [confirmRole, setConfirmRole] = useState(null);
 
     useEffect(() => {
       if(updateUserData && !updateUserLoading){
-        if(updateUserData === 200){
+        if(updateUserData.status === 200 && updateUserData.success === true){
           setUpdateDialogOpen(false);
           fetchUsers();
           toast.success("User updated.")
+        }
+        if(updateUserData.status === 500 && updateUserData.success === false){
+          setUpdateDialogOpen(false);
+          toast.error("User failed to updated.")
+        }
+        if(updateUserData.status === 501 && updateUserData.success === false){
+          setUpdateDialogOpen(false);
+          toast.error("Invalid character.")
         }
       }
     }, [updateUserData, updateUserLoading])
@@ -474,10 +524,18 @@ const [confirmRole, setConfirmRole] = useState(null);
 
     useEffect(() => {
       if(updatedEmail && !updateEmailLoading){
-        if(updatedEmail.status === 200){
+        if(updatedEmail.status === 200 && updatedEmail.success === true){
           fetchUsers();
           setOpenEmailDialog(false)
           toast.success("User updated.")
+          setUserToUpdateEmailId("");
+          setEmailUpdate("");
+        }
+        if(updatedEmail.status === 500 && updatedEmail.success === false){
+          fetchUsers();
+          setOpenEmailDialog(false)
+          console.log("Failed to update email.")
+          toast.error("Email failed to update.")
           setUserToUpdateEmailId("");
           setEmailUpdate("");
         }

@@ -199,11 +199,11 @@ const result = await Swal.fire({
   useEffect(() => {
     if (bulkDeleteData && !bulkDeleteLoading) {
       if(bulkDeleteData.code === 200){
-        toast.error(`Deleted successfully`);
+        toast.success(`Deleted successfully`);
         setSelectedIds([]);
       }
       if(bulkDeleteData.code === 500){
-        toast.error(`Deleted successfully`);
+        toast.error(`Delete failed`);
       }
     }
   }, [bulkDeleteData, bulkDeleteLoading]);

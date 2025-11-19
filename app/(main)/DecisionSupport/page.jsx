@@ -1,4 +1,4 @@
-import { getDashboardData, getUserAccounts } from '@/actions/dashboard';
+import { getDashboardData, getDashboardDataForDss, getUserAccounts } from '@/actions/dashboard';
 import React from 'react'
 import SectionOne from './_components/section-one';
 import SectionTwo from './_components/sectionTwo';
@@ -18,15 +18,13 @@ async function DecisionSupport () {
       const task = await getTask()
       const inflows = await getAllInflows();
       const outflows = await getAllOutflows();
-      const AllTransactions = await getAllTransactions();
       const entryCounts = await entryCount();
       const accountsClient = await getUserAccountForDSS()
 
       const accCount = accounts.data.length;
       
-      const transactions = await getDashboardData();
-
-    
+      const transactionsData = await getDashboardDataForDss();
+      const transactions = transactionsData.data;
   return (
     <FinancialDataProvider>
       <div className='flex flex-col gap-5 mx-10'>
@@ -37,7 +35,6 @@ async function DecisionSupport () {
             accounts={accountsClient} 
             transactions={transactions || []} 
             tasks={task}
-            AllTransactions={AllTransactions}
             inflows={inflows}
             outflows={outflows}
           />

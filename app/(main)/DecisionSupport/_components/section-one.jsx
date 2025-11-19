@@ -64,7 +64,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: ["400", "500", "700", "900"],
 })
 
-const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows, entryCounts, accCount}) => {
+const SectionOne = ({accounts, transactions, tasks,  inflows, outflows, entryCounts, accCount}) => {
 const barChartData = React.useMemo(() => {
   // const categoryMap = {};
   // tasks.forEach(task => {
