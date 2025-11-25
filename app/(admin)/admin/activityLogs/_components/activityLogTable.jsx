@@ -193,7 +193,6 @@ const ActivityLogTable = ({activities = {}, needApprovalVoid}) => {
   //   return ["all", ...actions];
   // }, [activityArray]);
 
-console.log("activities = {}, needApprovalVoid", activities, needApprovalVoid)
 
   const totalVoidPages = Math.max(1, Math.ceil(voidArray.length / perPage));
   const paginatedVoids = useMemo(
@@ -827,7 +826,7 @@ const anyFilterActive =
                   </div>
 
                   <div>
-                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Date</label>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Date of Transaction</label>
                     <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.date ? formatTransactionDate(selectedDetails.date) : "-"}</p>
                   </div>
                   <div>

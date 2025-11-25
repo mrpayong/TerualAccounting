@@ -11,7 +11,6 @@ const fontUnicaOne = Unica_One({
 async function ActivityLogsPage () {
   const activityLogs = await getActivityLogs();
   const needApprovalVoid = await getVoidsForApproval();
-  // console.log(" needApprovalVoid ",  needApprovalVoid )
 
   return (
     <div className='p-6'>

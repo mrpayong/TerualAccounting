@@ -972,7 +972,6 @@ export async function getSavedPredictions(accountId) {
 
     const excludeDate = new Date(`${currentYear}-${String(currentMonth).padStart(2, "0")}-01`);
 
-    console.log("Excluding predictions for the current month:", excludeDate);
 
     const predictions = await db.prediction.findMany({
       where: {
@@ -996,7 +995,6 @@ export async function getSavedPredictions(accountId) {
       outflow: prediction.outflow,
     }));
 
-    console.log("formattedPredictions",formattedPredictions)
     return {
       code: 200,
       success: true,

@@ -879,7 +879,7 @@ const getPhilippinesDate = () => {
                           <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} />
                           <Bar dataKey="inflow" name="Inflow" fill="#22c55e" />
                           <Bar dataKey="outflow" name="Outflow" fill="#ef4444" />
-                          {forecastStartMonth && (
+                          {/* {forecastStartMonth && (
                             <ReferenceLine
                               x={forecastStartMonth}
                               stroke="#6366f1"
@@ -892,7 +892,7 @@ const getPhilippinesDate = () => {
                                 fontSize: 12,
                               }}
                             />
-                          )}
+                          )} */}
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
