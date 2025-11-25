@@ -413,7 +413,7 @@ const accumulatedAmounts = cashflowRecords.reduce(
           </div>
           
           <p className="text-xs md:text-base text-blue-600">
-            These are cashflow statements of {Name}
+            These are cashflow statements of <strong>{Name}</strong>
           </p>
         </div>
 

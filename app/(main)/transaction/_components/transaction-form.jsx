@@ -214,7 +214,6 @@ const AddTransactionForm = ({
 
 
     const handleScanComplete = (scannedData) => {
-        console.log("Scanned Data: ", scannedData);
         if (scannedData) {
           if(scannedData.code === 401) {
             setScannedReceipt(null);
@@ -225,10 +224,10 @@ const AddTransactionForm = ({
             return;
           } 
           setValue("amount", scannedData.amount.toString());
-          console.log("amount scanning success")
+          
 
           setValue("date", new Date(scannedData.date));
-          console.log("date scanning success")
+          
           
           setValue("refNumber",scannedData.refNumber);
           setValue("particular", scannedData.particular);
@@ -238,7 +237,7 @@ const AddTransactionForm = ({
 
           if (scannedData.description) {
             setValue("description", scannedData.description);
-            console.log("description scanning success")
+            
           }
           if (scannedData.category) {
             setValue("category", scannedData.category);
@@ -325,6 +324,7 @@ const AddTransactionForm = ({
                         className='!font-normal !text-base tracking-wide'
                         type="number" 
                         step="0.01"
+                        disabled={scannedReceipt}
                         placeholder="0.00"
                         {...register("amount")}
                     />

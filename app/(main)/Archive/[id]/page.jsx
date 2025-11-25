@@ -28,6 +28,7 @@ async function ArchivePage ({ params }) {
   if(archives.code === 404 || archives.success === false){
     return NotFound404();
   }
+  const accountName = archives.clientName;
 
 
   return (
@@ -37,7 +38,7 @@ async function ArchivePage ({ params }) {
           <ButtonBack id={id}/>
         </div>
          <label className='text-center font-bold text-6xl tracking-normal'>Archive</label>
-        <label className='text-center my-2 font-normal text-base text-slate-400'>Here are your deleted transactions, groups, Cashflow Statments of this account.</label>
+        <label className='text-center my-2 font-medium text-lg text-black'>of {accountName}</label>
       </div>
      <ArchiveTable archives={archives}/>
       

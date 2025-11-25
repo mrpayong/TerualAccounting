@@ -16,7 +16,7 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
 })
 
 
-const CashReceiptBook = ({ inflows = [] }) => {
+const CashReceiptBook = ({ inflows = [], accountName }) => {
   const today = new Date();
   const lastMonth = new Date();
   lastMonth.setDate(today.getDate() - 30);  
@@ -166,6 +166,9 @@ const CashReceiptBook = ({ inflows = [] }) => {
         <h1 className={`${fontZenKaku.className} text-4xl sm:text-5xl lg:text-6xl font-black text-green-500`}>
           Cash Receipt Book
         </h1>
+        <p className={`${fontZenKaku.className} mt-2 text-lg sm:text-xl lg:text-2xl font-medium text-green-500`}>
+          of {accountName}
+        </p>
       </div>
 
       {/* Filters Section */}

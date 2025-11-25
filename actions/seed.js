@@ -3,8 +3,8 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "fbd28b18-12ac-4f5c-8e4d-6e191e047bed";
-const USER_ID = "e774c135-5562-4dbe-89e6-d34864f1a7f4";
+const ACCOUNT_ID = "8aaf7ee0-70d4-4507-b759-2b57919451cb";
+const USER_ID = "719b1d0d-739c-4bea-9db0-cf8b2b349358";
 
 // Categories with their typical amount ranges 
 // const CATEGORIES = {
@@ -32,38 +32,45 @@ const USER_ID = "e774c135-5562-4dbe-89e6-d34864f1a7f4";
 // Construction-ready categories and realistic ranges (PHP)
 const CATEGORIES = {
   INCOME: [
-    { name: "product-sales", range: [1000, 10000] },
-    { name: "printing-services", range: [200, 1500] },
-    { name: "photocopy-services", range: [100, 800] },
-    { name: "lamination-and-binding", range: [150, 1000] },
+    { name: "sales", range: [2000, 15000] },
+    { name: "delivery-fees", range: [100, 800] },
+    { name: "rental-income", range: [1000, 5000] },
+    { name: "scrap-sales", range: [200, 1000] },
+    { name: "service-fees", range: [200, 3000] }, 
+    { name: "commission-income", range: [100, 1500] }, 
+    { name: "packaging-fees", range: [50, 300] }, 
   ],
   EXPENSE: [
-    { name: "inventory-purchase", range: [3000, 12000] },
-    { name: "utilities", range: [800, 2500] },
-    { name: "transportation", range: [200, 800] },
-    { name: "employee-salary", range: [5000, 10000] },
-    { name: "equipment-maintenance", range: [500, 2000] },
-    { name: "insurance", range: [300, 1500] },
+    { name: "inventory-purchase", range: [5000, 20000] },
+    { name: "store-rent", range: [8000, 15000] },
+    { name: "utilities", range: [1000, 3000] },
+    { name: "transportation", range: [300, 1000] },
+    { name: "employee-salary", range: [5000, 15000] },
+    { name: "repairs-and-maintenance", range: [1000, 4000] },
+    { name: "insurance", range: [500, 2000] },
   ],
 };
 
 // Activity Mapping for Hardware Store
 const CATEGORY_ACTIVITY = {
   // INCOME
-  "product-sales": "OPERATION",
-  "printing-services": "OPERATION",
-  "photocopy-services": "OPERATION",
-  "lamination-and-binding": "OPERATION",
+  "sales": "OPERATION",
+  "delivery-fees": "OPERATION",
+  "rental-income": "INVESTMENT",
+  "scrap-sales": "OPERATION",
+  "services-fees": "OPERATION",
+  "commission-income": "OPERATION",
+  "packaging-fees": "OPERATION",
 
   // EXPENSE
   "inventory-purchase": "OPERATION",
+  "store-rent": "OPERATION",
   "utilities": "OPERATION",
   "transportation": "OPERATION",
   "employee-salary": "OPERATION",
-  "equipment-maintenance": "INVESTMENT",
+  "repairs-and-maintenance": "INVESTMENT",
   "insurance": "FINANCING",
 };
-
 // Helper to generate random amount within a range
 function getRandomAmount(min, max) {
   return Number((Math.random() * (max - min) + min).toFixed(2));
@@ -168,7 +175,7 @@ export async function seedTransactions() {
       message: `Created ${transactions.length} transactions`,
     };
   } catch (error) {
-    console.log("Error seeding transactions:", error.message, error);
+    console.log("Error seeding transactions:", error);
     return { success: false, error: error.message };
   }
 }

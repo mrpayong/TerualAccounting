@@ -13,14 +13,15 @@ async function DisbursementReceiptBookPage ({params}) {
       return NotFound();
     }
     const {id} = await params;
-    const outflows = await getCashOutflow(id);
-    console.log(outflows)
+    const outflowTransactions = await getCashOutflow(id);
+    const outflows = outflowTransactions.data;
+    const outflowAccountName = outflowTransactions.accountName;
   return (
     
     <div>
       <Suspense fallback={<BarLoader className='mt-4' width={"100%"} color="#9333ea"/>}>
         <div>
-          <DisbursementReceiptBook  outflows={outflows}/>
+          <DisbursementReceiptBook  outflows={outflows} outflowAccountName={outflowAccountName}/>
         </div>
       </Suspense>
     </div>

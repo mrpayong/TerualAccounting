@@ -25,7 +25,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Zen_Kaku_Gothic_Antique } from "next/font/google";
 import useFetch from "@/hooks/use-fetch";
-import { approveVoidedTransaction } from "@/actions/admin";
+import { approveVoidedTransaction, disapproveVoidedTransaction } from "@/actions/admin";
 import {
   Dialog,
   DialogContent,
@@ -132,6 +132,8 @@ function getActionLabel(action) {
       return "Approved Transaction Void";
     case "updatedSubAccountDescription":
       return "Added Note to Group Transaction"
+    case "disapproveVoidedTransaction":
+      return "Disapproved Void Request";
     default:
       return action;
   }
@@ -146,8 +148,17 @@ function formatManilaDate(dateString) {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: false,
+    hour12: true,
     timeZone: "Asia/Manila",
+  }).format(date);
+}
+
+function formatTransactionDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
   }).format(date);
 }
 
@@ -182,8 +193,7 @@ const ActivityLogTable = ({activities = {}, needApprovalVoid}) => {
   //   return ["all", ...actions];
   // }, [activityArray]);
 
-  console.log("voidArray: ", voidArray)
-
+console.log("activities = {}, needApprovalVoid", activities, needApprovalVoid)
 
   const totalVoidPages = Math.max(1, Math.ceil(voidArray.length / perPage));
   const paginatedVoids = useMemo(
@@ -302,21 +312,25 @@ const anyFilterActive =
     data: approveData,
   } = useFetch(approveVoidedTransaction)
 
-
-
-  const handleApproveVoid = (transactionId) => {
-    if (!transactionId) return;
-    setSelectedApproveId(transactionId);
-    setIsApproveDialogOpen(true);
+  const handleViewDetails = (log) => {
+    console.log("Viewing details for log:", log);
+    setSelectedDetails(log || null);
+    setIsDetailsOpen(true);
+    setSelectedApproveId(log.id);
   };
+
+  const closeDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedDetails(null);
+    setSelectedApproveId(null);
+  }; 
 
   const handleConfirmApprove = () => {
     if (!selectedApproveId) return;
-    if (approvingVoidLoading) return;
     // optional extra validation: ensure id exists in voidArray
     const exists = voidArray.find((v) => v.id === selectedApproveId);
     if (!exists) {
-      toast.error("Approve: transaction id not found");
+      toast.error("Transaction not found.");
       setIsApproveDialogOpen(false);
       setSelectedApproveId(null);
       return;
@@ -330,29 +344,22 @@ const anyFilterActive =
     if (approveData && !approvingVoidLoading) {
       if(approveData.code === 200 && approveData.success === true){
         setIsDetailsOpen(false);
-        toast.success("Transaction voided successfully");
+        setSelectedApproveId(null);
+        toast.success("Transaction voided successfully.");
       }
       if(approveData.code === 500 && approveData.success === false){
         toast.error("Error, consult system admin.");
       }
       if(approveData.code === 404 && approveData.success === false){
-        toast.error("Transaction not found");
+        toast.error("Transaction not found.");
       }
     }
   }, [approveData, approvingVoidLoading]);
 
 
-  const handleViewDetails = (log) => {
-    setSelectedDetails(log || null);
-    setIsDetailsOpen(true);
-  };
 
-  const closeDetails = () => {
-    setIsDetailsOpen(false);
-    setSelectedDetails(null);
-  };
 
-console.log("selectedDetails: ", selectedDetails)
+
     const formatAmount = (amount) => {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -373,31 +380,90 @@ console.log("selectedDetails: ", selectedDetails)
       }
     };
 
-function cleanReason(raw) {
-  // raw is guaranteed non-empty string per your note
-  let s = String(raw).trim();
+    function cleanReason(raw) {
+      // raw is guaranteed non-empty string per your note
+      let s = String(raw).trim();
 
-  // Remove common wrapping quotes (plain or escaped)
-  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-    s = s.slice(1, -1);
-  } else if (s.startsWith('\\"') && s.endsWith('\\"')) {
-    s = s.slice(2, -2);
-  }
+      // Remove common wrapping quotes (plain or escaped)
+      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.slice(1, -1);
+      } else if (s.startsWith('\\"') && s.endsWith('\\"')) {
+        s = s.slice(2, -2);
+      }
 
-  // Unescape common sequences produced by JSON.stringify
-  s = s
-    .replace(/\\\\/g, "\\")   // unescape double-backslashes first
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t")
-    .replace(/\\"/g, '"')
-    .replace(/\\'/g, "'");
+      // Unescape common sequences produced by JSON.stringify
+      s = s
+        .replace(/\\\\/g, "\\")   // unescape double-backslashes first
+        .replace(/\\n/g, "\n")
+        .replace(/\\r/g, "\r")
+        .replace(/\\t/g, "\t")
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'");
 
-  // Decode unicode escapes like \uXXXX if present
-  s = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+      // Decode unicode escapes like \uXXXX if present
+      s = s.replace(/\\u([0-9A-Fa-f]{4})/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
 
-  return s;
-}
+      return s;
+    }
+
+
+  const { 
+    loading: disapprovingVoidLoading,
+    fn: disapproveFn,
+    data: disapproveData,
+  } = useFetch(disapproveVoidedTransaction);
+
+
+
+  const handleConfirmDisapprove = () => {
+    if (!selectedApproveId) return;
+    // optional extra validation: ensure id exists in voidArray
+    const exists = voidArray.find((v) => v.id === selectedApproveId);
+    if (!exists) {
+      toast.error("Transaction not found");
+      setIsApproveDialogOpen(false);
+      setSelectedApproveId(null);
+      return;
+    }
+
+    disapproveFn(selectedApproveId);
+    setIsApproveDialogOpen(false);
+  };
+
+  useEffect(() => {
+    if (disapproveData && !disapprovingVoidLoading) {
+      if(disapproveData.code === 200 && disapproveData.success === true){
+        setIsDetailsOpen(false);
+        setSelectedApproveId(null);
+        toast.success("Transaction void request disapproved.");
+      }
+      if(disapproveData.code === 500 && disapproveData.success === false){
+        toast.error("Error, consult system admin.");
+      }
+      if(disapproveData.code === 404 && disapproveData.success === false){
+        toast.error("Transaction not found");
+      }
+    }
+  }, [disapproveData, disapprovingVoidLoading]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -626,8 +692,9 @@ function cleanReason(raw) {
         {Array.isArray(voidArray) && voidArray.length > 0 && (
           <div className="overflow-x-auto rounded-lg border bg-white mt-4">
             <div className="flex flex-col p-4">
-              <h1 className={`${fontZenKaku.className} font-bold text-xl `}>Void Request List</h1>
-              {approvingVoidLoading && (<Loader2 className="h-4 w-4 animate-spin mr-2" />)}
+              <div className="flex flex-row items-center gap-2">
+                <h1 className={`${fontZenKaku.className} font-bold text-xl `}>Void Request List</h1>
+              </div>
               <span className={`${fontZenKaku.className} text-gray-500 font-normal `}>You can view each transaction details here 
                 before approving to void. Voided transactions go to the archive page of their respective accounts.</span>
             </div>
@@ -653,7 +720,7 @@ function cleanReason(raw) {
                         { log.voidingDate
                         ? formatManilaDate(log.voidingDate)
                         : "-"
-                      }
+                        }
                       </TableCell>
                       <TableCell className="font-medium text-sm">
                         {log.user
@@ -661,12 +728,13 @@ function cleanReason(raw) {
                           : log.userId}
                       </TableCell>
                       <TableCell className="font-medium text-sm">
-                        <div className="flex gap-3">
-                          <Button disabled={approvingVoidLoading} className="bg-violet-500 text-white hover:bg-violet-600" onClick={() => handleApproveVoid(log.id)}>
-                            Approve
-                          </Button>
-                          <Button onClick={() => handleViewDetails(log)} className="bg-sky-500 text-white hover:bg-sky-600">
-                            View Details
+                        <div className="flex justify-center gap-3">
+                          <Button
+                            disabled={disapprovingVoidLoading || approvingVoidLoading}
+                            onClick={() => handleViewDetails(log)} 
+                            className="bg-sky-500 text-white 
+                            hover:bg-sky-600">
+                            View For Approval
                           </Button>
                         </div>
                       </TableCell>
@@ -728,102 +796,121 @@ function cleanReason(raw) {
         </Dialog>
 
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="[&>button]:hidden p-0 rounded-lg w-full max-w-screen-lg"> 
+          <DialogContent onInteractOutside={e => e.preventDefault()} className="[&>button]:hidden p-0 rounded-lg w-full max-w-screen-lg"> 
             <div className="flex flex-col h-[90vh] md:h-auto max-w-screen-lg w-full">
-              <DialogHeader className="px-4 py-3">
-                <DialogTitle>Transaction details</DialogTitle>
-                <DialogDescription>Review the transaction details for voiding below.</DialogDescription>
+              <DialogHeader className="mx-2 md:m-0 px-4 py-3 border-b-2 border-black
+            lg:border-none">
+                <DialogTitle className={`${fontZenKaku.className} md:text-3xl text-lg font-bold`}>Transaction details</DialogTitle>
+                <DialogDescription className={`${fontZenKaku.className} text-base font-normal`}>Review the transaction details for voiding below.</DialogDescription>
               </DialogHeader>
 
               <div className="flex-1 overflow-y-auto p-4 bg-white">
-                {/* Top grid: 3 columns on lg, 2 on sm, stacked on xs */}
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   <div>
-                    <div className="text-sm text-gray-500">Activity Type</div>
-                    <div className="font-medium">{getGerundActivity(selectedDetails?.Activity ?? selectedDetails?.activity)}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Activity Type</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{getGerundActivity(selectedDetails?.Activity ?? selectedDetails?.activity)}</p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Transaction Account Title</div>
-                    <div className="font-medium">{selectedDetails?.category ?? "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Transaction Account Title</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.category ?? "-"}</p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Amount</div>
-                    <div className={cn(
-                      "text-left font-medium tracking-wide",
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Amount</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium ` + cn(
+                      "text-left tracking-wide",
                       (selectedDetails?.type ?? "").toString().toUpperCase() === "EXPENSE" ? "text-red-500" : "text-green-500"
                     )}>
                       {selectedDetails?.amount != null
                         ? `${(selectedDetails?.type ?? "").toString().toUpperCase() === "EXPENSE" ? "-" : "+"}${formatAmount(selectedDetails.amount)}`
                         : "-"}
-                    </div>
+                    </p>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">Date</div>
-                    <div className="font-medium">{selectedDetails?.date ? formatManilaDate(selectedDetails.date) : "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Date</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.date ? formatTransactionDate(selectedDetails.date) : "-"}</p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Recorded On</div>
-                    <div className="font-medium">{selectedDetails?.createdAt ? formatManilaDate(selectedDetails.createdAt) : "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Recorded On</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.createdAt ? formatManilaDate(selectedDetails.createdAt) : "-"}</p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Reference Number</div>
-                    <div className="font-medium break-words">{selectedDetails?.refNumber ?? "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Reference Number</label>
+                    <p className="font-medium break-words">{selectedDetails?.refNumber ?? "-"}</p>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">Particular</div>
-                    <div className="font-medium">{selectedDetails?.particular ?? "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Particular</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.particular ?? "-"}</p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Sold By</div>
-                    <div className="font-medium">{selectedDetails?.printNumber ?? "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Sold By</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.printNumber ?? "-"}</p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Account Of</div>
-                    <div className="font-medium">{selectedDetails?.account?.name ?? "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Account Of</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>{selectedDetails?.account?.name ?? "-"}</p>
                   </div>
                 </div>
 
-                {/* Description area */}
                 <div className="mt-4">
-                  <div className="text-sm text-gray-500">Description</div>
-                  <div className="font-medium break-words mt-1">
+                  <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Description</label>
+                  <p className={`${fontZenKaku.className} text-lg font-medium break-words mt-1`}>
                     <Textarea
                       value={selectedDetails?.description ?? ""}
                       readOnly
                       className="w-full max-w-full font-medium break-words resize-none h-28 sm:h-36"
                       aria-label="Transaction description (read only)"
                     />
-                  </div>
+                  </p>
                 </div>
 
-                {/* Footer info: void requester  reason */}
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mt-4">
                   <div>
-                    <div className="text-sm text-gray-500">Void request by:</div>
-                    <div className="font-medium">
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Void request by:</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium`}>
                       {selectedDetails?.user
                         ? `${selectedDetails.user.Fname ?? ""} ${selectedDetails.user.Lname ?? ""}`.trim() || "-"
                         : "-"}
-                    </div>
+                    </p>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Reason To Void</div>
-                    <div className="font-medium break-words">{cleanReason(selectedDetails?.reason) ?? "-"}</div>
+                    <label className={`${fontZenKaku.className} text-sm font-medium text-gray-500`}>Reason To Void</label>
+                    <p className={`${fontZenKaku.className} text-lg font-medium break-words`}>{cleanReason(selectedDetails?.reason) ?? "-"}</p>
                   </div>
                 </div>
+
+                
               </div>
-            </div>
-              <DialogFooter className="m-2 bg-gray-50 flex !justify-center">
-                <Button 
-                  className="bg-black text-white hover:bg-white 
-                  hover:text-black hover:border hover:border-black"
-                  onClick={() => { closeDetails(); }}>
-                  Close
-                </Button>
-              </DialogFooter>
             
+
+            <DialogFooter className="m-2 pt-1 bg-gray-50 flex !justify-center gap-2 border-t-2 border-black
+            lg:border-none">
+              <Button 
+                className={`${fontZenKaku.className} text-base font-medium bg-black text-white hover:bg-white 
+                hover:text-black hover:border hover:border-black`}
+                disabled={disapprovingVoidLoading || approvingVoidLoading}
+                onClick={() => { closeDetails(); }}>
+                Close
+              </Button>
+              <Button 
+                className={`${fontZenKaku.className} text-base font-medium bg-violet-600 text-white hover:bg-white 
+                hover:text-violet-600 hover:border hover:border-violet-600`}
+                disabled={disapprovingVoidLoading || approvingVoidLoading}
+                onClick={() => void handleConfirmApprove()}>
+                Approve
+                {approvingVoidLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              </Button>
+              <Button 
+                className={`${fontZenKaku.className} text-base font-medium bg-rose-600 text-white hover:bg-white 
+                hover:text-rose-600 hover:border hover:border-rose-600`}
+                disabled={disapprovingVoidLoading || approvingVoidLoading}
+                onClick={() =>  handleConfirmDisapprove() }>
+                Disapprove
+                {disapprovingVoidLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              </Button>
+            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
 

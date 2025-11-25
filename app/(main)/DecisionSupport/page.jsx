@@ -22,7 +22,6 @@ async function DecisionSupport () {
       const accountsClient = await getUserAccountForDSS()
 
       const accCount = accounts.data.length;
-      
       const transactionsData = await getDashboardDataForDss();
       const transactions = transactionsData.data;
   return (

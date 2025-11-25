@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from "sonner";
 import { Bot, Brain, Info, Loader2, Minus, Square } from "lucide-react";
 import { createTasking } from '@/actions/task';
-import { getCashflowForecast, getInflowOutflowForecast, getOverallFinancialDataAnalysis, getSuggestedWeeklySchedule } from '@/actions/decisionSupport';
+import { getCashflowForecast, getInflowOutflowForecast, getOverallFinancialDataAnalysis, getSavedPredictions, getSuggestedWeeklySchedule, saveForecastToDB } from '@/actions/decisionSupport';
 import { ChartsLegend } from '@mui/x-charts/ChartsLegend';
 import { Area, AreaChart, ResponsiveContainer, Tooltip as AreaTooltip, CartesianGrid, XAxis, YAxis, Legend, ReferenceLine, BarChart, Bar } from "recharts"
 import { useFinancialData } from '../_context/FinancialDataContext';
@@ -99,6 +99,8 @@ const fontZenKaku = Zen_Kaku_Gothic_Antique({
   weight: ["400", "500", "700", "900"],
 })
 
+
+
 const SectionTwo = ({ accounts, transactions, accountIDs }) => {
 
 
@@ -115,13 +117,6 @@ const SectionTwo = ({ accounts, transactions, accountIDs }) => {
       const date = new Date(`${year}-${month}-01`);
       return date.toLocaleString("en-US", { month: "long", year: "numeric" });
     };
-
-
-
-
-
-
- 
 
 const getPhilippinesDate = () => {
       const now = new Date();
@@ -351,7 +346,6 @@ const getPhilippinesDate = () => {
     async function fetchOverallFinancialData() {
       try {
         if (inflowOutflowdata?.code === 200) {
-          console.log("Overall Financial Data Analysis:", inflowOutflowdata);
           await overallFinancialDataFn(
             inflowOutflowdata,
           );
@@ -398,30 +392,34 @@ const getPhilippinesDate = () => {
   useEffect(() => {
     if (inflowOutflowdata?.code === 200) {
       setForecastLoading(false)
-       const monthsSet = new Set([
-      ...(inflowOutflowdata.historical.inflows || []).map(d => d.month),
-      ...(inflowOutflowdata.historical.outflows || []).map(d => d.month),
-      ...(inflowOutflowdata.inflowForecast || []).map(d => d.month),
-      ...(inflowOutflowdata.outflowForecast || []).map(d => d.month),
-    ]);
-    const allMonths = Array.from(monthsSet).sort();
+    const forecastedData = [
+      ...inflowOutflowdata.inflowForecast.map(d => ({
+        month: d.month,
+        inflow: d.amount,
+        outflow: 0, // Default outflow to 0 for inflow forecast
+        isForecast: true,
+      })),
+      ...inflowOutflowdata.outflowForecast.map(d => ({
+        month: d.month,
+        inflow: 0, // Default inflow to 0 for outflow forecast
+        outflow: d.amount,
+        isForecast: true,
+      })),
+    ];
 
     // Merge inflow/outflow for each month
-    const merged = allMonths.map(month => {
-      const histIn = (inflowOutflowdata.historical.inflows || []).find(d => d.month === month);
-      const histOut = (inflowOutflowdata.historical.outflows || []).find(d => d.month === month);
-      const forIn = (inflowOutflowdata.inflowForecast || []).find(d => d.month === month);
-      const forOut = (inflowOutflowdata.outflowForecast || []).find(d => d.month === month);
-      const isForecast = !!(forIn || forOut);
-      return {
-        month,
-        inflow: histIn?.amount ?? forIn?.amount ?? 0,
-        outflow: histOut?.amount ?? forOut?.amount ?? 0,
-        isForecast,
-      };
-    });
+    const combinedForecast = forecastedData.reduce((acc, curr) => {
+      const existing = acc.find(d => d.month === curr.month);
+      if (existing) {
+        existing.inflow += curr.inflow;
+        existing.outflow += curr.outflow;
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
 
-    setBarChartData(merged);
+    setBarChartData(combinedForecast);
     setInflowOutflowData(inflowOutflowdata);
     toast.success("Forecast generated.")
     }
@@ -452,8 +450,83 @@ const getPhilippinesDate = () => {
 
 
 
+  const {
+    loading: saveForecastLoading,
+    fn: saveForecastFn,
+    data: saveForecastData,
+  } = useFetch(saveForecastToDB)
 
+  const saveForecastHandler = async () => {
+    if (!inflowOutflowdata) {
+      toast.error("No forecast data to save.");
+      return;
+    }
+    try {
+      console.log("Saving forecast data to DB...", inflowOutflowdata);
+      await saveForecastFn(selectedAccountId, inflowOutflowdata);
+    } catch (error) {
+      console.error("Error saving forecast:", error);
+      toast.error("Failed to save forecast.");
+    } 
+  }
 
+  useEffect(() => {
+    try {
+      if (inflowOutflowdata?.code === 200) {
+        saveForecastFn(selectedAccountId, inflowOutflowdata);
+      }
+      if (inflowOutflowdata?.code === 500) {
+        return;
+      }
+    } catch (error) {
+      console.error("Error saving forecast:", error);
+      toast.error("Failed to start saving forecast process.");
+    } 
+  },[inflowOutflowdata])
+
+  useEffect(() => {
+    if(saveForecastData && !saveForecastLoading) {
+      if (saveForecastData.code === 200) {
+        toast.success("Forecast saved as prediction points.");
+      }
+      if (saveForecastData.code === 201) {
+        toast.info("Prediction for the time frame already exists. Wait for the next quarter for the next forecast points.");
+      }
+      if (saveForecastData.code === 500) {
+        toast.error("Failed to save forecast. Try again.");
+      }
+      if (saveForecastData.code === 501) {
+        toast.error("Error Month-Year verification, consult System Admin.");
+      }
+    }
+  }, [saveForecastData, saveForecastLoading]);
+
+  const [predictionData, setPredictionData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchPredictions() {
+      if (!selectedAccountId) {
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await getSavedPredictions(selectedAccountId);
+        if (response.code === 200) {
+          setPredictionData(response.data);
+        } else {
+          console.error("Failed to fetch predictions:", response.message);
+        }
+      } catch (error) {
+        console.error("Error fetching predictions:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPredictions();
+  }, [selectedAccountId]);
 
 
 
@@ -610,34 +683,37 @@ const getPhilippinesDate = () => {
       </Card> */}
 
       {/* Cash Flow Projection */}
-      <Card>
-        <CardHeader className={`${fontZenKaku.className}`}>
-          <CardTitle className="!font-bold text-xl">Inflow and Outflow Forecast</CardTitle>
-          <CardDescription className="!font-normal !text-black text-sm tracking-wide">
-            The forecast of inflow and outflow of cash based on historical data. Only accounts with at least 5 years of transaction history are allowed for forecasting and analysis.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className={`${fontZenKaku.className}`}>
-          <div className="w-full px-2 md:px-4 h-[350px]">
-            {inflowOutflowloading ? (
-                <ChartSkeleton height="h-[350px]" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className={`${fontZenKaku.className}`}>
+            <CardTitle className="!font-bold text-xl">Previous Predictions</CardTitle>
+            <CardDescription className="!font-normal !text-black text-sm tracking-wide">
+              Past quarter's predictions of inflow and outflow of cash based on historical data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className={`${fontZenKaku.className}`}>
+            {loading ? (
+              <ChartSkeleton height="h-[350px]" />
               ) : (
               <div className="w-full h-[350px] overflow-x-auto sm:overflow-x-visible">
                 <div className="min-w-[600px] sm:min-w-0 h-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={barChartData}>
-                      <XAxis dataKey="month" 
-                        tick={{ fontSize: 12, fontWeight:'500' }}
-                        tickFormatter={formatMonthYear} 
+                    <BarChart data={predictionData}>
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fontSize: 12, fontWeight: "500" }}
+                        tickFormatter={formatMonthYear}
                         interval={0}
                         angle={-30}
                         textAnchor="end"
-                        height={60}/>
-                      <YAxis 
-                        tick={{ fontSize: 12, fontWeight:'500' }}
-                        tickFormatter={formatAmount} 
-                        width={80}/>
-                      <AreaTooltip 
+                        height={60}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12, fontWeight: "500" }}
+                        tickFormatter={formatAmount}
+                        width={80}
+                      />
+                      <AreaTooltip
                         content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
                             return (
@@ -645,19 +721,24 @@ const getPhilippinesDate = () => {
                                 <div className="font-medium text-lg mb-2">{formatMonthYear(label)}</div>
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center">
-                                    <span className='font-medium text-base'>Inflow:</span>
-                                    <span className="font-medium text-base ml-2 text-green-600">{formatAmount(payload[0].value)}</span>
+                                    <span className="font-medium text-base">Inflow:</span>
+                                    <span className="font-medium text-base ml-2 text-green-600">
+                                      {formatAmount(payload[0].value)}
+                                    </span>
                                   </div>
                                   <div className="flex items-center">
-                                    <span className='font-medium text-base'>Outflow:</span>
-                                    <span className="font-medium text-base ml-2 text-red-600">{formatAmount(payload[1].value)}</span>
+                                    <span className="font-medium text-base">Outflow:</span>
+                                    <span className="font-medium text-base ml-2 text-red-600">
+                                      {formatAmount(payload[1].value)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             );
                           }
                           return null;
-                        }}/>
+                        }}
+                      />
                       <Legend />
                       <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} />
                       <Bar dataKey="inflow" name="Inflow" fill="#22c55e" />
@@ -677,90 +758,177 @@ const getPhilippinesDate = () => {
                         />
                       )}
                     </BarChart>
-                  </ResponsiveContainer> 
+                  </ResponsiveContainer>
                 </div>
               </div>
             )}
-          </div>
-        </CardContent>
-        <CardFooter className='flex justify-end'>
-          <Button 
-            className={`${fontZenKaku.className}
-            !rounded-button whitespace-nowrap 
-            shine-effect
-            flex items-center gap-1
-            bg-black text-white
-            text-sm md:!text-base font-meidum
-            tracking-wide transition
-            hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
-            hover:shadow-lg hover:shadow-blue-500/60
-            cursor-pointer
-            relative
-            overflow-hidden
-            `}
-            type="button"
-            disabled={inflowOutflowloading}
-            onClick={cfsForecastHandler}>
-              {inflowOutflowloading
-                ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
-                : <Brain/> 
-              }
-              {inflowOutflowdata ? "Regenerate" : "Generate AI powered forecast"} 
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
 
-    {/* Right Column: Urgency Meters and Calendar */}
-    <div className="flex flex-row-reverse gap-5">
-        {/* AI CFS forecast insight */}
-      {/* <div className="w-full flex gap-4 h-auto lg:min-h-[340px]"> */}
-        {/* <Card className="h-full">
+        <Card>
           <CardHeader className={`${fontZenKaku.className}`}>
-            <CardTitle className='!font-bold text-base'>Insight on the Forecast</CardTitle>
-            <CardDescription className="font-normal text-sm tracking-wide">
-              {cfsForecastData
-                ? "Here's what the AI thinks base on the historical data and it's forecast."
-                : "Generate the forecast to see AI's insights."
-              }
+            <CardTitle className="!font-bold text-xl">Inflow and Outflow Forecast</CardTitle>
+            <CardDescription className="!font-normal !text-black text-sm tracking-wide">
+              The forecast of inflow and outflow of cash based on historical data. Only accounts with at least 5 years of transaction history are allowed for forecasting and analysis.
             </CardDescription>
           </CardHeader>
-          <CardContent className={`${fontZenKaku.className} space-y-6`}>
-            {cfsForecastData?.insight && (
-              <Alert className="mt-4 bg-blue-50 border-blue-200 h-full">
-                <AlertTitle className="text-base !font-bold flex flex-row items-center"><Brain className='h-4 w-4 mr-2'/> AI Insight</AlertTitle>
-                <AlertDescription className='!font-normal !text-base'>{cfsForecastData.insight}</AlertDescription>
-                {cfsForecastData.issuesOrImprovements && cfsForecastData.issuesOrImprovements.length > 0 && (
-                  <div className="mt-2">
-                    <ul className="list-disc list-inside space-y-1">
-                      {cfsForecastData.issuesOrImprovements.map((issue, index) => (
-                        <li key={index} className='font-normal text-base'>
-                          {issue}
-                        </li>
-                      ))}
-                    </ul>
+          <CardContent className={`${fontZenKaku.className}`}>
+            <div className="w-full px-2 md:px-4 h-[350px] flex gap-4">
+                {inflowOutflowloading ? (
+                    <ChartSkeleton height="h-[350px]" />
+                  ) : (
+                  <div className="w-full h-[350px] overflow-x-auto sm:overflow-x-visible">
+                    <div className="min-w-[600px] sm:min-w-0 h-full">
+                      {/* <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={barChartData}>
+                          <XAxis dataKey="month" 
+                            tick={{ fontSize: 12, fontWeight:'500' }}
+                            tickFormatter={formatMonthYear} 
+                            interval={0}
+                            angle={-30}
+                            textAnchor="end"
+                            height={60}/>
+                          <YAxis 
+                            tick={{ fontSize: 12, fontWeight:'500' }}
+                            tickFormatter={formatAmount} 
+                            width={80}/>
+                          <AreaTooltip 
+                            content={({ active, payload, label }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-white rounded-lg shadow-lg p-4">
+                                    <div className="font-medium text-lg mb-2">{formatMonthYear(label)}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center">
+                                        <span className='font-medium text-base'>Inflow:</span>
+                                        <span className="font-medium text-base ml-2 text-green-600">{formatAmount(payload[0].value)}</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <span className='font-medium text-base'>Outflow:</span>
+                                        <span className="font-medium text-base ml-2 text-red-600">{formatAmount(payload[1].value)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}/>
+                          <Legend />
+                          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} />
+                          <Bar dataKey="inflow" name="Inflow" fill="#22c55e" />
+                          <Bar dataKey="outflow" name="Outflow" fill="#ef4444" />
+                          {forecastStartMonth && (
+                            <ReferenceLine
+                              x={forecastStartMonth}
+                              stroke="#6366f1"
+                              strokeDasharray="6 3"
+                              label={{
+                                value: "Forecast",
+                                position: "insideTopRight",
+                                fill: "#6366f1",
+                                fontWeight: "bold",
+                                fontSize: 12,
+                              }}
+                            />
+                          )}
+                        </BarChart>
+                      </ResponsiveContainer>  */}
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={barChartData}>
+                          <XAxis
+                            dataKey="month"
+                            tick={{ fontSize: 12, fontWeight: "500" }}
+                            tickFormatter={formatMonthYear}
+                            interval={0}
+                            angle={-30}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 12, fontWeight: "500" }}
+                            tickFormatter={formatAmount}
+                            width={80}
+                          />
+                          <AreaTooltip
+                            content={({ active, payload, label }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-white rounded-lg shadow-lg p-4">
+                                    <div className="font-medium text-lg mb-2">{formatMonthYear(label)}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center">
+                                        <span className="font-medium text-base">Inflow:</span>
+                                        <span className="font-medium text-base ml-2 text-green-600">
+                                          {formatAmount(payload[0].value)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <span className="font-medium text-base">Outflow:</span>
+                                        <span className="font-medium text-base ml-2 text-red-600">
+                                          {formatAmount(payload[1].value)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Legend />
+                          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} />
+                          <Bar dataKey="inflow" name="Inflow" fill="#22c55e" />
+                          <Bar dataKey="outflow" name="Outflow" fill="#ef4444" />
+                          {forecastStartMonth && (
+                            <ReferenceLine
+                              x={forecastStartMonth}
+                              stroke="#6366f1"
+                              strokeDasharray="6 3"
+                              label={{
+                                value: "Forecast",
+                                position: "insideTopRight",
+                                fill: "#6366f1",
+                                fontWeight: "bold",
+                                fontSize: 12,
+                              }}
+                            />
+                          )}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 )}
-              </Alert>
-            )}
+            </div>
           </CardContent>
-        </Card> */}
-        {/* <Alert className={`${fontZenKaku.className} bg-sky-200 border-sky-500 `}>
-          <AlertTitle className="!font-bold text-base text-zinc-500 flex items-center gap-2">
-            <Info className="h-6 w-6 text-sky-500" />
-            {AIschedData
-              ? "AI says the ideal priority today:"
-              : "Ideal Priority Today"
-            }
-          </AlertTitle>
-          <AlertDescription className="font-normal text-base text-zinc-500">
-            {aiInsight}
-          </AlertDescription>
-        </Alert>  */}
-      {/* </div> */}
-
-        {/* Weekly Calendar */}
+          <CardFooter className='flex justify-end'>
+            <Button 
+              className={`${fontZenKaku.className}
+              !rounded-button whitespace-nowrap 
+              shine-effect
+              flex items-center gap-1
+              bg-black text-white
+              text-xs md:!text-base font-meidum
+              tracking-wide transition
+              hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
+              hover:shadow-lg hover:shadow-blue-500/60
+              cursor-pointer
+              relative
+              overflow-hidden
+              `}
+              type="button"
+              disabled={inflowOutflowloading}
+              onClick={cfsForecastHandler}>
+                {inflowOutflowloading
+                  ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
+                  : <Brain/> 
+                }
+                {inflowOutflowdata ? "Regenerate" : "Generate AI powered forecast"} 
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
+
   </div>
   )
 }

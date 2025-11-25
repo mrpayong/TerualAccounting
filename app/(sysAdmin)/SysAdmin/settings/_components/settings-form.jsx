@@ -264,7 +264,8 @@ const SettingsForm = () => {
             toast.error(`Failed to load users`);
         }
         if(updateRoleError){
-            toast.error(`Failed to update user role: ${updateRoleError.message}`);
+          console.log(`Error updating role: ${updateRoleError.message}`)
+          toast.error(`Failed to update user role: `);
         }
     },[usersError, updateRoleError])
 
@@ -284,7 +285,7 @@ const SettingsForm = () => {
           toast.error(`Failed to update user role`);
         }
       }
-    },[updateRoleResult, updatingRole, fetchUsers])
+    },[updateRoleResult, updatingRole])
 
     const filteredUsers = usersData?.success
         ? usersData.data.filter((user) => 
@@ -296,41 +297,41 @@ const SettingsForm = () => {
     
 
 
-const handleChangeUserRole = async (role) => {
-  if (!userToChangeRole) return;
-  await updateRole(userToChangeRole.id, role);
-  setChangeRoleDialog(false);
-};
+    const handleChangeUserRole = async (role) => {
+      if (!userToChangeRole) return;
+      await updateRole(userToChangeRole.id, role);
+      setChangeRoleDialog(false);
+    };
 
-const [createUserDialog, setCreateUserDialog] = useState(false);
+    const [createUserDialog, setCreateUserDialog] = useState(false);
 
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-    reset,
-  } = useForm({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      Fname: "",
-      Lname: "",
-      email: "",
-      role: "",
-      username: "",
-    },
-  });
+    const {
+      register,
+      handleSubmit,
+      formState: { errors },
+      setValue,
+      watch,
+      reset,
+    } = useForm({
+      resolver: zodResolver(userSchema),
+      defaultValues: {
+        Fname: "",
+        Lname: "",
+        email: "",
+        role: "",
+        username: "",
+      },
+    });
 
-const handleCreateUser = async (data) => {
-  if(data && data.email && data.username && data.Fname && data.Lname && data.role) {
-    await createUserFn(data);
-  } else {
-    toast.error("Incomplete inputs.")
-  }
-  return
-};
+    const handleCreateUser = async (data) => {
+      if(data && data.email && data.username && data.Fname && data.Lname && data.role) {
+        await createUserFn(data);
+      } else {
+        toast.error("Incomplete inputs.")
+      }
+      return
+    };
 
 useEffect(() => {
   if (createUserResult && !createUserLoading) {
@@ -345,31 +346,27 @@ useEffect(() => {
       console.log(createUserResult.message);
       setCreateUserDialog(false);
       reset();
-      fetchUsers();
     }
     if(createUserResult.code === 422){
       toast.error("Email might already exist.");
       console.log(createUserResult.message);
       setCreateUserDialog(false);
       reset();
-      fetchUsers();
     }
     if(createUserResult.code === 423){
       toast.error("Invalid Username format.");
       console.log(createUserResult.message);
       setCreateUserDialog(false);
       reset();
-      fetchUsers();
     }
     if(createUserResult.code === 500){
       toast.error("Error creating user.");
       console.log(createUserResult.message);
       setCreateUserDialog(false);
       reset();
-      fetchUsers();
     }
   }
-}, [createUserResult, reset, createUserLoading, fetchUsers]);
+}, [createUserResult, reset, createUserLoading]);
 
 
 
@@ -972,6 +969,7 @@ const [confirmRole, setConfirmRole] = useState(null);
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline"
+                                  disabled={userDeleteLoading || createUserLoading || updatingRole || updateEmailLoading || updateUserLoading}
                                   className="px-2 py-1 h-8 w-8 flex items-center justify-center"
                                   aria-label="Open user actions">
                                   <MoreHorizontal className="h-4 w-4" />

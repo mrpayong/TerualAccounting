@@ -164,6 +164,17 @@ const monthlyRevenue = inflows
     return acc;
   }, {});
 
+  const monthlyOutflows = outflows.filter(t => 
+    t.accountId === selectedAccountId &&
+    t.type === "EXPENSE" && // Only EXPENSE transactions
+    t.date // Ensure date exists
+  ).reduce((acc, t) => {
+    const date = new Date(t.date);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    acc[key] = (acc[key] || 0) + t.amount;
+    return acc;
+  }, {});
+
 const monthlyRevenueData = Object.entries(monthlyRevenue)
   .map(([key, amount]) => {
     // Format for display, e.g., "Jun 2025"
@@ -181,6 +192,22 @@ const monthlyRevenueData = Object.entries(monthlyRevenue)
   .sort((a, b) => a._sort.localeCompare(b._sort))
   .map(({ _sort, ...rest }) => rest);
 
+  const monthlyOutflowData = Object.entries(monthlyOutflows)
+  .map(([key, amount]) => {
+    // Format for display, e.g., "Jun 2025"
+    const [year, month] = key.split("-");
+    const displayMonth = new Date(year, month - 1).toLocaleString("default", {
+      month: "short",
+      year: "numeric",
+    });
+    return {
+      month: displayMonth,
+      Income: amount,
+      _sort: key,
+    };
+  })
+  .sort((a, b) => a._sort.localeCompare(b._sort))
+  .map(({ _sort, ...rest }) => rest);
 
   // top 5 CHART DATA
 const [barType, setBarType] = useState("INCOME");
@@ -215,16 +242,15 @@ const barData =
     : getTopBarCategories(outflows);
 
 
-const last6Months = getLast6Months();
-
-const paddedMonthlyRevenueData = last6Months.map(({ key, label }) => {
-  const found = monthlyRevenueData.find(d => d.month === label);
-  return found
-    ? found
-    : { month: label, Income: 0 };
+const combinedMonthlyData = getLast6Months().map(({ key, label }) => {
+  const inflow = monthlyRevenueData.find(d => d.month === label) || { Income: 0 };
+  const outflow = monthlyOutflowData.find(d => d.month === label) || { Income: 0 }; // Rename Income to Expense for clarity
+  return {
+    month: label,
+    Income: inflow.Income, // Inflows
+    Expense: outflow.Income, // Outflows (renamed to Expense)
+  };
 });
-
-
 
 const summaryCards = [
   {
@@ -473,9 +499,9 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
             gap-2 md:gap-0
             items-center">
             <div>
-              <CardTitle className="!font-bold text-xl text-center md:text-start">Client Inflow Summary</CardTitle>
+              <CardTitle className="!font-bold text-xl text-center md:text-start">Client's Actual Transactions Summary</CardTitle>
               <CardDescription className="text-sm !text-black font-normal tracking-wide">
-                Semiannual total inflows per month. Pre-select here the account you want forecast and analysis for.
+                Semiannual total inflows and outflows per month. Pre-select here the account you want forecast and analysis for.
                 {/* (Add outflows to me) */}
               </CardDescription>
             </div>
@@ -505,7 +531,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
               {monthlyRevenueData.length > 0 
               ? (<ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={paddedMonthlyRevenueData}
+                  data={combinedMonthlyData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -541,10 +567,16 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
                     stroke="#4ade80" 
                     dot={false}
                     />
+                    <Line 
+                      type="monotone" 
+                      dataKey="Expense" 
+                      stroke="#ef4444" 
+                      dot={false}
+                    />
                 </LineChart>
               </ResponsiveContainer>) 
               : (<div className="flex items-center font-bold text-base md:text-lg justify-center h-full text-gray-400">
-                  No inflows.
+                  Select an account first.
                 </div>
               )}
             </div>

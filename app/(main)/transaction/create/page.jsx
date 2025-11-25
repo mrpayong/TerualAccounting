@@ -5,13 +5,18 @@ import AddTransactionForm from '../_components/transaction-form';
 import { getTransaction } from '@/actions/transaction';
 import { getStaff, getUnauthUser } from '@/actions/admin';
 import NotFound from '@/app/not-found';
-import { Unica_One } from 'next/font/google';
+import { Unica_One, Zen_Kaku_Gothic_Antique } from 'next/font/google';
 // import { AddTransactionForm } from '../_components/transaction-form';
 
 const fontUnicaOne = Unica_One({
   subsets:["latin"],
   weight: "400",
 })
+
+const fontZenkakuGothicAntique = Zen_Kaku_Gothic_Antique({
+  subsets: ['latin'],
+  weight: '500',
+});
 
 const AddTransactionPage = async ({ searchParams }) => {
     const user = await getStaff()
@@ -36,8 +41,11 @@ const AddTransactionPage = async ({ searchParams }) => {
   const ScannerUserId = user.data.id;
   return (
     <div className="max-w-3xl mx-auto px-5">
-     <h1 className={`text-6xl md:text-[5rem]/[1] mb-5 w-full ${fontUnicaOne.className} font-normal tracking-wider text-center md:text-start`}>{editId ? "Edit" : "Add"} Transaction</h1>
- 
+      <div className="flex flex-col mb-4">
+        <h1 className={`text-6xl md:text-[5rem]/[0.5] mb-2 w-full ${fontUnicaOne.className} font-normal tracking-wider text-center md:text-start`}>Add Transaction</h1>
+        <p className={`${fontZenkakuGothicAntique.className} text-base font-medium text-gray-500`}>AI used with the scanner can make mistakes. Review the form before adding transaction.</p>
+      </div>
+     
       <AddTransactionForm 
         ScannerUserId={ScannerUserId}
         accounts={accounts} 

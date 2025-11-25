@@ -2,6 +2,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Prisma } from "@prisma/client";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -136,9 +137,6 @@ export async function getSuggestedWeeklySchedule() {
       }
       `;
 
-    console.log("prompt success and ready.")
-      // Call Gemini
-    console.log("cleaning data")
     const result = await model.generateContent([prompt]);
     const response = await result.response;
     const text = response.text();
@@ -305,8 +303,6 @@ function accumulateByMonth(transactions) {
 
   const limitedMonthlyInflows = monthlyInflows.slice(-6);
   const limitedMonthlyOutflows = monthlyOutflows.slice(-6);
-  console.log('limitedMonthlyInflows', limitedMonthlyInflows)
-  console.log('limitedMonthlyOutflows', limitedMonthlyOutflows)
 
   const updateLog = await activityLog({
     userId: user.id,
@@ -511,8 +507,6 @@ export async function getOverallFinancialDataAnalysis(inflowOutflowForecast) {
   if (user.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
-  console.log(" inflowOutflowForecast[3]: ",  inflowOutflowForecast.historical.inflows)
-
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   
@@ -598,7 +592,6 @@ export async function getOverallFinancialDataAnalysis(inflowOutflowForecast) {
 
   // Parse and return the insights
   const insights = JSON.parse(cleanedText);
-  console.log("Parsed Gemini insights:", insights);
 
 
   const insightsArr = Array.isArray(insights.insights) ? insights.insights : [];
@@ -733,6 +726,8 @@ export async function getAllOutflows() {
       amount: true, 
       accountId: true,
       voided:true,
+      date: true,
+      type:true,
       account: {
         select: {
           name: true
@@ -742,6 +737,7 @@ export async function getAllOutflows() {
     orderBy: { date: "asc" },
   });
 
+  
   const outflowsSerialize = outflows.map(outflow => ({
     ...outflow,
     amount: Number(outflow.amount),
@@ -857,4 +853,161 @@ export async function entryCount() {
     today: todayCount,
     yesterday: yesterdayCount,
   };
+}
+
+async function forecastExists(accountId, monthYear) {
+  try {
+    const existingForecast = await db.prediction.findFirst({
+      where: {
+        accountId: accountId,
+        monthYear: new Date(`${monthYear}-01`), // Convert "YYYY-MM" to "YYYY-MM-DD"
+      },
+    });
+
+    return {data: !!existingForecast, code:200, success: true}; // Return true if a forecast exists, false otherwise    
+  } catch (error) {
+    console.log("error forecastExists: ", error)
+    return {code:500, success: false}
+  }
+}
+
+export async function saveForecastToDB(accountId, forecastData) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { id: true, role:true },
+    });
+
+    if (!user) throw new Error("User not found.");
+
+    if(user.role !== "ADMIN") {
+      throw new Error("Unauthorized");
+    }
+
+    // Extract forecast data
+    const { inflowForecast, outflowForecast } = forecastData;
+
+    const forecastDataToInsert = [];
+    let forecastMonth;
+    for (let i = 0; i < inflowForecast.length; i++) {
+      const inflow = inflowForecast[i];
+      const outflow = outflowForecast[i];
+
+      // Ensure months match
+      if (inflow.month === outflow.month) {
+        forecastMonth = inflow.month ?? outflow.month;
+        
+        const exists = await forecastExists(accountId, forecastMonth);
+        if (exists) {
+          if(exists.code === 500){
+            return {code: 501, success: false, message: "Error checking existing forecast." };
+          }
+          if(exists.code === 200 && exists.data === true){
+            console.log(`Forecast for ${forecastMonth} already exists. Skipping.`);
+            continue; // Skip this forecast if it already exists            
+          }
+        }
+      }
+
+      // Construct the data object
+      forecastDataToInsert.push({
+        userId: user.id,
+        accountId: accountId,
+        monthYear: new Date(`${forecastMonth}-01`), // Convert "YYYY-MM" to "YYYY-MM-DD"
+        inflow: inflow.amount,
+        outflow: outflow.amount,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    if (forecastDataToInsert.length === 0) {
+      return { code: 201, success: true, message: "No new forecasts were saved. All forecasts already exist." };
+    }
+
+     for (const forecast of forecastDataToInsert) {
+        await db.prediction.create({
+          data: {
+            userId: forecast.userId,
+            accountId: forecast.accountId,
+            monthYear: forecast.monthYear,
+            inflow: forecast.inflow,
+            outflow: forecast.outflow,
+            createdAt: forecast.createdAt,
+            updatedAt: forecast.updatedAt,
+          },
+        });
+    }
+  
+    return { code: 200, success: true, message: "Forecast saved successfully." };
+  } catch (error) {
+    console.error("Error saving forecast:", error);
+    return { code: 500, success: false, message: "Failed to save forecast." };
+  }
+}
+
+export async function getSavedPredictions(accountId) {
+  try {
+    console.log("acocuntId", accountId)
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { id: true, role:true },
+    });
+
+    if (!user) throw new Error("User not found.");
+
+    if(user.role !== "ADMIN") {
+      throw new Error("Unauthorized");
+    }
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    const excludeDate = new Date(`${currentYear}-${String(currentMonth).padStart(2, "0")}-01`);
+
+    console.log("Excluding predictions for the current month:", excludeDate);
+
+    const predictions = await db.prediction.findMany({
+      where: {
+        accountId: accountId,
+        monthYear: {
+          lt: excludeDate, // Exclude current month
+        },
+      },
+      orderBy: { monthYear: "asc" }, // Sort by monthYear in ascending order
+      select: {
+        monthYear: true,
+        inflow: true,
+        outflow: true,
+      },
+    });
+
+    // Format the data for visualization
+    const formattedPredictions = predictions.map((prediction) => ({
+      month: prediction.monthYear.toISOString().slice(0, 7), // Format as "YYYY-MM"
+      inflow: prediction.inflow,
+      outflow: prediction.outflow,
+    }));
+
+    console.log("formattedPredictions",formattedPredictions)
+    return {
+      code: 200,
+      success: true,
+      data: formattedPredictions,
+    };
+  } catch (error) {
+    console.error("Error fetching saved predictions:", error);
+    return {
+      code: 500,
+      success: false,
+      message: "Failed to fetch saved predictions.",
+    };
+  }
 }

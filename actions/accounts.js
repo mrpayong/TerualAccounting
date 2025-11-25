@@ -415,6 +415,29 @@ async function updateParentBalancesInTransaction(subAccountId, balanceChange, vi
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function createSubAccount(transactionIds, data, id) {
   try {
     // Authenticate the user (maintaining authorization)
@@ -704,6 +727,62 @@ export async function createSubAccount(transactionIds, data, id) {
     return {success: false, code:505, message:"Error Creating Group."}
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function getSubAccounts(accountId) {
   try {
     // Authenticate the user
@@ -730,6 +809,10 @@ export async function getSubAccounts(accountId) {
       },
     });
 
+    const accountName = await db.account.findUnique({
+      where: { id: accountId },
+      select: { name: true },
+    });
     // Process each subAccount recursively
     const processedAccounts = await Promise.all(
       topLevelSubAccounts.map(async (account) => {
@@ -737,7 +820,7 @@ export async function getSubAccounts(accountId) {
       })
     );
 
-    return { success: true, data: processedAccounts };
+    return { success: true, data: processedAccounts, accountName:accountName };
   } catch (error) {
     console.error("Error in getSubAccountsWithDynamicDepth:", error.message);
     return { success: false, error: error.message };

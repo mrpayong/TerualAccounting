@@ -14,14 +14,15 @@ async function CashReceiptBookPage ({params})  {
     return NotFound();
   }
   const {id} = await params;
-  const inflows = await getCashInflow(id);
-  console.log(inflows)
-
+  const inflowTransactions = await getCashInflow(id);
+  const inflows = inflowTransactions.data;
+  const accountName = inflowTransactions.accountName;
+  
   return (
     <div>
       <Suspense fallback={<BarLoader className='mt-4' width={"100%"} color="#9333ea"/>}>
         <div>
-          <CashReceiptBook inflows={inflows} />
+          <CashReceiptBook inflows={inflows} accountName={accountName}/>
         </div>
       </Suspense>
     </div>

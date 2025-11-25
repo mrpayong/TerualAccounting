@@ -29,6 +29,8 @@ model User {
   tasks                   Task[]
   actLog                  ActivityLog[]
   archived                Archive[]
+  prediction              Prediction[]
+
   
 
   createdAt   DateTime    @default(now())
@@ -69,6 +71,7 @@ model Account {
   isHeadOffice            Boolean   @default(false)
   branchCount             Int?
   owner                   String
+  prediction              Prediction[]
   
   user                    User  @relation(fields: [userId], references: [id])
   transactions            Transaction[]
@@ -337,4 +340,21 @@ model Unauthz {
   action    String
   meta      Json?
   createdAt DateTime @default(now())
+}
+
+model Prediction {
+  id            String   @id @default(uuid())
+  userId        String
+  accountId     String
+  monthYear     DateTime?
+  inflow        Float
+  outflow       Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+  account       Account  @relation(fields: [accountId], references: [id])
+
+  @@index([userId])
+  @@index([accountId])
 }

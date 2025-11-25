@@ -23,6 +23,8 @@ export default async function SubAccountsPage({ params }) {
   // Fetch sub-accounts data from the server
   const response = await getSubAccounts(id);
 
+  const accountName = response.accountName.name;
+
   if (!response.success) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -39,8 +41,9 @@ export default async function SubAccountsPage({ params }) {
         <div className="flex items-start px-8">
           <BackButton id={id}/>
         </div>        
-        <div className="flex justify-center items-center">
+        <div className="flex flex-col justify-center items-center">
           <h1 className={`${fontZenKaku.className} text-2xl md:text-3xl text-center mb-4`}>Grouped Transcations</h1>
+          <p className="text-lg md:text-xl text-center ml-4 mt-1">of {accountName}</p>
         </div>
       
       </div>

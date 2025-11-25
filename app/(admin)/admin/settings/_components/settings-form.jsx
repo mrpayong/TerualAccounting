@@ -959,6 +959,7 @@ useEffect(() => {
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline"
+                                disabled={userDeleteLoading || createUserLoading || updatingRole || updateEmailLoading || updateUserLoading}
                                 className="px-2 py-1 h-8 w-8 flex items-center justify-center"
                                 aria-label="Open user actions">
                                 <MoreHorizontal className="h-4 w-4" />

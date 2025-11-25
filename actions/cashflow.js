@@ -136,6 +136,11 @@ export async function getCashOutflow(id) {
             userId: true,
             refNumber:true,
             particular: true,
+            account:{
+              select:{
+                name:true
+              }
+            }
           }
         },
       },
@@ -145,17 +150,18 @@ export async function getCashOutflow(id) {
       throw new Error("Account not found");
     }
 
+    const accountName = transactionExpenses?.transactions[0].account?.name;
+
     const serializedTransactions = transactionExpenses.transactions.map((transaction) => ({
       ...transaction,
       amount: transaction.amount.toNumber(), // Convert Decimal to number
       date: transaction.date.toISOString(), // Convert Date to string
     }));
 
-    return serializedTransactions;
-
+    return {data:serializedTransactions, success:true, code:200, accountName:accountName};
   } catch (error) {
     console.error("Error fetching account expenses:", error);
-    throw new Error("Failed to fetch account expenses", error);
+    return { success:true, code:500, message: "Failed to fetch account expenses."};
   }
 }
 
@@ -198,7 +204,12 @@ export async function getCashInflow(id) {
             userId: true,
             refNumber:true,
             particular: true,
-            voided:true
+            voided:true,
+            account: {
+              select: {
+                name:true
+              }
+            }
           }
         },
       },
@@ -208,6 +219,7 @@ export async function getCashInflow(id) {
       throw new Error("Account not found");
     }
 
+    const accountName = transactionIncome?.transactions[0].account?.name;
     // Serialize the data
     const serializedTransactions = transactionIncome.transactions.map((transaction) => ({
       ...transaction,
@@ -215,10 +227,10 @@ export async function getCashInflow(id) {
       date: transaction.date.toISOString(), // Convert Date to string
     }));
 
-    return serializedTransactions;
+    return {data:serializedTransactions, accountName:accountName, sucess: true, code: 200};
   } catch (error) {
-    console.error("Error fetching account Income:", error.message);
-    throw new Error("Failed to fetch account Income.");
+    console.log("Error fetching account Income:", error);
+    return {code:500, success:false, message: "Failed to fetch account Income.",}
   }
 }
 

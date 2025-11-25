@@ -105,7 +105,6 @@ const SectionFour = () => {
     }, [AIschedData])
   
   
-  console.log("AIschedData", AIschedData)
     
     function mapAIScheduleToWeekDays(AIschedData) {
         const today = new Date();
@@ -172,7 +171,7 @@ const SectionFour = () => {
             <div>
               <CardTitle className="!font-bold text-xl text-center md:text-start">Forecast Analysis</CardTitle>
               <CardDescription className="font-nomral text-sm tracking-wide text-center md:text-start">
-                Recommendations based on AI's financial data analysis.
+                Recommendations based on AI's financial data analysis. AI may make mistakes, always verify information.
               </CardDescription>
             </div>
             <Badge

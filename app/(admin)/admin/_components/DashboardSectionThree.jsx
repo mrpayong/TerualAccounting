@@ -37,9 +37,7 @@ function getActionLabel(action) {
     case "deleteUser":
       return "User deleted";
     case "deleteCashflow":
-      return "Cashflow deleted";
-    case "bulkDeleteTransactions":
-      return "Transactions deleted";
+      return "Voided Cashflow Statement";
     case "bulkDeleteTask":
       return "Task deleted";
     case "scanReceipt":
@@ -52,8 +50,6 @@ function getActionLabel(action) {
     case "getUserForSysAdmin":
       return "Visited User List";
     case "getUser":
-      return "Visited User List";
-    case "n":
       return "Visited User List";
     case "getOverallFinancialDataAnalysis":
       return "Overall Financial Analysis(AI)";
@@ -86,9 +82,9 @@ function getActionLabel(action) {
     case "updateClientInfo":
       return "Edited Client Information";
     case "deleteSubAccount":
-      return "Deleted a Group Transaction";
+      return "Ungrouped a Group Transaction";
     case "deleteCashflowStatement":
-      return 'Deleted Cashflow Statement';
+      return 'Voided Cashflow Statement';
     case 'udpateNetChange':
       return 'Edited Net Change';
     case 'updateBalanceQuick':
@@ -99,6 +95,16 @@ function getActionLabel(action) {
       return "Logged Out";
     case "EMAIL-CREATED":
       return "OTP Requested";
+    case "deleteUnfinalizedCashflow":
+      return "Canceled Cashflow Statement creation"
+    case "voidTransaction":
+      return "Requested Transaction Void";
+    case "approveVoidedTransaction":
+      return "Approved Transaction Void";
+    case "updatedSubAccountDescription":
+      return "Added Note to Group Transaction";
+    case "disapproveVoidedTransaction":
+      return "Disapproved Void Request";
     default:
       return action;
   }
